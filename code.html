@@ -1,0 +1,148 @@
+<!DOCTYPE html><html class="light" lang="ko"><head>
+<meta charset="utf-8">
+<meta content="width=device-width, initial-scale=1.0" name="viewport">
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com" rel="preconnect">
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@400;700&amp;family=Public+Sans:wght@300;400&amp;family=Noto+Serif:ital,wght@0,400;0,700;1,400&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            colors: {
+              "secondary-container": "#e4e2e2",
+              "error-container": "#fe8b70",
+              "error-dim": "#5c1202",
+              "secondary-dim": "#535353",
+              "on-surface-variant": "#5d605b",
+              "secondary-fixed-dim": "#d6d4d4",
+              "on-error-container": "#742410",
+              "surface-dim": "#d9dbd4",
+              "tertiary-dim": "#525353",
+              "surface-container-high": "#e8e8e3",
+              "on-primary-fixed-variant": "#5c5b5a",
+              "on-primary-container": "#525250",
+              "secondary": "#5f5f5f",
+              "on-background": "#31332f",
+              "surface-container": "#eeeee9",
+              "surface-bright": "#fbf9f6",
+              "primary-dim": "#535251",
+              "on-secondary-fixed-variant": "#5b5b5b",
+              "on-tertiary-fixed": "#494a4a",
+              "tertiary-fixed-dim": "#e6e5e5",
+              "secondary-fixed": "#e4e2e2",
+              "on-primary-fixed": "#403f3e",
+              "on-secondary-container": "#525252",
+              "background": "#fbf9f6",
+              "on-tertiary-container": "#5b5c5c",
+              "on-error": "#fff7f6",
+              "primary": "#5f5e5d",
+              "on-primary": "#faf7f5",
+              "surface-container-highest": "#e2e3dd",
+              "inverse-on-surface": "#9e9d9a",
+              "surface": "#fbf9f6",
+              "on-tertiary": "#faf8f8",
+              "on-tertiary-fixed-variant": "#666666",
+              "primary-fixed": "#e5e2e0",
+              "tertiary-container": "#f4f3f3",
+              "tertiary": "#5e5f5f",
+              "on-secondary-fixed": "#3f3f3f",
+              "surface-container-low": "#f5f3f0",
+              "primary-fixed-dim": "#d7d4d2",
+              "tertiary-fixed": "#f4f3f3",
+              "on-secondary": "#faf8f8",
+              "primary-container": "#e5e2e0",
+              "outline": "#797b76",
+              "outline-variant": "#b1b3ad",
+              "inverse-surface": "#0e0e0d",
+              "surface-variant": "#e2e3dd",
+              "error": "#9e422c",
+              "inverse-primary": "#ffffff",
+              "on-surface": "#31332f",
+              "surface-container-lowest": "#ffffff",
+              "surface-tint": "#5f5e5d"
+            },
+            fontFamily: {
+              "headline": ["Noto Serif KR", "Noto Serif", "serif"],
+              "body": ["Public Sans", "sans-serif"],
+              "label": ["Public Sans", "sans-serif"]
+            },
+            borderRadius: {"DEFAULT": "0px", "lg": "0px", "xl": "0px", "full": "9999px"},
+          },
+        },
+      }
+    </script>
+<style>.material-symbols-outlined {
+    font-variation-settings: "FILL" 0, "wght" 200, "GRAD" 0, "opsz" 24
+    }
+body {
+    background-color: #0e0e0d;
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+    height: 100vh;
+    width: 100vw
+    }
+.grain-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: 10;
+    opacity: 0.03;
+    background-image: url(https://lh3.googleusercontent.com/aida-public/AB6AXuCZQluC89h3FGEeuI1s968zqPC6gjFtv---Bw_Gukhc_udT3Eu__BW1x2NgQlMi3lpNjYBaVBb34jCk4TT-VnvH1uyXr5MNY7E3cAexlpyxKOnKuhJUC-ZWNn4tXmNo-SxQA16o1QRaD7NbR3wOCZqW8dQf3pMVUxbXQEKsiEYFeh-nScjeDU5DE-54yHemHeFhwj63m8Oqaft3jNgvDsTL9HqzC9xLdD-7fJDtJ1uI3rO8PfvMzWETXkQDumgV7JVLUhs-HhZtB-c)
+    }
+.vignette {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: 5;
+    background: radial-gradient(circle, transparent 40%, rgba(0, 0, 0, 0.4) 100%)
+    }</style>
+</head>
+<body class="font-body selection:bg-primary-container selection:text-on-primary-container">
+<div class="grain-overlay"></div>
+<div class="vignette"></div>
+<header class="fixed top-0 left-0 w-full z-50 flex justify-between items-center px-12 py-8">
+<div class="text-sm font-light tracking-[0.2em] uppercase text-[#fbf9f6] opacity-40" style="">
+            The Whispering Page
+        </div>
+<div class="flex gap-8">
+<span class="material-symbols-outlined text-[#fbf9f6] opacity-30 hover:opacity-100 transition-opacity duration-700 cursor-default" style="">more_vert</span>
+</div>
+</header>
+<main class="relative h-screen w-full flex flex-col items-center justify-center bg-[#0e0e0d] px-12">
+<section class="max-w-5xl w-full flex flex-col items-center text-center">
+<h1 class="font-headline text-4xl md:text-6xl lg:text-7xl leading-relaxed text-[#fbf9f6] tracking-tight mb-12 opacity-90" style="">
+                모두 병들었는데&nbsp;<div><br><div>아무도 아프지 않았다
+            </div></div></h1>
+<div class="w-16 h-[1px] bg-[#fbf9f6] opacity-20 mb-8"></div>
+</section>
+<div class="absolute bottom-24 right-12 text-right">
+<p class="font-label text-[10px] tracking-[0.3em] uppercase text-[#b1b3ad] opacity-60 mb-2" style="">
+                이성복
+            </p>
+<p class="font-headline italic text-lg text-[#fbf9f6] opacity-40" style="">
+                &lt;그날&gt;
+            </p>
+</div>
+</main>
+<footer class="fixed bottom-0 left-0 w-full z-50 flex justify-between items-end px-12 py-8">
+<div class="text-[#797b76] font-label text-[10px] tracking-widest uppercase" style="">
+            M-eum Anthology © 2024
+        </div>
+<div class="flex gap-12">
+<a class="text-[#797b76] hover:text-[#fbf9f6] font-label text-[10px] tracking-widest uppercase transition-colors duration-500" href="#" style="">Archive</a>
+<a class="text-[#797b76] hover:text-[#fbf9f6] font-label text-[10px] tracking-widest uppercase transition-colors duration-500" href="#" style="">Colophon</a>
+</div>
+</footer>
+<div class="fixed inset-0 pointer-events-none border-[40px] border-[#0e0e0d] z-[60]"></div>
+</body></html>
