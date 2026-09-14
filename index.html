@@ -3,148 +3,145 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Nemotron Personas Korea Explorer</title>
+    <title>지수함수와 로그함수 대칭성 시각화</title>
+    <!-- 시각화를 위한 Plotly 라이브러리 로드 -->
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
     <style>
-        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif; line-height: 1.6; padding: 20px; background-color: #f8f9fa; color: #333; }
-        h1 { text-align: center; color: #2c3e50; }
-        .container { max-width: 1200px; margin: 0 auto; background: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
-        .controls { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
-        button { padding: 8px 16px; background-color: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; }
-        button:disabled { background-color: #cccccc; cursor: not-allowed; }
-        .table-wrapper { overflow-x: auto; max-height: 70vh; border: 1px solid #dee2e6; }
-        table { width: 100%; border-collapse: collapse; font-size: 14px; white-space: nowrap; }
-        th, td { border: 1px solid #dee2e6; padding: 12px; text-align: left; }
-        th { background-color: #e9ecef; position: sticky; top: 0; box-shadow: 0 2px 2px -1px rgba(0,0,0,0.1); }
-        .status { text-align: center; font-weight: bold; margin-bottom: 15px; }
-        .loading { color: #007bff; }
-        .error { color: #dc3545; }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f8f9fa;
+            text-align: center;
+            padding: 20px;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        .control-panel {
+            margin: 20px 0;
+            padding: 15px;
+            background: #e9ecef;
+            border-radius: 8px;
+        }
+        input[type=range] {
+            width: 60%;
+            cursor: pointer;
+        }
+        h1 { color: #343a40; font-size: 1.5rem; }
+        .math-text { font-family: 'Courier New', Courier, monospace; font-weight: bold; }
     </style>
 </head>
 <body>
 
-<div class="container">
-    <h1>Nemotron-Personas-Korea 탐색기</h1>
-    
-    <div class="controls">
-        <button id="prevBtn" disabled>이전 페이지</button>
-        <span id="pageInfo">페이지 1</span>
-        <button id="nextBtn" disabled>다음 페이지</button>
+    <div class="container">
+        <h1>지수함수와 로그함수 역함수 관계 ($y=x$ 대칭)</h1>
+        
+        <div class="control-panel">
+            <label for="baseSlider"><strong>밑 (Base) <span class="math-text">a</span> : </strong></label>
+            <span id="baseValue" class="math-text" style="font-size: 1.2rem; color: #d63384;">2.0</span><br><br>
+            <input type="range" id="baseSlider" min="0.1" max="5.0" step="0.1" value="2.0">
+            <p style="font-size: 0.9rem; color: #6c757d;">(슬라이더를 움직여 밑 $a$의 값을 변경해 보세요. $a=1$인 경우는 정의되지 않아 제외됩니다.)</p>
+        </div>
+
+        <div id="graphPlot"></div>
     </div>
 
-    <div id="status" class="status loading">데이터를 API에서 불러오는 중입니다...</div>
-    
-    <div class="table-wrapper">
-        <table id="dataTable">
-            <thead id="tableHead"></thead>
-            <tbody id="tableBody"></tbody>
-        </table>
-    </div>
-</div>
+    <script>
+        // 초기 그래프 렌더링
+        drawGraph();
 
-<script>
-    // 시스템 매개변수 정의
-    const DATASET_ID = "nvidia/Nemotron-Personas-Korea";
-    const CONFIG = "default";
-    const SPLIT = "train";
-    const ROWS_PER_PAGE = 50;
-    let currentPage = 1;
-
-    // 수학적 Offset 연산 함수
-    const getOffset = (page) => (page - 1) * ROWS_PER_PAGE;
-
-    // Hugging Face Datasets API 비동기 Fetch
-    async function fetchDataset(page) {
-        const offset = getOffset(page);
-        const url = `https://datasets-server.huggingface.co/rows?dataset=${DATASET_ID}&config=${CONFIG}&split=${SPLIT}&offset=${offset}&length=${ROWS_PER_PAGE}`;
-        
-        const response = await fetch(url);
-        if (!response.ok) {
-            throw new Error(`HTTP 에러 발생: 상태 코드 ${response.status}`);
-        }
-        const data = await response.json();
-        return data.rows; // { row_idx, row, truncated_cells } 형태의 배열 반환
-    }
-
-    // HTML 테이블 렌더링 함수 (O(N) 복잡도)
-    function renderTable(rows) {
-        const thead = document.getElementById('tableHead');
-        const tbody = document.getElementById('tableBody');
-        thead.innerHTML = '';
-        tbody.innerHTML = '';
-
-        if (!rows || rows.length === 0) {
-            document.getElementById('status').innerText = "해당 범위에 데이터가 존재하지 않습니다.";
-            document.getElementById('status').className = "status error";
-            return;
-        }
-
-        // 1. 동적 컬럼 헤더(Header) 생성 로직
-        const columns = Object.keys(rows[0].row);
-        const trHead = document.createElement('tr');
-        columns.forEach(col => {
-            const th = document.createElement('th');
-            th.textContent = col;
-            trHead.appendChild(th);
-        });
-        thead.appendChild(trHead);
-
-        // 2. 데이터 레코드(Body) 렌더링 로직
-        rows.forEach(item => {
-            const tr = document.createElement('tr');
-            columns.forEach(col => {
-                const td = document.createElement('td');
-                const cellData = item.row[col];
-                // 배열/객체 형태의 데이터는 JSON 문자열로 직렬화하여 출력
-                td.textContent = typeof cellData === 'object' && cellData !== null ? JSON.stringify(cellData) : cellData;
-                tr.appendChild(td);
-            });
-            tbody.appendChild(tr);
+        // 슬라이더 이벤트 리스너 설정
+        document.getElementById('baseSlider').addEventListener('input', function() {
+            let a = parseFloat(this.value);
+            // 밑이 1이 되는 경우, 로그함수 분모가 0이 되는 것을 방지
+            if (a === 1.0) {
+                a = 1.1; 
+                this.value = 1.1;
+            }
+            document.getElementById('baseValue').innerText = a.toFixed(1);
+            drawGraph(a);
         });
 
-        document.getElementById('status').innerText = "";
-    }
+        function drawGraph(a = 2.0) {
+            const xValuesExp = [];
+            const yValuesExp = [];
+            const xValuesLog = [];
+            const yValuesLog = [];
+            const xValuesLine = [];
+            const yValuesLine = [];
 
-    // 페이지 로드 제어기
-    async function loadPage(page) {
-        const statusEl = document.getElementById('status');
-        statusEl.className = "status loading";
-        statusEl.innerText = "데이터를 API에서 불러오는 중입니다...";
-        document.getElementById('tableBody').innerHTML = '';
-        document.getElementById('prevBtn').disabled = true;
-        document.getElementById('nextBtn').disabled = true;
-        
-        try {
-            const rows = await fetchDataset(page);
-            renderTable(rows);
-            document.getElementById('pageInfo').innerText = `페이지 ${page}`;
-            
-            // 버튼 상태 유효성 검증
-            document.getElementById('prevBtn').disabled = page === 1;
-            // 불러온 데이터 수가 요청한 상수 L보다 적으면 마지막 페이지로 간주
-            document.getElementById('nextBtn').disabled = rows.length < ROWS_PER_PAGE;
-        } catch (error) {
-            console.error(error);
-            statusEl.className = "status error";
-            statusEl.innerText = "데이터 통신에 실패했습니다. CORS 문제 또는 API 한도 초과일 수 있습니다.";
+            // 1. 지수함수 데이터 및 y=x 데이터 생성 (-5 <= x <= 5)
+            for (let x = -5; x <= 5; x += 0.05) {
+                xValuesExp.push(x);
+                yValuesExp.push(Math.pow(a, x)); // f(x) = a^x
+
+                xValuesLine.push(x);
+                yValuesLine.push(x); // f(x) = x
+            }
+
+            // 2. 로그함수 데이터 생성 (x > 0, 정의역 제한)
+            for (let x = 0.001; x <= 5; x += 0.05) {
+                xValuesLog.push(x);
+                yValuesLog.push(Math.log(x) / Math.log(a)); // 밑변환 공식: log_a(x) = ln(x) / ln(a)
+            }
+
+            // 지수함수 트레이스
+            const traceExp = {
+                x: xValuesExp,
+                y: yValuesExp,
+                mode: 'lines',
+                name: `y = ${a.toFixed(1)}<sup>x</sup>`,
+                line: { color: '#0d6efd', width: 3 }
+            };
+
+            // 로그함수 트레이스
+            const traceLog = {
+                x: xValuesLog,
+                y: yValuesLog,
+                mode: 'lines',
+                name: `y = log<sub>${a.toFixed(1)}</sub>(x)`,
+                line: { color: '#dc3545', width: 3 }
+            };
+
+            // 항등함수 (y = x) 트레이스
+            const traceIdentity = {
+                x: xValuesLine,
+                y: yValuesLine,
+                mode: 'lines',
+                name: 'y = x (대칭축)',
+                line: { color: '#6c757d', width: 2, dash: 'dash' }
+            };
+
+            const data = [traceExp, traceLog, traceIdentity];
+
+            const layout = {
+                xaxis: { 
+                    range: [-5, 5], 
+                    zeroline: true, 
+                    zerolinecolor: 'black',
+                    title: 'x 축'
+                },
+                yaxis: { 
+                    range: [-5, 5], 
+                    zeroline: true, 
+                    zerolinecolor: 'black',
+                    title: 'y 축',
+                    scaleanchor: "x", // x, y축 비율을 1:1로 고정하여 기하학적 대칭을 정확히 표현
+                    scaleratio: 1 
+                },
+                width: 700,
+                height: 700,
+                margin: { l: 50, r: 50, t: 50, b: 50 },
+                legend: { x: 0.05, y: 0.95 }
+            };
+
+            // Plotly를 이용해 지정된 div에 그래프 렌더링
+            Plotly.newPlot('graphPlot', data, layout, {responsive: true});
         }
-    }
-
-    // 사용자 상호작용 이벤트 리스너 바인딩
-    document.getElementById('prevBtn').addEventListener('click', () => {
-        if (currentPage > 1) {
-            currentPage--;
-            loadPage(currentPage);
-        }
-    });
-
-    document.getElementById('nextBtn').addEventListener('click', () => {
-        currentPage++;
-        loadPage(currentPage);
-    });
-
-    // 진입점(Entry Point): 초기 페이지 로드
-    window.onload = () => loadPage(currentPage);
-</script>
-
+    </script>
 </body>
 </html>
