@@ -3,12 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>함수 비교 (평행이동 및 교점 탐색 모델)</title>
+    <title>함수 비교 (호버 및 교점 정보창 지원)</title>
     <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
     <style>
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f0f2f5; margin: 0; padding: 20px; }
-        .container { max-width: 1300px; margin: 0 auto; background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.08); }
+        .container { max-width: 1450px; margin: 0 auto; background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.08); }
         h1 { color: #212529; text-align: center; font-size: 1.8rem; margin-bottom: 5px; font-weight: 800; }
         
         .status-board { text-align: center; background: #e9ecef; padding: 10px; border-radius: 6px; font-weight: bold; color: #495057; margin-bottom: 20px; transition: all 0.3s; }
@@ -42,8 +42,19 @@
         input:checked + .slider:before { transform: translateX(16px); }
 
         #math-display { background: #f8f9fa; padding: 20px; border-radius: 8px; border: 1px solid #dee2e6; margin-bottom: 20px; font-size: 1.2rem; overflow-x: auto; text-align: center; min-height: 50px; }
+        
+        /* ---------------- [새로운 레이아웃: 그래프와 우측 정보 패널] ---------------- */
+        .workspace { display: flex; gap: 20px; align-items: flex-start; }
+        .graph-wrapper { flex: 1; min-width: 0; }
         #graphPlot { width: 100%; height: 750px; border-radius: 8px; overflow: hidden; border: 1px solid #dee2e6; background-color: white; cursor: crosshair; }
         
+        .info-panel { width: 320px; background: #fff; border: 1px solid #dee2e6; border-radius: 8px; padding: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); position: sticky; top: 20px; max-height: 80vh; overflow-y: auto; flex-shrink: 0; }
+        .info-panel h3 { margin-top: 0; font-size: 1.2rem; border-bottom: 2px solid #212529; padding-bottom: 10px; margin-bottom: 15px; color: #212529; }
+        .info-group { margin-bottom: 20px; }
+        .info-group h4 { margin: 0 0 10px 0; font-size: 1rem; color: #495057; display: flex; align-items: center; gap: 8px; }
+        .coord-item { font-family: 'Courier New', Courier, monospace; font-size: 0.95rem; background: #f8f9fa; padding: 8px 10px; border-radius: 6px; margin-bottom: 6px; border-left: 4px solid #ccc; font-weight: bold; color: #212529; }
+        .empty-msg { font-size: 0.9rem; color: #adb5bd; font-style: italic; }
+
         .scroll-notice { text-align: center; color: #6c757d; font-size: 0.9rem; margin-top: 10px; font-weight: bold; padding-bottom: 50px; }
     </style>
 </head>
@@ -52,7 +63,8 @@
 <div class="container">
     <h1>함수 비교 및 평행이동 모델</h1>
     <div id="statusBoard" class="status-board">
-        💡 그래프 선을 <strong>클릭</strong>하여 선택한 후 바탕을 <strong>드래그</strong>하면 평행이동합니다. (바탕 더블클릭 시 선택 해제)
+        💡 그래프 선을 <strong>클릭</strong>하여 선택한 후 바탕을 <strong>드래그</strong>하면 평행이동합니다. (바탕 더블클릭 시 선택 해제)<br>
+        곡선 위에 마우스를 올리면 <strong>(x, y) 좌표</strong>가 나타납니다.
     </div>
 
     <div class="add-controls">
@@ -66,8 +78,33 @@
 
     <div id="functionsGrid" class="functions-grid"></div>
     <div id="math-display">수식을 불러오는 중입니다...</div>
-    <div id="graphPlot"></div>
-    <div class="scroll-notice">▼ 스크롤을 내리면 캔버스가 Y축 하단으로 무한 확장됩니다 ▼</div>
+    
+    <!-- 메인 워크스페이스 (좌측 그래프, 우측 정보창) -->
+    <div class="workspace">
+        <div class="graph-wrapper">
+            <div id="graphPlot"></div>
+            <div class="scroll-notice">▼ 스크롤을 내리면 캔버스가 Y축 하단으로 무한 확장됩니다 ▼</div>
+        </div>
+        
+        <div class="info-panel">
+            <h3>📍 주요 교점 좌표</h3>
+            
+            <div class="info-group">
+                <h4><span style="color:#212529;">●</span> 함수 간의 교점</h4>
+                <div id="panel-intersections"><div class="empty-msg">계산 중...</div></div>
+            </div>
+
+            <div class="info-group">
+                <h4><span style="color:#fd7e14;">◆</span> X축 교점 (y=0)</h4>
+                <div id="panel-x-axis"><div class="empty-msg">계산 중...</div></div>
+            </div>
+
+            <div class="info-group">
+                <h4><span style="color:#fd7e14;">◆</span> Y축 교점 (x=0)</h4>
+                <div id="panel-y-axis"><div class="empty-msg">계산 중...</div></div>
+            </div>
+        </div>
+    </div>
 </div>
 
 <script>
@@ -89,7 +126,6 @@
         return coeff;
     }
 
-    // 테일러 이항 정리 기반 평행이동 연산
     function shiftPolynomial(coeffs, dx, dy) {
         let n = coeffs.length - 1;
         let newCoeffs = new Array(n + 1).fill(0);
@@ -238,7 +274,40 @@
         return NaN;
     }
 
-    // skipHeavy 파라미터를 추가하여 드래그 중에는 무거운 교점 연산을 건너뜀
+    // 우측 패널 UI 업데이트 함수
+    function updateIntersectionPanel(panelData) {
+        const xDiv = document.getElementById('panel-x-axis');
+        const yDiv = document.getElementById('panel-y-axis');
+        const fDiv = document.getElementById('panel-intersections');
+
+        let xHTML = '', yHTML = '', fHTML = '';
+
+        if (panelData.xInt.length === 0) xHTML = '<div class="empty-msg">교점이 없습니다.</div>';
+        else {
+            panelData.xInt.forEach(p => {
+                xHTML += `<div class="coord-item" style="border-left-color: ${p.color};"><span style="color:${p.color}">${p.name}</span> : (${p.x.toFixed(2)}, 0.00)</div>`;
+            });
+        }
+
+        if (panelData.yInt.length === 0) yHTML = '<div class="empty-msg">교점이 없습니다.</div>';
+        else {
+            panelData.yInt.forEach(p => {
+                yHTML += `<div class="coord-item" style="border-left-color: ${p.color};"><span style="color:${p.color}">${p.name}</span> : (0.00, ${p.y.toFixed(2)})</div>`;
+            });
+        }
+
+        if (panelData.funcInt.length === 0) fHTML = '<div class="empty-msg">두 함수의 교점이 없습니다.</div>';
+        else {
+            panelData.funcInt.forEach(p => {
+                fHTML += `<div class="coord-item"><span style="color:${p.c1}">■</span> <span style="color:${p.c2}">■</span> : (${p.x.toFixed(2)}, ${p.y.toFixed(2)})</div>`;
+            });
+        }
+
+        xDiv.innerHTML = xHTML;
+        yDiv.innerHTML = yHTML;
+        fDiv.innerHTML = fHTML;
+    }
+
     function generateTraces(rangeX, skipHeavy) {
         const spanX = rangeX[1] - rangeX[0];
         const minX = rangeX[0] - spanX; const maxX = rangeX[1] + spanX;
@@ -251,8 +320,10 @@
         
         const yDataCollection = [];
         const axisIntX = [], axisIntY = [], axisIntText = [];
+        
+        // 우측 패널용 데이터 객체
+        const panelData = { yInt: [], xInt: [], funcInt: [] };
 
-        // 1. 함수 곡선 렌더링 및 축(X/Y) 교점 계산
         visibleFunctions.forEach((f, index) => {
             const yVal = [];
             for (let i = 0; i < xVal.length; i++) {
@@ -262,17 +333,20 @@
             }
             yDataCollection.push(yVal);
 
-            // 무거운 연산(교점)은 마우스를 놓았을 때(!skipHeavy)만 수행하여 FPS 방어
+            let typeName = f.type === 'poly' ? '다항함수' : (f.type === 'exp' ? '지수함수' : '로그함수');
+            let fName = `${typeName} ${index + 1}`;
+
             if (!skipHeavy) {
-                // Y축 절편 (x=0)
+                // Y축 절편
                 let y_at_0 = evaluateFunction(f, 0);
                 if (isFinite(y_at_0) && Math.abs(y_at_0) < 1e150) {
                     if (!axisIntX.some(x => Math.abs(x - 0) < 1e-4 && Math.abs(axisIntY[axisIntX.indexOf(x)] - y_at_0) < 1e-4)) {
                         axisIntX.push(0); axisIntY.push(y_at_0); axisIntText.push(`(0.00, ${y_at_0.toFixed(2)})`);
+                        panelData.yInt.push({ name: fName, color: f.color, x: 0, y: y_at_0 });
                     }
                 }
 
-                // X축 절편 (y=0 통과점 사잇값 정리)
+                // X축 절편
                 for (let k = 0; k < xVal.length - 1; k++) {
                     let y1 = yVal[k], y2 = yVal[k+1];
                     if (isNaN(y1) || isNaN(y2)) continue;
@@ -281,21 +355,22 @@
                         let ix = xVal[k] + t * (xVal[k+1] - xVal[k]);
                         if (!axisIntX.some(x => Math.abs(x - ix) < 1e-4 && Math.abs(axisIntY[axisIntX.indexOf(x)] - 0) < 1e-4)) {
                             axisIntX.push(ix); axisIntY.push(0); axisIntText.push(`(${ix.toFixed(2)}, 0.00)`);
+                            panelData.xInt.push({ name: fName, color: f.color, x: ix, y: 0 });
                         }
                     }
                 }
             }
 
-            let typeName = f.type === 'poly' ? '다항함수' : (f.type === 'exp' ? '지수함수' : '로그함수');
             let isSelected = (f.id === selectedFuncId);
             traces.push({ 
-                x: xVal, y: yVal, mode: 'lines', name: `${typeName} ${index + 1}`, 
+                x: xVal, y: yVal, mode: 'lines', name: fName, 
                 line: { color: f.color, width: isSelected ? 7 : 3 },
-                customdata: Array(xVal.length).fill(f.id), hoverinfo: 'name'
+                customdata: Array(xVal.length).fill(f.id), 
+                // [핵심] 마우스를 올렸을 때 정확한 (X, Y) 좌표를 띄움
+                hovertemplate: '(%{x:.2f}, %{y:.2f})<extra>%{name}</extra>'
             });
         });
 
-        // 2. 함수 간의 교점 연산 (선형 보간법)
         if (!skipHeavy) {
             const intersectX = [], intersectY = [], intersectText = [];
             for (let i = 0; i < yDataCollection.length; i++) {
@@ -309,15 +384,18 @@
                             const ix = xVal[k] + t * (xVal[k+1] - xVal[k]), iy = y1[k] + t * (y1[k+1] - y1[k]);
                             if (!intersectX.some(x => Math.abs(x - ix) < (step * 5))) {
                                 intersectX.push(ix); intersectY.push(iy); intersectText.push(`(${ix.toFixed(2)}, ${iy.toFixed(2)})`);
+                                panelData.funcInt.push({ c1: visibleFunctions[i].color, c2: visibleFunctions[j].color, x: ix, y: iy });
                             }
                         }
                     }
                 }
             }
 
-            // 마커 렌더링
             if (axisIntX.length > 0) traces.push({ x: axisIntX, y: axisIntY, mode: 'markers+text', name: '축 교점', marker: { size: 10, color: '#fd7e14', symbol: 'diamond' }, text: axisIntText, textposition: 'bottom right', textfont: { size: 13, weight: 'bold', color: '#fd7e14' }, hoverinfo: 'text' });
             if (intersectX.length > 0) traces.push({ x: intersectX, y: intersectY, mode: 'markers+text', name: '함수 교점', marker: { size: 10, color: '#212529', symbol: 'circle' }, text: intersectText, textposition: 'top left', textfont: { size: 13, weight: 'bold', color: '#212529' }, hoverinfo: 'text' });
+            
+            // 연산된 데이터를 우측 패널 UI에 즉시 반영
+            updateIntersectionPanel(panelData);
         }
 
         if (traces.length === 0) traces.push({ x: [], y: [], name: '활성화 없음' });
@@ -329,7 +407,6 @@
         return Math.abs(range[1] - range[0]) <= 20 ? 0.5 : undefined; 
     }
 
-    // skipHeavy 파라미터를 통해 드래그 중 교점/수식 연산을 패스함
     function updateAll(skipHeavy = false) {
         if (!skipHeavy) renderLatex();
         const graphDiv = document.getElementById('graphPlot');
@@ -349,21 +426,19 @@
     }
 
     function selectGraph(funcId) {
-        selectedFuncId = funcId;
-        renderUI(); updateAll();
+        selectedFuncId = funcId; renderUI(); updateAll();
         const sb = document.getElementById('statusBoard');
         const f = functionsList.find(x => x.id === funcId);
         sb.className = 'status-board active';
-        sb.innerHTML = `✅ <span style="color:${f.color}">선택됨</span> - 그래프를 마우스로 잡고 당겨보세요. (바탕 더블클릭 시 선택 해제)`;
+        sb.innerHTML = `✅ <span style="color:${f.color}">선택됨</span> - 바탕을 <strong>드래그</strong>하면 평행이동합니다. (더블클릭 시 해제)`;
         Plotly.relayout('graphPlot', {dragmode: false});
     }
 
     function deselectGraph() {
-        selectedFuncId = null;
-        renderUI(); updateAll();
+        selectedFuncId = null; renderUI(); updateAll();
         const sb = document.getElementById('statusBoard');
         sb.className = 'status-board';
-        sb.innerHTML = `💡 그래프 선을 <strong>클릭</strong>하여 선택한 후 바탕을 <strong>드래그</strong>하면 평행이동합니다. (바탕 더블클릭 시 선택 해제)`;
+        sb.innerHTML = `💡 그래프 선을 <strong>클릭</strong>하여 선택한 후 바탕을 <strong>드래그</strong>하면 평행이동합니다.<br>곡선 위에 마우스를 올리면 <strong>(x, y) 좌표</strong>가 나타납니다.`;
         Plotly.relayout('graphPlot', {dragmode: 'pan'});
     }
 
@@ -372,17 +447,8 @@
 
         const layout = {
             dragmode: 'pan',
-            xaxis: { 
-                range: [-5, 5], dtick: 0.5, 
-                zeroline: true, zerolinecolor: '#343a40', zerolinewidth: 2, gridcolor: '#e9ecef',
-                showticklabels: true, tickfont: { size: 14, color: '#212529', weight: 'bold' } // X축 눈금 숫자 가시성 강화
-            },
-            yaxis: { 
-                range: [-5, 5], dtick: 0.5, 
-                zeroline: true, zerolinecolor: '#343a40', zerolinewidth: 2, gridcolor: '#e9ecef', 
-                scaleanchor: 'x', scaleratio: 1,
-                showticklabels: true, tickfont: { size: 14, color: '#212529', weight: 'bold' } // Y축 눈금 숫자 가시성 강화
-            },
+            xaxis: { range: [-5, 5], dtick: 0.5, zeroline: true, zerolinecolor: '#343a40', zerolinewidth: 2, gridcolor: '#e9ecef', showticklabels: true, tickfont: { size: 14, color: '#212529', weight: 'bold' } },
+            yaxis: { range: [-5, 5], dtick: 0.5, zeroline: true, zerolinecolor: '#343a40', zerolinewidth: 2, gridcolor: '#e9ecef', scaleanchor: 'x', scaleratio: 1, showticklabels: true, tickfont: { size: 14, color: '#212529', weight: 'bold' } },
             margin: { l: 60, r: 40, t: 30, b: 60 }, hovermode: 'closest'
         };
 
@@ -413,23 +479,15 @@
 
             let dx = currDataX - startDataX; let dy = currDataY - startDataY;
             let targetFunc = functionsList.find(f => f.id === selectedFuncId);
-            if (targetFunc.type === 'poly') {
-                targetFunc.coeffs = shiftPolynomial(startFuncState.coeffs, dx, dy);
-            } else {
-                targetFunc.H = formatNumber(startFuncState.H + dx); targetFunc.K = formatNumber(startFuncState.K + dy);
-            }
+            if (targetFunc.type === 'poly') { targetFunc.coeffs = shiftPolynomial(startFuncState.coeffs, dx, dy); } 
+            else { targetFunc.H = formatNumber(startFuncState.H + dx); targetFunc.K = formatNumber(startFuncState.K + dy); }
 
             syncInputValues(targetFunc); 
-            // 드래그 중에는 무거운 교점 연산과 수식 렌더링을 생략하여 60fps 부드러운 이동 보장
             updateAll(true); 
         });
 
         window.addEventListener('mouseup', function() {
-            if (isDraggingTrace) {
-                isDraggingTrace = false;
-                // 드래그 종료 시 교점 및 수식을 최종 재연산하여 표출
-                updateAll(false); 
-            }
+            if (isDraggingTrace) { isDraggingTrace = false; updateAll(false); }
         });
 
         graphDiv.on('plotly_relayout', function(eventData) {
