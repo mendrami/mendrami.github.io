@@ -4,40 +4,32 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>함수 비교</title>
-    <!-- Plotly (그래프 렌더링) -->
     <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
-    <!-- MathJax (LaTeX 수식 렌더링) -->
     <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
     <style>
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f0f2f5; margin: 0; padding: 20px; }
         .container { max-width: 1300px; margin: 0 auto; background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.08); }
         h1 { color: #212529; text-align: center; font-size: 1.8rem; margin-bottom: 25px; font-weight: 800; }
         
-        /* 컨트롤 패널 상단 (추가 버튼 영역) */
         .add-controls { display: flex; justify-content: center; align-items: center; gap: 10px; margin-bottom: 25px; padding: 15px; background: #e9ecef; border-radius: 8px; }
         .add-controls select { padding: 8px 12px; font-size: 1rem; border-radius: 5px; border: 1px solid #ced4da; }
         .add-controls button { padding: 8px 20px; font-size: 1rem; cursor: pointer; border: none; border-radius: 5px; background-color: #0d6efd; color: white; font-weight: bold; transition: background 0.2s; }
         .add-controls button:hover { background-color: #0b5ed7; }
 
-        /* 함수 리스트 그리드 */
         .functions-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 15px; margin-bottom: 20px; }
         
-        /* 개별 함수 카드 */
         .func-card { background: #fff; border: 1px solid #dee2e6; border-radius: 8px; padding: 15px; box-shadow: 0 2px 5px rgba(0,0,0,0.04); position: relative; transition: border-color 0.2s; border-left: 5px solid #ccc; }
         .func-card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; border-bottom: 1px solid #f1f3f5; padding-bottom: 10px; }
         .func-card-title { font-weight: bold; font-size: 1.1rem; display: flex; align-items: center; gap: 10px; }
         
-        /* 색상 선택기 및 삭제 버튼 */
         input[type="color"] { border: none; width: 30px; height: 30px; border-radius: 4px; cursor: pointer; padding: 0; background: none; }
         .btn-delete { background: #dc3545; color: white; border: none; border-radius: 4px; padding: 4px 8px; cursor: pointer; font-size: 0.85rem; }
         .btn-delete:hover { background: #c82333; }
         
-        /* 입력 폼 */
         .input-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; font-size: 0.95rem; }
         .input-row input[type="number"] { width: 65px; padding: 4px; border: 1px solid #ced4da; border-radius: 4px; text-align: right; }
         .poly-coeffs { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 5px; padding: 10px; background: #f8f9fa; border-radius: 6px; }
         
-        /* 토글 스위치 */
         .switch { position: relative; display: inline-block; width: 36px; height: 20px; }
         .switch input { opacity: 0; width: 0; height: 0; }
         .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #ccc; transition: .4s; border-radius: 20px; }
@@ -45,7 +37,6 @@
         input:checked + .slider { background-color: #0d6efd; }
         input:checked + .slider:before { transform: translateX(16px); }
 
-        /* 수식 및 그래프 영역 */
         #math-display { background: #f8f9fa; padding: 20px; border-radius: 8px; border: 1px solid #dee2e6; margin-bottom: 20px; font-size: 1.2rem; overflow-x: auto; text-align: center; min-height: 50px; }
         #graphPlot { width: 100%; height: 650px; border-radius: 8px; overflow: hidden; border: 1px solid #dee2e6; }
     </style>
@@ -65,41 +56,27 @@
         <button onclick="addFunction()">+ 함수 추가</button>
     </div>
 
-    <!-- 동적으로 함수 카드가 생성될 그리드 -->
     <div id="functionsGrid" class="functions-grid"></div>
-
-    <!-- 수학 공식 렌더링 영역 -->
     <div id="math-display">수식을 불러오는 중입니다...</div>
-
-    <!-- 그래프 렌더링 영역 -->
     <div id="graphPlot"></div>
 </div>
 
 <script>
-    // 상태 관리: 모든 그래프 정보를 담는 배열
     let functionsList = [];
-    
-    // 기본 색상 팔레트 (새 그래프 추가 시 순차 할당)
     const colorPalette = ['#0d6efd', '#dc3545', '#198754', '#fd7e14', '#6610f2', '#20c997', '#e83e8c', '#0dcaf0'];
     let colorIndex = 0;
 
-    // 1. 함수 추가 로직
     function addFunction() {
         const type = document.getElementById('newFuncType').value;
         const newFunc = {
             id: Date.now() + Math.random().toString(36).substr(2, 9),
-            type: type,
-            color: colorPalette[colorIndex % colorPalette.length],
-            visible: true
+            type: type, color: colorPalette[colorIndex % colorPalette.length], visible: true
         };
 
         if (type === 'poly') {
-            newFunc.degree = 2;
-            newFunc.coeffs = [0, 0, 1]; // [a_0, a_1, a_2] (2차항 계수 1)
+            newFunc.degree = 2; newFunc.coeffs = [0, 0, 1];
         } else {
-            newFunc.C = 1;
-            newFunc.base = 2;
-            newFunc.K = 0;
+            newFunc.C = 1; newFunc.base = 2; newFunc.K = 0;
         }
 
         functionsList.push(newFunc);
@@ -109,56 +86,40 @@
         updateAll();
     }
 
-    // 2. 함수 삭제 로직
     function removeFunction(id) {
         functionsList = functionsList.filter(f => f.id !== id);
-        renderUI();
-        updateAll();
+        renderUI(); updateAll();
     }
 
-    // 3. 상태 업데이트 및 동기화 (입력값 변경 시 호출)
     function updateState(id, field, value, index = null) {
         const func = functionsList.find(f => f.id === id);
         if (!func) return;
 
-        if (field === 'visible') {
-            func.visible = value;
-        } else if (field === 'color') {
+        if (field === 'visible') { func.visible = value; } 
+        else if (field === 'color') {
             func.color = value;
             document.getElementById(`card_${id}`).style.borderLeftColor = value;
         } else if (field === 'degree') {
             let newDeg = parseInt(value) || 1;
-            newDeg = Math.max(1, Math.min(newDeg, 10)); // 1~10차 제한
+            newDeg = Math.max(1, Math.min(newDeg, 10));
             func.degree = newDeg;
-            
             const newCoeffs = new Array(newDeg + 1).fill(0);
-            for (let i = 0; i < Math.min(func.coeffs.length, newCoeffs.length); i++) {
-                newCoeffs[i] = func.coeffs[i];
-            }
-            if (newCoeffs[newDeg] === 0) newCoeffs[newDeg] = 1; // 최고차항 0 방지
+            for (let i = 0; i < Math.min(func.coeffs.length, newCoeffs.length); i++) newCoeffs[i] = func.coeffs[i];
+            if (newCoeffs[newDeg] === 0) newCoeffs[newDeg] = 1;
             func.coeffs = newCoeffs;
-            
             renderUI();
-        } else if (field === 'coeffs') {
-            func.coeffs[index] = parseFloat(value) || 0;
-        } else { 
-            func[field] = parseFloat(value) || 0;
-        }
+        } else if (field === 'coeffs') { func.coeffs[index] = parseFloat(value) || 0; } 
+        else { func[field] = parseFloat(value) || 0; }
 
         if (field !== 'degree') updateAll();
     }
 
-    // 4. UI 렌더링 (카드 생성)
     function renderUI() {
         const grid = document.getElementById('functionsGrid');
         grid.innerHTML = '';
-
         functionsList.forEach(func => {
             const card = document.createElement('div');
-            card.className = 'func-card';
-            card.id = `card_${func.id}`;
-            card.style.borderLeftColor = func.color;
-
+            card.className = 'func-card'; card.id = `card_${func.id}`; card.style.borderLeftColor = func.color;
             let typeName = func.type === 'poly' ? '다항함수' : (func.type === 'exp' ? '지수함수' : '로그함수');
 
             let innerHTML = `
@@ -168,68 +129,40 @@
                         ${typeName}
                     </div>
                     <div style="display:flex; align-items:center; gap:10px;">
-                        <label class="switch">
-                            <input type="checkbox" ${func.visible ? 'checked' : ''} onchange="updateState('${func.id}', 'visible', this.checked)">
-                            <span class="slider"></span>
-                        </label>
+                        <label class="switch"><input type="checkbox" ${func.visible ? 'checked' : ''} onchange="updateState('${func.id}', 'visible', this.checked)"><span class="slider"></span></label>
                         <button class="btn-delete" onclick="removeFunction('${func.id}')">삭제</button>
                     </div>
                 </div>
             `;
-
             if (func.type === 'poly') {
-                innerHTML += `
-                    <div class="input-row">
-                        <label>차수 (N):</label>
-                        <input type="number" min="1" max="10" value="${func.degree}" onchange="updateState('${func.id}', 'degree', this.value)">
-                    </div>
-                    <div style="font-size: 0.9rem; font-weight: bold; margin-top: 15px; color: #495057;">항별 계수(Coefficient) 입력</div>
-                    <div class="poly-coeffs">
-                `;
+                innerHTML += `<div class="input-row"><label>차수 (N):</label><input type="number" min="1" max="10" value="${func.degree}" onchange="updateState('${func.id}', 'degree', this.value)"></div>
+                              <div style="font-size: 0.9rem; font-weight: bold; margin-top: 15px; color: #495057;">항별 계수(Coefficient) 입력</div><div class="poly-coeffs">`;
                 for (let i = func.degree; i >= 0; i--) {
-                    innerHTML += `
-                        <div class="input-row" style="margin:0;">
-                            <label>x<sup>${i}</sup> 계수 :</label>
-                            <input type="number" step="0.5" value="${func.coeffs[i]}" oninput="updateState('${func.id}', 'coeffs', this.value, ${i})">
-                        </div>
-                    `;
+                    innerHTML += `<div class="input-row" style="margin:0;"><label>x<sup>${i}</sup> 계수 :</label><input type="number" step="0.5" value="${func.coeffs[i]}" oninput="updateState('${func.id}', 'coeffs', this.value, ${i})"></div>`;
                 }
                 innerHTML += `</div>`;
             } else {
-                innerHTML += `
-                    <div class="input-row"><label>계수 (C):</label><input type="number" step="0.5" value="${func.C}" oninput="updateState('${func.id}', 'C', this.value)"></div>
-                    <div class="input-row"><label>밑 (a):</label><input type="number" step="0.1" min="0.1" value="${func.base}" oninput="updateState('${func.id}', 'base', this.value)"></div>
-                    <div class="input-row"><label>상수 (K):</label><input type="number" step="1" value="${func.K}" oninput="updateState('${func.id}', 'K', this.value)"></div>
-                `;
+                innerHTML += `<div class="input-row"><label>계수 (C):</label><input type="number" step="0.5" value="${func.C}" oninput="updateState('${func.id}', 'C', this.value)"></div>
+                              <div class="input-row"><label>밑 (a):</label><input type="number" step="0.1" min="0.1" value="${func.base}" oninput="updateState('${func.id}', 'base', this.value)"></div>
+                              <div class="input-row"><label>상수 (K):</label><input type="number" step="1" value="${func.K}" oninput="updateState('${func.id}', 'K', this.value)"></div>`;
             }
-
-            card.innerHTML = innerHTML;
-            grid.appendChild(card);
+            card.innerHTML = innerHTML; grid.appendChild(card);
         });
     }
 
-    // 5. LaTeX 수식 렌더링
     function renderLatex() {
         let tex = '';
-        
         const visibleFunctions = functionsList.filter(f => f.visible);
-
-        if (visibleFunctions.length === 0) {
-            tex = '\\text{추가되거나 활성화된 함수가 없습니다.}';
-        } else {
+        if (visibleFunctions.length === 0) tex = '\\text{추가되거나 활성화된 함수가 없습니다.}';
+        else {
             visibleFunctions.forEach(f => {
                 let eqStr = '';
                 if (f.type === 'poly') {
                     let terms = [];
                     for (let i = f.degree; i >= 0; i--) {
-                        let c = f.coeffs[i];
-                        if (c === 0) continue;
-                        let term = '';
-                        if (c > 0 && terms.length > 0) term += '+ ';
-                        else if (c < 0) term += '- ';
-                        
-                        let absC = Math.abs(c);
-                        if (absC !== 1 || i === 0) term += absC;
+                        let c = f.coeffs[i]; if (c === 0) continue;
+                        let term = (c > 0 && terms.length > 0) ? '+ ' : (c < 0 ? '- ' : '');
+                        let absC = Math.abs(c); if (absC !== 1 || i === 0) term += absC;
                         if (i > 0) { term += 'x'; if (i > 1) term += '^' + i; }
                         terms.push(term);
                     }
@@ -243,62 +176,102 @@
                     eqStr = `${f.C !== 1 ? f.C + ' \\cdot ' : ''}\\log_{${a}}(x)`;
                     if (f.K > 0) eqStr += ` + ${f.K}`; else if (f.K < 0) eqStr += ` - ${Math.abs(f.K)}`;
                 }
-
                 tex += `\\color{${f.color}}{y = ${eqStr}} \\\\ `;
             });
         }
-
         const display = document.getElementById('math-display');
         display.innerHTML = `$$ \\begin{align*} ${tex} \\end{align*} $$`;
-        
-        if (typeof MathJax !== 'undefined' && MathJax.typesetPromise) {
-            MathJax.typesetPromise([display]).catch(err => console.warn('MathJax 렌더링 오류:', err.message));
-        }
+        if (typeof MathJax !== 'undefined' && MathJax.typesetPromise) MathJax.typesetPromise([display]).catch(err => console.warn(err.message));
     }
 
-    // 6. 좌표 평면 데이터 생성기
+    // 6. 데이터 생성기 및 교점(Intersection) 도출 알고리즘
     function generateTraces(rangeX) {
         const spanX = rangeX[1] - rangeX[0];
-        const minX = rangeX[0] - spanX;
-        const maxX = rangeX[1] + spanX;
-        const step = Math.max((maxX - minX) / 2000, 0.001);
+        const minX = rangeX[0] - spanX; const maxX = rangeX[1] + spanX;
+        const step = Math.max((maxX - minX) / 2000, 0.001); // 정밀도를 위한 해상도
+        
         const traces = [];
-
         const visibleFunctions = functionsList.filter(f => f.visible);
+        
+        // 1) 기준이 되는 단일 정의역 X 배열 생성 (교점을 정확히 비교하기 위함)
+        const xVal = [];
+        for (let x = minX; x <= maxX; x += step) xVal.push(x);
 
+        // 2) 각 함수별 Y 배열 계산
+        const yDataCollection = [];
         visibleFunctions.forEach((f, index) => {
-            const xVal = [], yVal = [];
-            
-            if (f.type === 'poly') {
-                for (let x = minX; x <= maxX; x += step) {
-                    xVal.push(x);
-                    let y = 0;
-                    for (let i = 0; i < f.coeffs.length; i++) y += f.coeffs[i] * Math.pow(x, i);
-                    yVal.push(y);
+            const yVal = [];
+            for (let i = 0; i < xVal.length; i++) {
+                let x = xVal[i];
+                let y = NaN;
+                if (f.type === 'poly') {
+                    y = 0; for (let j = 0; j < f.coeffs.length; j++) y += f.coeffs[j] * Math.pow(x, j);
+                } else if (f.type === 'exp') {
+                    let a = Math.max(f.base, 0.001); if (a === 1) a = 1.0001;
+                    y = f.C * Math.pow(a, x) + f.K;
+                } else if (f.type === 'log') {
+                    if (x > 0) { // 로그 정의역 제한
+                        let a = Math.max(f.base, 0.001); if (a === 1) a = 1.0001;
+                        y = f.C * (Math.log(x) / Math.log(a)) + f.K;
+                    }
                 }
-            } else if (f.type === 'exp') {
-                let a = Math.max(f.base, 0.001); if (a === 1) a = 1.0001;
-                for (let x = minX; x <= maxX; x += step) {
-                    xVal.push(x);
-                    yVal.push(f.C * Math.pow(a, x) + f.K);
-                }
-            } else if (f.type === 'log') {
-                let a = Math.max(f.base, 0.001); if (a === 1) a = 1.0001;
-                const logMin = Math.max(0.00001, minX);
-                for (let x = logMin; x <= maxX; x += step) {
-                    xVal.push(x);
-                    yVal.push(f.C * (Math.log(x) / Math.log(a)) + f.K);
-                }
+                yVal.push(y);
             }
+            
+            yDataCollection.push(yVal); // 나중 교점 연산을 위해 저장
 
             let typeName = f.type === 'poly' ? '다항함수' : (f.type === 'exp' ? '지수함수' : '로그함수');
-            traces.push({
-                x: xVal, y: yVal,
-                mode: 'lines',
-                name: `${typeName} ${index + 1}`,
-                line: { color: f.color, width: 3 }
-            });
+            traces.push({ x: xVal, y: yVal, mode: 'lines', name: `${typeName} ${index + 1}`, line: { color: f.color, width: 3 } });
         });
+
+        // 3) 교점(Intersection) 탐색 알고리즘 (사잇값 정리 활용)
+        const intersectX = [], intersectY = [], intersectText = [];
+        
+        // 두 개 이상의 그래프가 활성화된 경우에만 쌍(Pair)을 지어 검사
+        for (let i = 0; i < yDataCollection.length; i++) {
+            for (let j = i + 1; j < yDataCollection.length; j++) {
+                const y1 = yDataCollection[i];
+                const y2 = yDataCollection[j];
+                
+                for (let k = 0; k < xVal.length - 1; k++) {
+                    // NaN (정의역 밖)인 경우는 스킵
+                    if (isNaN(y1[k]) || isNaN(y2[k]) || isNaN(y1[k+1]) || isNaN(y2[k+1])) continue;
+                    
+                    const d1 = y1[k] - y2[k];
+                    const d2 = y1[k+1] - y2[k+1];
+                    
+                    // 두 함수값의 차이가 부호가 바뀌면 그 사이에 교점이 존재함
+                    if (d1 * d2 <= 0 && (d1 !== 0 || d2 !== 0)) {
+                        // 선형 보간법(Linear Interpolation)으로 소수점 아래 정밀 좌표 계산
+                        const t = d1 / (d1 - d2);
+                        const ix = xVal[k] + t * (xVal[k+1] - xVal[k]);
+                        const iy = y1[k] + t * (y1[k+1] - y1[k]);
+                        
+                        // 너무 가까운 중복 교점 필터링 방지
+                        if (!intersectX.some(x => Math.abs(x - ix) < (step * 5))) {
+                            intersectX.push(ix);
+                            intersectY.push(iy);
+                            intersectText.push(`(${ix.toFixed(2)}, ${iy.toFixed(2)})`);
+                        }
+                    }
+                }
+            }
+        }
+
+        // 4) 찾아낸 교점을 시각화하는 마커(Marker) 트레이스 추가
+        if (intersectX.length > 0) {
+            traces.push({
+                x: intersectX,
+                y: intersectY,
+                mode: 'markers+text',
+                name: '교점 (Intersection)',
+                marker: { size: 10, color: '#212529', symbol: 'circle' },
+                text: intersectText,
+                textposition: 'top center',
+                textfont: { size: 13, weight: 'bold', color: '#212529' },
+                hoverinfo: 'text'
+            });
+        }
 
         if (traces.length === 0) traces.push({ x: [], y: [], name: '활성화 없음' });
         return traces;
@@ -309,7 +282,6 @@
         return Math.abs(range[1] - range[0]) <= 20 ? 0.5 : undefined; 
     }
 
-    // 7. 메인 업데이트 로직
     function updateAll() {
         renderLatex();
         const graphDiv = document.getElementById('graphPlot');
@@ -327,12 +299,8 @@
         }
     }
 
-    // 8. 초기화
     function initGraph() {
-        if (typeof Plotly === 'undefined') {
-            setTimeout(initGraph, 100);
-            return;
-        }
+        if (typeof Plotly === 'undefined') { setTimeout(initGraph, 100); return; }
 
         const layout = {
             dragmode: 'pan',
