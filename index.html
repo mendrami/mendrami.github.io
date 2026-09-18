@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>함수 비교 및 자유 입력 모델 (완성판)</title>
+    <title>함수 비교 및 자유 입력 모델 (더블클릭 고정판)</title>
     <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
     <style>
@@ -148,7 +148,7 @@
         };
         if (type === 'poly') { newFunc.degree = 2; newFunc.coeffs = [0, 0, 1]; } 
         else if (type === 'power') { newFunc.C = 1; newFunc.p = 0.5; newFunc.H = 0; newFunc.K = 0; }
-        else if (type === 'custom') { newFunc.expr = 'x^2 - 4'; } // 중학생 친화적 기본 예시
+        else if (type === 'custom') { newFunc.expr = 'x^2 - 4'; } 
         else { newFunc.C = 1; newFunc.base = 2; newFunc.H = 0; newFunc.K = 0; }
 
         functionsList.push(newFunc); colorIndex++;
@@ -306,7 +306,6 @@
 
     function evaluateCustomExpr(expr, x) {
         try {
-            // 중학생용 수학적 기호(^)를 자바스크립트 제곱 연산자(**)로 치환, 2x 형태를 2*x 로 치환
             let cleanExpr = expr.replace(/\^/g, '**').replace(/(\d)([a-zA-Z])/g, '$1*$2');
             let fn = new Function('x', 'Math', 'return ' + cleanExpr);
             let val = fn(x, Math);
@@ -544,12 +543,13 @@
             margin: { l: 60, r: 40, t: 30, b: 60 }, hovermode: 'closest'
         };
 
-        Plotly.newPlot('graphPlot', [], layout, { responsive: true, scrollZoom: true, displayModeBar: false });
+        // [핵심 해결] 플롯리의 고유 더블클릭 초기화(오토스케일) 이벤트를 원천 차단하여 그래프 튕김 방지
+        Plotly.newPlot('graphPlot', [], layout, { responsive: true, scrollZoom: true, displayModeBar: false, doubleClick: false });
         const graphDiv = document.getElementById('graphPlot');
 
         graphDiv.on('plotly_afterplot', floatXAxis);
 
-        // --- 실시간 접선(Tangent) 및 수치 기울기 렌더링 시스템 ---
+        // 실시간 접선(Tangent) 렌더링
         graphDiv.on('plotly_hover', function(data) {
             if (!document.getElementById('tangentModeToggle').checked) return;
             const pt = data.points[0];
@@ -595,7 +595,8 @@
             }
         });
 
-        graphDiv.on('plotly_doubleclick', function() { deselectGraph(); });
+        // [핵심 해결] 튕김 없이 선택 해제만 조용히 실행되도록 브라우저 네이티브 DOM 더블클릭 이벤트로 대체
+        graphDiv.addEventListener('dblclick', function() { deselectGraph(); });
 
         graphDiv.addEventListener('mousedown', function(e) {
             if (!selectedFuncId) return;
@@ -627,7 +628,6 @@
             if (isDraggingTrace) { isDraggingTrace = false; updateAll(false); }
         });
 
-        // 렌더링 무한 루프 방지 로직 (annotations 변경 무시)
         graphDiv.on('plotly_relayout', function(eventData) {
             if (eventData['shapes'] !== undefined || eventData['annotations'] !== undefined || eventData['xaxis.dtick'] || eventData['yaxis.dtick'] || eventData['yaxis.scaleanchor'] || eventData['yaxis.range[0]'] === undefined) return;
             updateAll();
