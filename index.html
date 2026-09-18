@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>함수 비교 (호버 및 교점 정보창 지원)</title>
+    <title>함수 비교 (평행이동 및 교점 탐색 모델)</title>
     <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
     <style>
@@ -43,7 +43,7 @@
 
         #math-display { background: #f8f9fa; padding: 20px; border-radius: 8px; border: 1px solid #dee2e6; margin-bottom: 20px; font-size: 1.2rem; overflow-x: auto; text-align: center; min-height: 50px; }
         
-        /* ---------------- [새로운 레이아웃: 그래프와 우측 정보 패널] ---------------- */
+        /* 새로운 레이아웃: 그래프와 우측 정보 패널 */
         .workspace { display: flex; gap: 20px; align-items: flex-start; }
         .graph-wrapper { flex: 1; min-width: 0; }
         #graphPlot { width: 100%; height: 750px; border-radius: 8px; overflow: hidden; border: 1px solid #dee2e6; background-color: white; cursor: crosshair; }
@@ -79,7 +79,6 @@
     <div id="functionsGrid" class="functions-grid"></div>
     <div id="math-display">수식을 불러오는 중입니다...</div>
     
-    <!-- 메인 워크스페이스 (좌측 그래프, 우측 정보창) -->
     <div class="workspace">
         <div class="graph-wrapper">
             <div id="graphPlot"></div>
@@ -274,7 +273,6 @@
         return NaN;
     }
 
-    // 우측 패널 UI 업데이트 함수
     function updateIntersectionPanel(panelData) {
         const xDiv = document.getElementById('panel-x-axis');
         const yDiv = document.getElementById('panel-y-axis');
@@ -321,7 +319,6 @@
         const yDataCollection = [];
         const axisIntX = [], axisIntY = [], axisIntText = [];
         
-        // 우측 패널용 데이터 객체
         const panelData = { yInt: [], xInt: [], funcInt: [] };
 
         visibleFunctions.forEach((f, index) => {
@@ -337,25 +334,40 @@
             let fName = `${typeName} ${index + 1}`;
 
             if (!skipHeavy) {
-                // Y축 절편
+                // [1] Y축 절편 (x=0)
                 let y_at_0 = evaluateFunction(f, 0);
                 if (isFinite(y_at_0) && Math.abs(y_at_0) < 1e150) {
+                    
+                    // 패널에 무조건 추가
+                    panelData.yInt.push({ name: fName, color: f.color, x: 0, y: y_at_0 });
+                    
+                    // [팩트 체크] 원점(0,0)을 지날 경우 X축 교점 패널에도 명시적으로 추가
+                    if (Math.abs(y_at_0) < 1e-4) {
+                        panelData.xInt.push({ name: fName, color: f.color, x: 0, y: 0 });
+                    }
+
+                    // 시각적 마커 렌더링 (중복 방지 필터)
                     if (!axisIntX.some(x => Math.abs(x - 0) < 1e-4 && Math.abs(axisIntY[axisIntX.indexOf(x)] - y_at_0) < 1e-4)) {
                         axisIntX.push(0); axisIntY.push(y_at_0); axisIntText.push(`(0.00, ${y_at_0.toFixed(2)})`);
-                        panelData.yInt.push({ name: fName, color: f.color, x: 0, y: y_at_0 });
                     }
                 }
 
-                // X축 절편
+                // [2] X축 절편 (y=0) 사잇값 정리
                 for (let k = 0; k < xVal.length - 1; k++) {
                     let y1 = yVal[k], y2 = yVal[k+1];
                     if (isNaN(y1) || isNaN(y2)) continue;
                     if (y1 * y2 <= 0 && (y1 !== 0 || y2 !== 0)) {
                         let t = y1 / (y1 - y2);
                         let ix = xVal[k] + t * (xVal[k+1] - xVal[k]);
+                        
+                        // 패널 추가 (이미 원점 0,0 으로 처리된 경우는 제외)
+                        let alreadyInXInt = panelData.xInt.some(p => p.name === fName && Math.abs(p.x - ix) < 1e-4);
+                        if (!alreadyInXInt) {
+                            panelData.xInt.push({ name: fName, color: f.color, x: ix, y: 0 });
+                        }
+
                         if (!axisIntX.some(x => Math.abs(x - ix) < 1e-4 && Math.abs(axisIntY[axisIntX.indexOf(x)] - 0) < 1e-4)) {
                             axisIntX.push(ix); axisIntY.push(0); axisIntText.push(`(${ix.toFixed(2)}, 0.00)`);
-                            panelData.xInt.push({ name: fName, color: f.color, x: ix, y: 0 });
                         }
                     }
                 }
@@ -366,12 +378,12 @@
                 x: xVal, y: yVal, mode: 'lines', name: fName, 
                 line: { color: f.color, width: isSelected ? 7 : 3 },
                 customdata: Array(xVal.length).fill(f.id), 
-                // [핵심] 마우스를 올렸을 때 정확한 (X, Y) 좌표를 띄움
                 hovertemplate: '(%{x:.2f}, %{y:.2f})<extra>%{name}</extra>'
             });
         });
 
         if (!skipHeavy) {
+            // [3] 함수 간 교점
             const intersectX = [], intersectY = [], intersectText = [];
             for (let i = 0; i < yDataCollection.length; i++) {
                 for (let j = i + 1; j < yDataCollection.length; j++) {
@@ -394,7 +406,6 @@
             if (axisIntX.length > 0) traces.push({ x: axisIntX, y: axisIntY, mode: 'markers+text', name: '축 교점', marker: { size: 10, color: '#fd7e14', symbol: 'diamond' }, text: axisIntText, textposition: 'bottom right', textfont: { size: 13, weight: 'bold', color: '#fd7e14' }, hoverinfo: 'text' });
             if (intersectX.length > 0) traces.push({ x: intersectX, y: intersectY, mode: 'markers+text', name: '함수 교점', marker: { size: 10, color: '#212529', symbol: 'circle' }, text: intersectText, textposition: 'top left', textfont: { size: 13, weight: 'bold', color: '#212529' }, hoverinfo: 'text' });
             
-            // 연산된 데이터를 우측 패널 UI에 즉시 반영
             updateIntersectionPanel(panelData);
         }
 
