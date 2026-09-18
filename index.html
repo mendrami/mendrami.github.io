@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>함수 비교 및 자유 입력 모델</title>
+    <title>함수 비교 및 자유 입력 모델 (UI 교정판)</title>
     <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
     <style>
@@ -33,10 +33,20 @@
         .btn-delete { background: #dc3545; color: white; border: none; border-radius: 4px; padding: 4px 8px; cursor: pointer; font-size: 0.85rem; margin-left: 5px;}
         .btn-delete:hover { background: #c82333; }
         
-        .input-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; font-size: 0.95rem; }
-        .input-row input[type="number"], .input-row input[type="text"] { width: 150px; padding: 4px; border: 1px solid #ced4da; border-radius: 4px; text-align: right; }
-        .poly-coeffs { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 5px; padding: 10px; background: #f8f9fa; border-radius: 6px; }
+        /* --- [핵심 교정 영역: CSS 박스 모델 최적화] --- */
+        .input-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; font-size: 0.9rem; white-space: nowrap; gap: 5px; }
+        /* 기본 입력창 넓이 축소 */
+        .input-row input[type="number"] { width: 75px; padding: 4px; border: 1px solid #ced4da; border-radius: 4px; text-align: right; }
         
+        .poly-coeffs { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 5px; padding: 10px; background: #f8f9fa; border-radius: 6px; }
+        /* 다항함수 내부 계수 입력창의 넓이를 분할 그리드에 맞게 엄밀히 제한 */
+        .poly-coeffs .input-row input[type="number"] { width: 55px; }
+        
+        /* 자유 입력 전용 레이아웃 분리 */
+        .custom-expr-row { display: flex; flex-direction: column; align-items: flex-start; gap: 5px; width: 100%; margin-bottom: 8px; }
+        .custom-expr-row input[type="text"] { width: 100%; padding: 6px; border: 1px solid #ced4da; border-radius: 4px; font-family: monospace; box-sizing: border-box; }
+        /* ----------------------------------------------- */
+
         .switch { position: relative; display: inline-block; width: 36px; height: 20px; }
         .switch input { opacity: 0; width: 0; height: 0; }
         .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #ccc; transition: .4s; border-radius: 20px; }
@@ -74,7 +84,6 @@
             <option value="power">멱함수 (실수 지수)</option>
             <option value="exp">지수함수</option>
             <option value="log">로그함수</option>
-            <!-- 사용자 정의 자유 입력 타입 추가 -->
             <option value="custom">자유 입력 함수 (직접 쓰기)</option>
         </select>
         <button onclick="addFunction()">+ 함수 추가</button>
@@ -144,7 +153,7 @@
         };
         if (type === 'poly') { newFunc.degree = 2; newFunc.coeffs = [0, 0, 1]; } 
         else if (type === 'power') { newFunc.C = 1; newFunc.p = 0.5; newFunc.H = 0; newFunc.K = 0; }
-        else if (type === 'custom') { newFunc.expr = '(2*x + 1) / (x - 1)'; } // 중학생 친화적 기본 예시
+        else if (type === 'custom') { newFunc.expr = '(2*x + 1) / (x - 1)'; } 
         else { newFunc.C = 1; newFunc.base = 2; newFunc.H = 0; newFunc.K = 0; }
 
         functionsList.push(newFunc); colorIndex++;
@@ -235,10 +244,10 @@
                               <div class="input-row"><label>X 이동 (H):</label><input type="number" step="0.5" id="input_${func.id}_H" value="${func.H}" oninput="updateState('${func.id}', 'H', this.value)"></div>
                               <div class="input-row"><label>Y 이동 (K):</label><input type="number" step="0.5" id="input_${func.id}_K" value="${func.K}" oninput="updateState('${func.id}', 'K', this.value)"></div>`;
             } else if (func.type === 'custom') {
-                innerHTML += `<div class="input-row" style="flex-direction:column; align-items:flex-start; gap:5px;">
+                innerHTML += `<div class="custom-expr-row">
                                 <label><strong>함수식 입력:</strong></label>
-                                <input type="text" id="input_${func.id}_expr" value="${func.expr}" style="width:100%; text-align:left; font-family:monospace;" oninput="updateState('${func.id}', 'expr', this.value)" placeholder="예: (2*x+1)/(x-1)">
-                                <span style="font-size:0.75rem; color:#6c757d;">* x를 사용하고, 곱하기는 *, 나누기는 /, 제곱은 ^를 쓰세요.</span>
+                                <input type="text" id="input_${func.id}_expr" value="${func.expr}" oninput="updateState('${func.id}', 'expr', this.value)" placeholder="예: (2*x+1)/(x-1)">
+                                <span style="font-size:0.75rem; color:#6c757d;">* 변수는 x를 사용. 곱하기(*), 나누기(/), 제곱(^) 기호 사용.</span>
                               </div>`;
             } else {
                 innerHTML += `<div class="input-row"><label>계수 (C):</label><input type="number" step="0.5" value="${func.C}" oninput="updateState('${func.id}', 'C', this.value)"></div>
@@ -272,7 +281,7 @@
                     rhs = `${f.C !== 1 ? f.C + ' \\cdot ' : ''}${baseStr}^{${f.p}}`;
                     if (f.K > 0) rhs += ` + ${f.K}`; else if (f.K < 0) rhs += ` - ${Math.abs(f.K)}`;
                 } else if (f.type === 'custom') {
-                    rhs = f.expr; // 사용자가 입력한 문자열 그대로 표시
+                    rhs = f.expr.replace(/\*/g, '\\cdot ');
                 } else if (f.type === 'exp') {
                     let a = Math.max(f.base, 0.001); if (a === 1) a = 1.0001;
                     let exponent = f.H !== 0 ? `(x ${f.H > 0 ? '-' : '+'} ${Math.abs(f.H)})` : `x`;
@@ -285,7 +294,7 @@
                     if (f.K > 0) rhs += ` + ${f.K}`; else if (f.K < 0) rhs += ` - ${Math.abs(f.K)}`;
                 }
                 
-                let eqStr = f.type === 'custom' ? `y = ${rhs}` : `y = ${rhs}`;
+                let eqStr = f.type === 'custom' ? `y = \\text{${f.expr}}` : `y = ${rhs}`;
                 if (f.id === selectedFuncId) tex += `\\color{${f.color}}{\\boxed{${eqStr}}} \\\\ `;
                 else tex += `\\color{${f.color}}{${eqStr}} \\\\ `;
 
@@ -300,15 +309,9 @@
         if (typeof MathJax !== 'undefined' && MathJax.typesetPromise) MathJax.typesetPromise([display]).catch(e => {});
     }
 
-    // 중학생 친화적 자유 입력 파서 및 평가기
     function evaluateCustomExpr(expr, x) {
         try {
-            // 편의를 위해 ^ 를 ** 로 바꾸고, 숫자바로뒤 x인 경우 2x -> 2*x 자동 보정
-            let cleanExpr = expr
-                .replace(/\^/g, '**')
-                .replace(/(\d)([a-zA-Z])/g, '$1*$2');
-            
-            // 안전한 함수 생성 평가 (Math 객체 내장)
+            let cleanExpr = expr.replace(/\^/g, '**').replace(/(\d)([a-zA-Z])/g, '$1*$2');
             let fn = new Function('x', 'Math', 'return ' + cleanExpr);
             let val = fn(x, Math);
             return typeof val === 'number' ? val : NaN;
@@ -485,7 +488,7 @@
     }
 
     function clearTangentShape() {
-        Plotly.relayout('graphPlot', { shapes: [] });
+        Plotly.relayout('graphPlot', { shapes: [], annotations: [] });
     }
 
     function floatXAxis() {
@@ -557,7 +560,7 @@
             if (!funcId || typeof funcId === 'string' && funcId.startsWith('inv_')) return;
 
             const f = functionsList.find(x => x.id === funcId);
-            if (!f || f.type === 'custom') return; // 자유 입력은 미분계수 예외처리
+            if (!f || f.type === 'custom') return; 
 
             let px = pt.x, py = pt.y;
             let m = evaluateDerivative(f, px);
@@ -570,7 +573,16 @@
                 type: 'line', x0: tx0, y0: ty0, x1: tx1, y1: ty1,
                 line: { color: pt.fullData.line.color, width: 2, dash: 'dot' }
             };
-            Plotly.relayout('graphPlot', { shapes: [shape] });
+
+            const annotation = {
+                x: px, y: py,
+                text: `<b>기울기(m) = ${m.toFixed(3)}</b>`,
+                showarrow: true, arrowhead: 2, ax: 0, ay: -40,
+                font: { size: 14, color: '#fff' },
+                bgcolor: '#212529', bordercolor: '#212529', borderpad: 4, borderwidth: 1, border-radius: 4
+            };
+
+            Plotly.relayout('graphPlot', { shapes: [shape], annotations: [annotation] });
         });
 
         graphDiv.on('plotly_unhover', function() {
@@ -631,7 +643,6 @@
     let isResizing = false;
     window.addEventListener('scroll', function() {
         floatXAxis(); 
-        
         if ((window.innerHeight + window.scrollY) >= document.body.offsetHeight - 50) {
             if (isResizing) return;
             isResizing = true;
