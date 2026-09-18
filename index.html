@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>지수함수와 로그함수 무한대 거동 관찰</title>
+    <title>지수함수와 로그함수 (눈금 제어 및 무한대 관찰)</title>
     <!-- 시각화를 위한 Plotly 라이브러리 로드 -->
     <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
     <style>
@@ -66,14 +66,12 @@
             </div>
 
             <div class="instruction">
-                <strong>💡 무한대 관찰 조작 방법 (비율 고정 해제 후):</strong><br>
-                1. <strong>마우스 휠(스크롤):</strong> 전체 화면을 무한히 확대/축소할 수 있습니다.<br>
-                2. <strong>그래프 바탕 드래그:</strong> 화면을 자유롭게 상하좌우로 이동(Pan)합니다.<br>
-                3. <strong>축 숫자(X축 또는 Y축 라벨) 드래그:</strong> 특정 축만 독립적으로 늘리거나 줄일 수 있습니다. (예: X축 숫자만 드래그하여 X값만 무한히 넓게 보기)
+                <strong>💡 눈금 및 조작 팩트 체크:</strong><br>
+                - <strong>최소 눈금 단위: 0.5</strong> (아무리 확대해도 0.5 이하의 눈금은 렌더링되지 않습니다.)<br>
+                - <strong>조작:</strong> 바탕 드래그(시점 이동), 마우스 휠(확대/축소), 축 숫자 드래그(해당 축만 개별 스케일링)
             </div>
         </div>
 
-        <!-- 그래프가 그려질 영역 -->
         <div id="graphPlot"></div>
     </div>
 
@@ -81,31 +79,26 @@
         let currentBase = 2.0;
         let isRatioLocked = true;
 
-        // 그래프 렌더링에 필요한 동적 데이터 생성 함수 (무한대 대응)
+        // 동적 데이터 생성 (렌더링 끊김 방지 최적화)
         function generateData(a, rangeX) {
             const xValuesExp = [], yValuesExp = [];
             const xValuesLog = [], yValuesLog = [];
             const xValuesLine = [], yValuesLine = [];
 
-            // 현재 화면에 보이는 X 범위보다 3배 넓은 범위를 실시간으로 계산하여 끊김 방지
             const spanX = rangeX[1] - rangeX[0];
             const minX = rangeX[0] - spanX;
             const maxX = rangeX[1] + spanX;
             
-            // X축 범위가 엄청나게 커져도 해상도를 유지할 수 있도록 동적 스텝 적용
+            // X 해상도 최적화: 극한으로 갈수록 step 조절
             const step = Math.max((maxX - minX) / 2000, 0.0001); 
 
             for (let x = minX; x <= maxX; x += step) {
-                // 1. 지수함수 y = a^x
-                // 자바스크립트 최대 표현수(약 1.79e308)를 초과하면 Infinity로 자동 처리됨
                 xValuesExp.push(x);
                 yValuesExp.push(Math.pow(a, x));
                 
-                // 2. y = x 항등함수 (대칭축)
                 xValuesLine.push(x);
                 yValuesLine.push(x);
 
-                // 3. 로그함수 y = log_a(x) (x > 0 일 때만 정의됨)
                 if (x > 0) {
                     xValuesLog.push(x);
                     yValuesLog.push(Math.log(x) / Math.log(a));
@@ -119,9 +112,18 @@
             ];
         }
 
-        // 초기 그래프 그리기
+        // 범위(span)에 따라 dtick 값을 동적으로 반환하는 함수 (최소 눈금 0.5)
+        function getDynamicTick(range) {
+            if (!range || range.length < 2) return 0.5;
+            const span = Math.abs(range[1] - range[0]);
+            // 화면의 범위가 20 이하일 때는 0.5 고정 (최소 단위 강제)
+            // 화면의 범위가 넓어지면 브라우저 렌더링 한계를 막기 위해 Plotly 자동 위임 (undefined)
+            return span <= 20 ? 0.5 : undefined; 
+        }
+
         function initGraph() {
             const initialRangeX = [-5, 5];
+            const initialRangeY = [-5, 5];
             const dataSets = generateData(currentBase, initialRangeX);
 
             const traceExp = {
@@ -143,17 +145,21 @@
             };
 
             const layout = {
-                dragmode: 'pan', // 기본 동작을 '이동(Pan)'으로 설정
+                dragmode: 'pan',
                 xaxis: { 
                     range: initialRangeX, 
+                    dtick: 0.5, // 초기 눈금 간격 0.5
                     zeroline: true, zerolinecolor: '#343a40', zerolinewidth: 2,
-                    title: 'x 축 (정의역)'
+                    gridcolor: '#e9ecef',
+                    title: 'x 축'
                 },
                 yaxis: { 
-                    range: [-5, 5], 
+                    range: initialRangeY, 
+                    dtick: 0.5, // 초기 눈금 간격 0.5
                     zeroline: true, zerolinecolor: '#343a40', zerolinewidth: 2,
-                    title: 'y 축 (치역)',
-                    scaleanchor: "x", // 초기 상태: 1:1 비율 고정
+                    gridcolor: '#e9ecef',
+                    title: 'y 축',
+                    scaleanchor: "x",
                     scaleratio: 1 
                 },
                 width: 850, height: 650,
@@ -164,23 +170,50 @@
 
             Plotly.newPlot('graphPlot', [traceExp, traceLog, traceIdentity], layout, {
                 responsive: true,
-                scrollZoom: true, // 휠 줌 허용
-                displayModeBar: true, // 플롯리 기본 도구 모음(우측 상단) 활성화
+                scrollZoom: true,
+                displayModeBar: true,
                 modeBarButtonsToRemove: ['lasso2d', 'select2d']
             });
 
-            // 화면이 이동하거나 줌(Zoom)될 때마다 새로운 범위의 데이터를 실시간으로 수학적 연산하여 끊김 방지
+            // 화면 줌/이동 시 눈금 간격(dtick) 동적 제어 이벤트 리스너
             document.getElementById('graphPlot').on('plotly_relayout', function(eventData) {
                 const graphDiv = document.getElementById('graphPlot');
                 const currentXRange = graphDiv.layout.xaxis.range;
+                const currentYRange = graphDiv.layout.yaxis.range;
                 
-                // 새로운 도메인에 맞춰 함수 데이터를 재계산
+                const update = {};
+                let layoutChanged = false;
+
+                // X, Y 범위에 따른 dtick 재계산 (최소 단위 0.5 보장)
+                const newDtickX = getDynamicTick(currentXRange);
+                const newDtickY = getDynamicTick(currentYRange);
+
+                if (graphDiv.layout.xaxis.dtick !== newDtickX) {
+                    update['xaxis.dtick'] = newDtickX;
+                    layoutChanged = true;
+                }
+                
+                // 비율 고정이 해제되어 있을 때만 Y축 눈금을 독립적으로 계산
+                if (!isRatioLocked && graphDiv.layout.yaxis.dtick !== newDtickY) {
+                    update['yaxis.dtick'] = newDtickY;
+                    layoutChanged = true;
+                } else if (isRatioLocked && graphDiv.layout.yaxis.dtick !== newDtickX) {
+                    // 비율이 고정되어 있다면 Y축 눈금도 X축 눈금에 동기화
+                    update['yaxis.dtick'] = newDtickX;
+                    layoutChanged = true;
+                }
+
+                // 데이터 재연산 및 레이아웃 업데이트
                 const newDataSets = generateData(currentBase, currentXRange);
                 
                 Plotly.restyle('graphPlot', {
                     x: [newDataSets[0].x, newDataSets[1].x, newDataSets[2].x],
                     y: [newDataSets[0].y, newDataSets[1].y, newDataSets[2].y]
                 });
+
+                if (layoutChanged) {
+                    Plotly.relayout('graphPlot', update);
+                }
             });
         }
 
@@ -189,11 +222,10 @@
         // 밑(Base) 슬라이더 이벤트
         document.getElementById('baseSlider').addEventListener('input', function() {
             let a = parseFloat(this.value);
-            if (a === 1.0) { a = 1.1; this.value = 1.1; } // 밑조건 a != 1 방어
+            if (a === 1.0) { a = 1.1; this.value = 1.1; } 
             currentBase = a;
             document.getElementById('baseValue').innerText = a.toFixed(1);
             
-            // 데이터 업데이트
             const graphDiv = document.getElementById('graphPlot');
             const currentXRange = graphDiv.layout.xaxis.range;
             const newDataSets = generateData(currentBase, currentXRange);
@@ -209,18 +241,20 @@
             });
         });
 
-        // 1:1 비율 고정 토글 이벤트 (핵심)
+        // 1:1 비율 고정 토글 이벤트
         document.getElementById('aspectRatioToggle').addEventListener('change', function(e) {
             isRatioLocked = e.target.checked;
+            const graphDiv = document.getElementById('graphPlot');
+            const currentXRange = graphDiv.layout.xaxis.range;
             
             const update = {};
             if (isRatioLocked) {
-                // 비율 고정: 기하학적 선대칭 유지
                 update['yaxis.scaleanchor'] = 'x';
                 update['yaxis.scaleratio'] = 1;
+                update['yaxis.dtick'] = getDynamicTick(currentXRange); // X축과 동기화
             } else {
-                // 비율 고정 해제: 극한 및 점근적 거동 관찰을 위한 독립적 스케일링 허용
                 update['yaxis.scaleanchor'] = false;
+                update['yaxis.dtick'] = getDynamicTick(graphDiv.layout.yaxis.range); // Y축 독립적 계산
             }
             
             Plotly.relayout('graphPlot', update);
