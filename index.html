@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>지수함수와 로그함수 대칭성 시각화 (Zoom 기능 포함)</title>
+    <title>지수함수와 로그함수 대칭성 시각화 (Zoom & Pan)</title>
     <!-- 시각화를 위한 Plotly 라이브러리 로드 -->
     <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
     <style>
@@ -14,7 +14,7 @@
             padding: 20px;
         }
         .container {
-            max-width: 800px;
+            max-width: 850px;
             margin: 0 auto;
             background: white;
             padding: 20px;
@@ -22,18 +22,38 @@
             box-shadow: 0 4px 6px rgba(0,0,0,0.1);
         }
         .control-panel {
-            margin: 20px 0;
+            margin: 15px 0;
             padding: 15px;
             background: #e9ecef;
             border-radius: 8px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
         }
-        .zoom-controls {
-            margin-top: 15px;
+        .button-group {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            justify-content: center;
+        }
+        .pan-grid {
+            display: grid;
+            grid-template-columns: 40px 40px 40px;
+            grid-template-rows: 40px 40px 40px;
+            gap: 5px;
+            margin-left: 20px;
+        }
+        .pan-btn {
+            padding: 0;
+            font-size: 1.2rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
         button {
             padding: 8px 16px;
-            margin: 0 5px;
-            font-size: 1rem;
+            font-size: 0.95rem;
             font-weight: bold;
             cursor: pointer;
             border: none;
@@ -42,14 +62,11 @@
             color: white;
             transition: background-color 0.2s;
         }
-        button:hover {
-            background-color: #0b5ed7;
-        }
-        input[type=range] {
-            width: 60%;
-            cursor: pointer;
-        }
-        h1 { color: #343a40; font-size: 1.5rem; }
+        button:hover { background-color: #0b5ed7; }
+        .btn-secondary { background-color: #6c757d; }
+        .btn-secondary:hover { background-color: #5c636a; }
+        input[type=range] { width: 300px; cursor: pointer; }
+        h1 { color: #343a40; font-size: 1.5rem; margin-bottom: 5px; }
         .math-text { font-family: 'Courier New', Courier, monospace; font-weight: bold; }
     </style>
 </head>
@@ -59,91 +76,121 @@
         <h1>지수함수와 로그함수 역함수 관계 ($y=x$ 대칭)</h1>
         
         <div class="control-panel">
-            <label for="baseSlider"><strong>밑 (Base) <span class="math-text">a</span> : </strong></label>
-            <span id="baseValue" class="math-text" style="font-size: 1.2rem; color: #d63384;">2.0</span><br><br>
-            <input type="range" id="baseSlider" min="0.1" max="5.0" step="0.1" value="2.0">
-            <p style="font-size: 0.9rem; color: #6c757d;">(슬라이더를 움직여 밑 $a$의 값을 변경해 보세요.)</p>
-            
-            <div class="zoom-controls">
-                <button onclick="zoom(0.5)">+ 줌 인 (확대)</button>
-                <button onclick="zoom(2.0)">- 줌 아웃 (축소)</button>
-                <button onclick="resetZoom()" style="background-color: #6c757d;">초기화</button>
+            <div>
+                <label for="baseSlider"><strong>밑 (Base) <span class="math-text">a</span> : </strong></label>
+                <span id="baseValue" class="math-text" style="font-size: 1.2rem; color: #d63384;">2.0</span><br>
+                <input type="range" id="baseSlider" min="0.1" max="5.0" step="0.1" value="2.0">
             </div>
-            <p style="font-size: 0.85rem; color: #6c757d; margin-top: 10px;">그래프 영역에서 <strong>마우스 휠(스크롤)</strong>을 사용하거나 <strong>드래그</strong>하여 영역을 확대/축소할 수도 있습니다.</p>
+            
+            <div class="button-group">
+                <div>
+                    <strong>확대/축소: </strong>
+                    <button onclick="zoom(0.5)">+ 줌 인</button>
+                    <button onclick="zoom(2.0)">- 줌 아웃</button>
+                    <button class="btn-secondary" onclick="resetView()">초기화</button>
+                </div>
+
+                <div class="pan-grid">
+                    <div></div>
+                    <button class="pan-btn" onclick="pan(0, 1)">▲</button>
+                    <div></div>
+                    <button class="pan-btn" onclick="pan(-1, 0)">◀</button>
+                    <button class="pan-btn btn-secondary" onclick="resetView()">●</button>
+                    <button class="pan-btn" onclick="pan(1, 0)">▶</button>
+                    <div></div>
+                    <button class="pan-btn" onclick="pan(0, -1)">▼</button>
+                    <div></div>
+                </div>
+            </div>
+            <p style="font-size: 0.85rem; color: #6c757d; margin: 0;">
+                💡 <strong>팁:</strong> 그래프 영역을 직접 <strong>클릭 후 드래그</strong>하면 자유롭게 이동할 수 있으며, <strong>마우스 휠</strong>로 확대/축소가 가능합니다.
+            </p>
         </div>
 
         <div id="graphPlot"></div>
     </div>
 
     <script>
-        // 전역 범위(Range) 변수 설정 (초기값 -5 ~ 5)
-        let currentRange = [-5, 5];
+        // X축, Y축 각각의 렌더링 범위 독립적 관리 (Pan 이동 시 독립적 변위 발생 대비)
+        let currentRangeX = [-5, 5];
+        let currentRangeY = [-5, 5];
         let currentBase = 2.0;
 
-        // 초기 그래프 렌더링
         drawGraph();
 
-        // 슬라이더 이벤트 리스너 설정
         document.getElementById('baseSlider').addEventListener('input', function() {
             let a = parseFloat(this.value);
-            if (a === 1.0) {
-                a = 1.1; 
-                this.value = 1.1;
-            }
+            if (a === 1.0) { a = 1.1; this.value = 1.1; }
             currentBase = a;
             document.getElementById('baseValue').innerText = a.toFixed(1);
-            updatePlot(); // 전체를 다시 그리지 않고 데이터만 업데이트
+            updatePlotData();
         });
 
-        // 줌 기능 함수 (배율에 따라 범위 조정)
+        // 줌 함수 (Viewport 스케일 변환)
         function zoom(factor) {
-            const center = (currentRange[0] + currentRange[1]) / 2;
-            const span = (currentRange[1] - currentRange[0]) / 2;
-            
-            currentRange[0] = center - (span * factor);
-            currentRange[1] = center + (span * factor);
+            const centerX = (currentRangeX[0] + currentRangeX[1]) / 2;
+            const spanX = (currentRangeX[1] - currentRangeX[0]) / 2;
+            currentRangeX[0] = centerX - (spanX * factor);
+            currentRangeX[1] = centerX + (spanX * factor);
+
+            const centerY = (currentRangeY[0] + currentRangeY[1]) / 2;
+            const spanY = (currentRangeY[1] - currentRangeY[0]) / 2;
+            currentRangeY[0] = centerY - (spanY * factor);
+            currentRangeY[1] = centerY + (spanY * factor);
             
             updateLayout();
         }
 
-        // 줌 초기화 함수
-        function resetZoom() {
-            currentRange = [-5, 5];
+        // 평행이동(Pan) 함수 (현재 스팬의 15%만큼 이동)
+        function pan(dx, dy) {
+            const spanX = currentRangeX[1] - currentRangeX[0];
+            const spanY = currentRangeY[1] - currentRangeY[0];
+            
+            const moveX = spanX * dx * 0.15;
+            const moveY = spanY * dy * 0.15;
+
+            currentRangeX[0] += moveX;
+            currentRangeX[1] += moveX;
+            currentRangeY[0] += moveY;
+            currentRangeY[1] += moveY;
+
             updateLayout();
         }
 
-        // Plotly 레이아웃(범위)만 업데이트
+        // 뷰 초기화 함수
+        function resetView() {
+            currentRangeX = [-5, 5];
+            currentRangeY = [-5, 5];
+            updateLayout();
+        }
+
+        // Plotly 레이아웃 업데이트 (Range 갱신)
         function updateLayout() {
             const update = {
-                'xaxis.range': currentRange,
-                'yaxis.range': currentRange
+                'xaxis.range': currentRangeX,
+                'yaxis.range': currentRangeY
             };
             Plotly.relayout('graphPlot', update);
         }
 
-        // 데이터 생성 로직 모듈화
-        function generateData(a, range) {
-            const xValuesExp = [];
-            const yValuesExp = [];
-            const xValuesLog = [];
-            const yValuesLog = [];
-            const xValuesLine = [];
-            const yValuesLine = [];
+        // 데이터 생성 로직 (현재 시야각보다 넓은 영역 렌더링을 통해 이동 시 빈 공간 방지)
+        function generateData(a, rangeX, rangeY) {
+            const xValuesExp = [], yValuesExp = [];
+            const xValuesLog = [], yValuesLog = [];
+            const xValuesLine = [], yValuesLine = [];
 
-            // 계산을 위한 충분한 도메인 확보 (화면 밖의 데이터도 일부 생성)
-            const minX = Math.min(-10, range[0] * 2);
-            const maxX = Math.max(10, range[1] * 2);
-            const step = (maxX - minX) / 1000; // 해상도 유지
+            // 렌더링할 데이터 도메인을 현재 화면보다 3배 넓게 잡아 이동(Pan)에 대비
+            const minX = rangeX[0] - (rangeX[1] - rangeX[0]);
+            const maxX = rangeX[1] + (rangeX[1] - rangeX[0]);
+            const step = (maxX - minX) / 1500; 
 
             for (let x = minX; x <= maxX; x += step) {
-                // 지수함수 & 항등함수
                 xValuesExp.push(x);
                 yValuesExp.push(Math.pow(a, x));
                 
                 xValuesLine.push(x);
                 yValuesLine.push(x);
 
-                // 로그함수 (x > 0 조건 필수)
                 if (x > 0) {
                     xValuesLog.push(x);
                     yValuesLog.push(Math.log(x) / Math.log(a));
@@ -157,10 +204,8 @@
             ];
         }
 
-        // 데이터만 갱신 (슬라이더 이동 시)
-        function updatePlot() {
-            const dataSets = generateData(currentBase, currentRange);
-            
+        function updatePlotData() {
+            const dataSets = generateData(currentBase, currentRangeX, currentRangeY);
             const update = {
                 x: [dataSets[0].x, dataSets[1].x, dataSets[2].x],
                 y: [dataSets[0].y, dataSets[1].y, dataSets[2].y],
@@ -170,13 +215,11 @@
                     'y = x (대칭축)'
                 ]
             };
-            
             Plotly.restyle('graphPlot', update);
         }
 
-        // 초기 그래프 생성 함수
         function drawGraph() {
-            const dataSets = generateData(currentBase, currentRange);
+            const dataSets = generateData(currentBase, currentRangeX, currentRangeY);
 
             const traceExp = {
                 x: dataSets[0].x, y: dataSets[0].y,
@@ -197,37 +240,47 @@
             };
 
             const layout = {
+                dragmode: 'pan', // 기본 마우스 동작을 줌(Zoom)에서 평행이동(Pan)으로 변경
                 xaxis: { 
-                    range: currentRange, 
+                    range: currentRangeX, 
                     zeroline: true, zerolinecolor: '#343a40', zerolinewidth: 2,
                     title: 'x 축'
                 },
                 yaxis: { 
-                    range: currentRange, 
+                    range: currentRangeY, 
                     zeroline: true, zerolinecolor: '#343a40', zerolinewidth: 2,
                     title: 'y 축',
-                    scaleanchor: "x", // x:y 비율 1:1 고정 (대칭성 유지)
-                    scaleratio: 1 
+                    scaleanchor: "x", scaleratio: 1 
                 },
-                width: 700,
-                height: 700,
-                margin: { l: 50, r: 50, t: 50, b: 50 },
+                width: 800, height: 600,
+                margin: { l: 50, r: 50, t: 30, b: 50 },
                 legend: { x: 0.05, y: 0.95 },
                 hovermode: 'closest'
             };
 
-            // scrollZoom: true 옵션을 추가하여 마우스 휠 줌을 활성화
             Plotly.newPlot('graphPlot', [traceExp, traceLog, traceIdentity], layout, {
                 responsive: true,
                 scrollZoom: true,
-                displayModeBar: true // 플롯리 기본 도구 모음 표시
+                displayModeBar: false // 사용자 정의 버튼을 제공하므로 기본 도구 모음 숨김
             });
 
-            // 마우스 휠/드래그로 줌을 했을 때 내부 상태(currentRange) 동기화
+            // 마우스 드래그(Pan) 및 휠(Zoom) 이벤트 발생 시 내부 상태 변수(Range) 동기화
             document.getElementById('graphPlot').on('plotly_relayout', function(eventData) {
+                let layoutNeedsUpdate = false;
                 if (eventData['xaxis.range[0]'] !== undefined) {
-                    currentRange[0] = eventData['xaxis.range[0]'];
-                    currentRange[1] = eventData['xaxis.range[1]'];
+                    currentRangeX[0] = eventData['xaxis.range[0]'];
+                    currentRangeX[1] = eventData['xaxis.range[1]'];
+                    layoutNeedsUpdate = true;
+                }
+                if (eventData['yaxis.range[0]'] !== undefined) {
+                    currentRangeY[0] = eventData['yaxis.range[0]'];
+                    currentRangeY[1] = eventData['yaxis.range[1]'];
+                    layoutNeedsUpdate = true;
+                }
+                
+                // 마우스로 크게 이동했을 때 화면 밖에 선이 끊기는 현상을 방지하기 위해 데이터 재계산
+                if (layoutNeedsUpdate) {
+                    updatePlotData(); 
                 }
             });
         }
