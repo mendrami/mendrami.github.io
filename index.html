@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>함수 비교 및 자유 입력 모델 (더블클릭 고정판)</title>
+    <title>함수 비교 및 역함수 미분 렌더링 모델</title>
     <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
     <style>
@@ -543,24 +543,34 @@
             margin: { l: 60, r: 40, t: 30, b: 60 }, hovermode: 'closest'
         };
 
-        // [핵심 해결] 플롯리의 고유 더블클릭 초기화(오토스케일) 이벤트를 원천 차단하여 그래프 튕김 방지
         Plotly.newPlot('graphPlot', [], layout, { responsive: true, scrollZoom: true, displayModeBar: false, doubleClick: false });
         const graphDiv = document.getElementById('graphPlot');
 
         graphDiv.on('plotly_afterplot', floatXAxis);
 
-        // 실시간 접선(Tangent) 렌더링
+        // --- [핵심] 역함수 및 자유 입력 함수의 실시간 접선/기울기 미분 연산 ---
         graphDiv.on('plotly_hover', function(data) {
             if (!document.getElementById('tangentModeToggle').checked) return;
             const pt = data.points[0];
             const funcId = pt.customdata;
-            if (!funcId || typeof funcId === 'string' && funcId.startsWith('inv_')) return;
+            if (!funcId) return;
 
-            const f = functionsList.find(x => x.id === funcId);
-            if (!f) return;
+            let m = 0; let px = pt.x, py = pt.y;
 
-            let px = pt.x, py = pt.y;
-            let m = evaluateDerivative(f, px);
+            if (typeof funcId === 'string' && funcId.startsWith('inv_')) {
+                // 역함수 정리 (Inverse Function Theorem): 역함수의 기울기는 원래 함수 기울기의 역수
+                const origId = funcId.replace('inv_', '');
+                const f = functionsList.find(x => x.id === origId);
+                if (!f) return;
+                const origM = evaluateDerivative(f, py); // 역함수의 x좌표는 원래 함수의 y좌표
+                if (Math.abs(origM) < 1e-8 || isNaN(origM)) return; // 0으로 나누기 방지
+                m = 1 / origM;
+            } else {
+                const f = functionsList.find(x => x.id === funcId);
+                if (!f) return; 
+                m = evaluateDerivative(f, px);
+            }
+
             if (isNaN(m)) return;
 
             const tx0 = px - 10, tx1 = px + 10;
@@ -576,7 +586,7 @@
                 text: `<b>기울기(m) = ${m.toFixed(3)}</b>`,
                 showarrow: true, arrowhead: 2, ax: 0, ay: -40,
                 font: { size: 14, color: '#fff' },
-                bgcolor: '#212529', bordercolor: '#212529', borderpad: 4, borderwidth: 1
+                bgcolor: '#212529', bordercolor: pt.fullData.line.color, borderpad: 4, borderwidth: 2
             };
 
             Plotly.relayout('graphPlot', { shapes: [shape], annotations: [annotation] });
@@ -595,7 +605,6 @@
             }
         });
 
-        // [핵심 해결] 튕김 없이 선택 해제만 조용히 실행되도록 브라우저 네이티브 DOM 더블클릭 이벤트로 대체
         graphDiv.addEventListener('dblclick', function() { deselectGraph(); });
 
         graphDiv.addEventListener('mousedown', function(e) {
