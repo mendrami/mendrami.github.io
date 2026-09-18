@@ -3,263 +3,279 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>지수함수와 로그함수 (눈금 제어 및 무한대 관찰)</title>
-    <!-- 시각화를 위한 Plotly 라이브러리 로드 -->
+    <title>범용 수학 함수 시각화</title>
+    <!-- 시각화를 위한 Plotly 라이브러리 -->
     <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+    <!-- 수식 렌더링을 위한 MathJax 라이브러리 -->
+    <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
     <style>
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: #f8f9fa;
-            text-align: center;
-            padding: 20px;
-        }
-        .container {
-            max-width: 900px;
-            margin: 0 auto;
-            background: white;
-            padding: 20px;
-            border-radius: 10px;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-        }
-        .control-panel {
-            margin: 15px 0;
-            padding: 20px;
-            background: #e9ecef;
-            border-radius: 8px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 15px;
-        }
-        .toggle-container {
-            background: #fff;
-            padding: 10px 20px;
-            border-radius: 5px;
-            border: 2px solid #0d6efd;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-        }
-        input[type=range] { width: 300px; cursor: pointer; }
-        input[type=checkbox] { transform: scale(1.5); margin-right: 10px; cursor: pointer; }
-        h1 { color: #343a40; font-size: 1.5rem; margin-bottom: 5px; }
-        .math-text { font-family: 'Courier New', Courier, monospace; font-weight: bold; }
-        .instruction { font-size: 0.9rem; color: #495057; text-align: left; background: #e2e3e5; padding: 10px; border-radius: 5px; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f8f9fa; padding: 20px; }
+        .container { max-width: 950px; margin: 0 auto; background: white; padding: 20px; border-radius: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+        .control-panel { background: #e9ecef; padding: 20px; border-radius: 8px; margin-bottom: 20px; }
+        .func-selector { margin-bottom: 20px; text-align: center; }
+        select { padding: 8px; font-size: 1.1rem; border-radius: 5px; border: 1px solid #ced4da; }
+        .input-group { margin-bottom: 10px; display: flex; align-items: center; justify-content: center; gap: 10px; }
+        input[type="number"] { padding: 6px; width: 80px; border-radius: 4px; border: 1px solid #ced4da; text-align: right; }
+        button { padding: 6px 12px; cursor: pointer; border: none; border-radius: 4px; background-color: #0d6efd; color: white; font-weight: bold; }
+        button:hover { background-color: #0b5ed7; }
+        #math-display { text-align: center; font-size: 1.5rem; margin: 20px 0; min-height: 40px; color: #000; overflow-x: auto; }
+        h1 { color: #343a40; text-align: center; font-size: 1.5rem; }
+        .poly-coeff-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; margin-top: 15px; }
+        .poly-item { background: #fff; padding: 10px; border-radius: 5px; border: 1px solid #dee2e6; text-align: center; }
     </style>
 </head>
 <body>
 
-    <div class="container">
-        <h1>지수/로그함수 점근선 및 극한 시각화</h1>
-        
-        <div class="control-panel">
-            <div>
-                <label for="baseSlider"><strong>밑 (Base) <span class="math-text">a</span> : </strong></label>
-                <span id="baseValue" class="math-text" style="font-size: 1.2rem; color: #d63384;">2.0</span><br>
-                <input type="range" id="baseSlider" min="0.1" max="5.0" step="0.1" value="2.0">
-            </div>
-
-            <div class="toggle-container">
-                <input type="checkbox" id="aspectRatioToggle" checked>
-                <label for="aspectRatioToggle">
-                    <strong>X, Y축 1:1 비율 고정 (대칭성 관찰 모드)</strong><br>
-                    <span style="font-size: 0.85rem; color: #dc3545;">※ 무한히 커지는 극한을 보려면 이 체크를 <strong>해제</strong>하세요!</span>
-                </label>
-            </div>
-
-            <div class="instruction">
-                <strong>💡 눈금 및 조작 팩트 체크:</strong><br>
-                - <strong>최소 눈금 단위: 0.5</strong> (아무리 확대해도 0.5 이하의 눈금은 렌더링되지 않습니다.)<br>
-                - <strong>조작:</strong> 바탕 드래그(시점 이동), 마우스 휠(확대/축소), 축 숫자 드래그(해당 축만 개별 스케일링)
-            </div>
+<div class="container">
+    <h1>연속 함수 및 점근적 거동 시각화 모델</h1>
+    
+    <div class="control-panel">
+        <div class="func-selector">
+            <label for="funcType"><strong>함수 유형 선택 : </strong></label>
+            <select id="funcType" onchange="switchFunctionType()">
+                <option value="poly">N차 다항함수 (Polynomial)</option>
+                <option value="exp">지수함수 (Exponential)</option>
+                <option value="log">로그함수 (Logarithmic)</option>
+            </select>
         </div>
 
-        <div id="graphPlot"></div>
+        <!-- N차 다항함수 컨트롤 -->
+        <div id="polyControls">
+            <div class="input-group">
+                <label>차수 (N) : </label>
+                <input type="number" id="polyDegree" min="1" max="10" value="2" step="1">
+                <button onclick="generatePolyInputs()">계수 입력란 생성</button>
+            </div>
+            <div id="polyInputsContainer" class="poly-coeff-grid"></div>
+        </div>
+
+        <!-- 지수함수 컨트롤 -->
+        <div id="expControls" style="display: none;">
+            <div class="input-group">
+                <label>계수 (C) : </label><input type="number" id="expC" value="1" step="0.5" oninput="updatePlot()">
+                <label>밑 (a) : </label><input type="number" id="expBase" value="2" min="0.1" step="0.1" oninput="updatePlot()">
+                <label>상수 (K) : </label><input type="number" id="expK" value="0" step="1" oninput="updatePlot()">
+            </div>
+            <p style="text-align:center; font-size: 0.85rem; color:#6c757d;">(조건: 밑 a > 0, a ≠ 1)</p>
+        </div>
+
+        <!-- 로그함수 컨트롤 -->
+        <div id="logControls" style="display: none;">
+            <div class="input-group">
+                <label>계수 (C) : </label><input type="number" id="logC" value="1" step="0.5" oninput="updatePlot()">
+                <label>밑 (a) : </label><input type="number" id="logBase" value="2" min="0.1" step="0.1" oninput="updatePlot()">
+                <label>상수 (K) : </label><input type="number" id="logK" value="0" step="1" oninput="updatePlot()">
+            </div>
+            <p style="text-align:center; font-size: 0.85rem; color:#6c757d;">(조건: 밑 a > 0, a ≠ 1 / 정의역 x > 0)</p>
+        </div>
     </div>
 
-    <script>
-        let currentBase = 2.0;
-        let isRatioLocked = true;
+    <!-- 수학 공식 렌더링 영역 -->
+    <div id="math-display">$$f(x) = x^2$$</div>
 
-        // 동적 데이터 생성 (렌더링 끊김 방지 최적화)
-        function generateData(a, rangeX) {
-            const xValuesExp = [], yValuesExp = [];
-            const xValuesLog = [], yValuesLog = [];
-            const xValuesLine = [], yValuesLine = [];
+    <!-- 그래프 렌더링 영역 -->
+    <div id="graphPlot"></div>
+</div>
 
-            const spanX = rangeX[1] - rangeX[0];
-            const minX = rangeX[0] - spanX;
-            const maxX = rangeX[1] + spanX;
+<script>
+    let currentMode = 'poly';
+    let polyCoeffs = []; // [a_0, a_1, a_2, ..., a_N] (인덱스가 차수)
+
+    function switchFunctionType() {
+        currentMode = document.getElementById('funcType').value;
+        document.getElementById('polyControls').style.display = currentMode === 'poly' ? 'block' : 'none';
+        document.getElementById('expControls').style.display = currentMode === 'exp' ? 'block' : 'none';
+        document.getElementById('logControls').style.display = currentMode === 'log' ? 'block' : 'none';
+        
+        if(currentMode === 'poly' && polyCoeffs.length === 0) {
+            generatePolyInputs();
+        } else {
+            updatePlot();
+        }
+    }
+
+    // N차 다항함수 계수 입력란 동적 생성
+    function generatePolyInputs() {
+        let degree = parseInt(document.getElementById('polyDegree').value);
+        if (degree < 1) degree = 1;
+        if (degree > 10) { degree = 10; document.getElementById('polyDegree').value = 10; } // 클라이언트 메모리 부하 방지용 상한
+        
+        const container = document.getElementById('polyInputsContainer');
+        container.innerHTML = '';
+        polyCoeffs = new Array(degree + 1).fill(0);
+        
+        // 기본값: 최고차항 1, 나머지 0
+        polyCoeffs[degree] = 1;
+
+        for (let i = degree; i >= 0; i--) {
+            const div = document.createElement('div');
+            div.className = 'poly-item';
+            div.innerHTML = `
+                <label>x<sup>${i}</sup> 계수</label><br>
+                <input type="number" id="poly_c_${i}" value="${polyCoeffs[i]}" step="0.5" oninput="syncPolyCoeffs(${i})">
+            `;
+            container.appendChild(div);
+        }
+        updatePlot();
+    }
+
+    // 배열 동기화 및 그래프 업데이트
+    function syncPolyCoeffs(index) {
+        polyCoeffs[index] = parseFloat(document.getElementById(`poly_c_${index}`).value) || 0;
+        updatePlot();
+    }
+
+    // LaTeX 수식 문자열 생성기
+    function generateLatex() {
+        let latex = 'f(x) = ';
+        if (currentMode === 'poly') {
+            let terms = [];
+            for (let i = polyCoeffs.length - 1; i >= 0; i--) {
+                let c = polyCoeffs[i];
+                if (c === 0) continue;
+                
+                let term = '';
+                if (c > 0 && terms.length > 0) term += '+ ';
+                else if (c < 0) term += '- ';
+                
+                let absC = Math.abs(c);
+                if (absC !== 1 || i === 0) term += absC;
+                
+                if (i > 0) {
+                    term += 'x';
+                    if (i > 1) term += '^' + i;
+                }
+                terms.push(term);
+            }
+            latex += terms.length > 0 ? terms.join(' ') : '0';
+        } else if (currentMode === 'exp') {
+            let c = parseFloat(document.getElementById('expC').value) || 1;
+            let a = parseFloat(document.getElementById('expBase').value) || 2;
+            let k = parseFloat(document.getElementById('expK').value) || 0;
             
-            // X 해상도 최적화: 극한으로 갈수록 step 조절
-            const step = Math.max((maxX - minX) / 2000, 0.0001); 
+            latex += `${c !== 1 ? c + ' \\cdot ' : ''}${a}^x`;
+            if (k > 0) latex += ` + ${k}`;
+            else if (k < 0) latex += ` - ${Math.abs(k)}`;
+        } else if (currentMode === 'log') {
+            let c = parseFloat(document.getElementById('logC').value) || 1;
+            let a = parseFloat(document.getElementById('logBase').value) || 2;
+            let k = parseFloat(document.getElementById('logK').value) || 0;
+            
+            latex += `${c !== 1 ? c + ' \\cdot ' : ''}\\log_{${a}}(x)`;
+            if (k > 0) latex += ` + ${k}`;
+            else if (k < 0) latex += ` - ${Math.abs(k)}`;
+        }
+        return `$$ ${latex} $$`;
+    }
+
+    // 수학적 정의역 기반 데이터 생성 엔진
+    function calculateData(rangeX) {
+        const xValues = [], yValues = [];
+        const spanX = rangeX[1] - rangeX[0];
+        const minX = rangeX[0] - spanX; // 여유 도메인
+        const maxX = rangeX[1] + spanX;
+        const step = Math.max((maxX - minX) / 2000, 0.001); // 해상도 최적화
+
+        if (currentMode === 'poly') {
+            for (let x = minX; x <= maxX; x += step) {
+                xValues.push(x);
+                let y = 0;
+                for (let i = 0; i < polyCoeffs.length; i++) {
+                    y += polyCoeffs[i] * Math.pow(x, i);
+                }
+                yValues.push(y);
+            }
+        } else if (currentMode === 'exp') {
+            let c = parseFloat(document.getElementById('expC').value) || 1;
+            let a = Math.max(parseFloat(document.getElementById('expBase').value) || 2, 0.001); // 음수 방어
+            if (a === 1) a = 1.0001; // 특이점 방어
+            let k = parseFloat(document.getElementById('expK').value) || 0;
 
             for (let x = minX; x <= maxX; x += step) {
-                xValuesExp.push(x);
-                yValuesExp.push(Math.pow(a, x));
-                
-                xValuesLine.push(x);
-                yValuesLine.push(x);
-
-                if (x > 0) {
-                    xValuesLog.push(x);
-                    yValuesLog.push(Math.log(x) / Math.log(a));
-                }
+                xValues.push(x);
+                yValues.push(c * Math.pow(a, x) + k);
             }
+        } else if (currentMode === 'log') {
+            let c = parseFloat(document.getElementById('logC').value) || 1;
+            let a = Math.max(parseFloat(document.getElementById('logBase').value) || 2, 0.001);
+            if (a === 1) a = 1.0001;
+            let k = parseFloat(document.getElementById('logK').value) || 0;
 
-            return [
-                { x: xValuesExp, y: yValuesExp },
-                { x: xValuesLog, y: yValuesLog },
-                { x: xValuesLine, y: yValuesLine }
-            ];
+            // 정의역 제한: x > 0 (해석적 연속성을 위해 0.00001 부터 시작)
+            const logMin = Math.max(0.00001, minX);
+            for (let x = logMin; x <= maxX; x += step) {
+                xValues.push(x);
+                yValues.push(c * (Math.log(x) / Math.log(a)) + k); // 밑변환 공식
+            }
         }
+        return { x: xValues, y: yValues };
+    }
 
-        // 범위(span)에 따라 dtick 값을 동적으로 반환하는 함수 (최소 눈금 0.5)
-        function getDynamicTick(range) {
-            if (!range || range.length < 2) return 0.5;
-            const span = Math.abs(range[1] - range[0]);
-            // 화면의 범위가 20 이하일 때는 0.5 고정 (최소 단위 강제)
-            // 화면의 범위가 넓어지면 브라우저 렌더링 한계를 막기 위해 Plotly 자동 위임 (undefined)
-            return span <= 20 ? 0.5 : undefined; 
-        }
+    function getDynamicTick(range) {
+        if (!range || range.length < 2) return 0.5;
+        const span = Math.abs(range[1] - range[0]);
+        // 범위가 20 이하일 경우 수리적 관찰을 위해 0.5 간격 고정
+        return span <= 20 ? 0.5 : undefined; 
+    }
 
-        function initGraph() {
-            const initialRangeX = [-5, 5];
-            const initialRangeY = [-5, 5];
-            const dataSets = generateData(currentBase, initialRangeX);
+    function updatePlot() {
+        // 수식 렌더링 업데이트
+        document.getElementById('math-display').innerHTML = generateLatex();
+        MathJax.typesetPromise();
 
-            const traceExp = {
-                x: dataSets[0].x, y: dataSets[0].y,
-                mode: 'lines', name: `y = ${currentBase.toFixed(1)}<sup>x</sup>`,
-                line: { color: '#0d6efd', width: 3 }
-            };
+        const graphDiv = document.getElementById('graphPlot');
+        if (!graphDiv.layout) return;
 
-            const traceLog = {
-                x: dataSets[1].x, y: dataSets[1].y,
-                mode: 'lines', name: `y = log<sub>${currentBase.toFixed(1)}</sub>(x)`,
-                line: { color: '#dc3545', width: 3 }
-            };
+        const currentXRange = graphDiv.layout.xaxis.range;
+        const currentYRange = graphDiv.layout.yaxis.range;
+        
+        const data = calculateData(currentXRange);
 
-            const traceIdentity = {
-                x: dataSets[2].x, y: dataSets[2].y,
-                mode: 'lines', name: 'y = x (대칭축)',
-                line: { color: '#6c757d', width: 2, dash: 'dash' }
-            };
+        // 눈금 동기화
+        const updateLayout = {
+            'xaxis.dtick': getDynamicTick(currentXRange),
+            'yaxis.dtick': getDynamicTick(currentYRange)
+        };
 
-            const layout = {
-                dragmode: 'pan',
-                xaxis: { 
-                    range: initialRangeX, 
-                    dtick: 0.5, // 초기 눈금 간격 0.5
-                    zeroline: true, zerolinecolor: '#343a40', zerolinewidth: 2,
-                    gridcolor: '#e9ecef',
-                    title: 'x 축'
-                },
-                yaxis: { 
-                    range: initialRangeY, 
-                    dtick: 0.5, // 초기 눈금 간격 0.5
-                    zeroline: true, zerolinecolor: '#343a40', zerolinewidth: 2,
-                    gridcolor: '#e9ecef',
-                    title: 'y 축',
-                    scaleanchor: "x",
-                    scaleratio: 1 
-                },
-                width: 850, height: 650,
-                margin: { l: 60, r: 40, t: 30, b: 60 },
-                legend: { x: 0.05, y: 0.95 },
-                hovermode: 'closest'
-            };
+        Plotly.restyle('graphPlot', { x: [data.x], y: [data.y] });
+        Plotly.relayout('graphPlot', updateLayout);
+    }
 
-            Plotly.newPlot('graphPlot', [traceExp, traceLog, traceIdentity], layout, {
-                responsive: true,
-                scrollZoom: true,
-                displayModeBar: true,
-                modeBarButtonsToRemove: ['lasso2d', 'select2d']
-            });
+    function initGraph() {
+        const initialRangeX = [-5, 5];
+        const initialRangeY = [-5, 5];
 
-            // 화면 줌/이동 시 눈금 간격(dtick) 동적 제어 이벤트 리스너
-            document.getElementById('graphPlot').on('plotly_relayout', function(eventData) {
-                const graphDiv = document.getElementById('graphPlot');
-                const currentXRange = graphDiv.layout.xaxis.range;
-                const currentYRange = graphDiv.layout.yaxis.range;
-                
-                const update = {};
-                let layoutChanged = false;
+        const layout = {
+            dragmode: 'pan',
+            xaxis: { 
+                range: initialRangeX, dtick: 0.5, 
+                zeroline: true, zerolinecolor: '#343a40', zerolinewidth: 2, gridcolor: '#e9ecef', title: 'x 축'
+            },
+            yaxis: { 
+                range: initialRangeY, dtick: 0.5, 
+                zeroline: true, zerolinecolor: '#343a40', zerolinewidth: 2, gridcolor: '#e9ecef', title: 'y 축'
+            },
+            width: 900, height: 600,
+            margin: { l: 60, r: 40, t: 20, b: 60 },
+            hovermode: 'closest'
+        };
 
-                // X, Y 범위에 따른 dtick 재계산 (최소 단위 0.5 보장)
-                const newDtickX = getDynamicTick(currentXRange);
-                const newDtickY = getDynamicTick(currentYRange);
-
-                if (graphDiv.layout.xaxis.dtick !== newDtickX) {
-                    update['xaxis.dtick'] = newDtickX;
-                    layoutChanged = true;
-                }
-                
-                // 비율 고정이 해제되어 있을 때만 Y축 눈금을 독립적으로 계산
-                if (!isRatioLocked && graphDiv.layout.yaxis.dtick !== newDtickY) {
-                    update['yaxis.dtick'] = newDtickY;
-                    layoutChanged = true;
-                } else if (isRatioLocked && graphDiv.layout.yaxis.dtick !== newDtickX) {
-                    // 비율이 고정되어 있다면 Y축 눈금도 X축 눈금에 동기화
-                    update['yaxis.dtick'] = newDtickX;
-                    layoutChanged = true;
-                }
-
-                // 데이터 재연산 및 레이아웃 업데이트
-                const newDataSets = generateData(currentBase, currentXRange);
-                
-                Plotly.restyle('graphPlot', {
-                    x: [newDataSets[0].x, newDataSets[1].x, newDataSets[2].x],
-                    y: [newDataSets[0].y, newDataSets[1].y, newDataSets[2].y]
-                });
-
-                if (layoutChanged) {
-                    Plotly.relayout('graphPlot', update);
-                }
-            });
-        }
-
-        initGraph();
-
-        // 밑(Base) 슬라이더 이벤트
-        document.getElementById('baseSlider').addEventListener('input', function() {
-            let a = parseFloat(this.value);
-            if (a === 1.0) { a = 1.1; this.value = 1.1; } 
-            currentBase = a;
-            document.getElementById('baseValue').innerText = a.toFixed(1);
-            
-            const graphDiv = document.getElementById('graphPlot');
-            const currentXRange = graphDiv.layout.xaxis.range;
-            const newDataSets = generateData(currentBase, currentXRange);
-            
-            Plotly.restyle('graphPlot', {
-                x: [newDataSets[0].x, newDataSets[1].x, newDataSets[2].x],
-                y: [newDataSets[0].y, newDataSets[1].y, newDataSets[2].y],
-                name: [
-                    `y = ${currentBase.toFixed(1)}<sup>x</sup>`,
-                    `y = log<sub>${currentBase.toFixed(1)}</sub>(x)`,
-                    'y = x (대칭축)'
-                ]
-            });
+        // 초기 빈 트레이스로 생성 후 updatePlot이 덮어씀
+        Plotly.newPlot('graphPlot', [{ x: [], y: [], mode: 'lines', line: { color: '#0d6efd', width: 3 } }], layout, {
+            responsive: true, scrollZoom: true, displayModeBar: true, modeBarButtonsToRemove: ['lasso2d', 'select2d']
         });
 
-        // 1:1 비율 고정 토글 이벤트
-        document.getElementById('aspectRatioToggle').addEventListener('change', function(e) {
-            isRatioLocked = e.target.checked;
-            const graphDiv = document.getElementById('graphPlot');
-            const currentXRange = graphDiv.layout.xaxis.range;
-            
-            const update = {};
-            if (isRatioLocked) {
-                update['yaxis.scaleanchor'] = 'x';
-                update['yaxis.scaleratio'] = 1;
-                update['yaxis.dtick'] = getDynamicTick(currentXRange); // X축과 동기화
-            } else {
-                update['yaxis.scaleanchor'] = false;
-                update['yaxis.dtick'] = getDynamicTick(graphDiv.layout.yaxis.range); // Y축 독립적 계산
-            }
-            
-            Plotly.relayout('graphPlot', update);
+        // 스크롤 줌 및 팬 이동 시 데이터 동적 재연산 (끊김 방지)
+        document.getElementById('graphPlot').on('plotly_relayout', function(eventData) {
+            updatePlot();
         });
 
-    </script>
+        generatePolyInputs(); // 초기 함수 세팅
+    }
+
+    // 문서 로드 완료 후 초기화
+    window.onload = initGraph;
+
+</script>
 </body>
 </html>
