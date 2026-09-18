@@ -3,115 +3,110 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>범용 수학 함수 시각화</title>
-    <!-- 시각화를 위한 Plotly 라이브러리 -->
+    <title>다중 수학 함수 동시 비교</title>
     <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
-    <!-- 수식 렌더링을 위한 MathJax 라이브러리 -->
     <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
     <style>
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f8f9fa; padding: 20px; }
-        .container { max-width: 950px; margin: 0 auto; background: white; padding: 20px; border-radius: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
-        .control-panel { background: #e9ecef; padding: 20px; border-radius: 8px; margin-bottom: 20px; }
-        .func-selector { margin-bottom: 20px; text-align: center; }
-        select { padding: 8px; font-size: 1.1rem; border-radius: 5px; border: 1px solid #ced4da; }
-        .input-group { margin-bottom: 10px; display: flex; align-items: center; justify-content: center; gap: 10px; }
-        input[type="number"] { padding: 6px; width: 80px; border-radius: 4px; border: 1px solid #ced4da; text-align: right; }
-        button { padding: 6px 12px; cursor: pointer; border: none; border-radius: 4px; background-color: #0d6efd; color: white; font-weight: bold; }
-        button:hover { background-color: #0b5ed7; }
-        #math-display { text-align: center; font-size: 1.5rem; margin: 20px 0; min-height: 40px; color: #000; overflow-x: auto; }
-        h1 { color: #343a40; text-align: center; font-size: 1.5rem; }
-        .poly-coeff-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; margin-top: 15px; }
-        .poly-item { background: #fff; padding: 10px; border-radius: 5px; border: 1px solid #dee2e6; text-align: center; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f8f9fa; padding: 20px; margin: 0; }
+        .container { max-width: 1200px; margin: 0 auto; background: white; padding: 20px; border-radius: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+        h1 { color: #343a40; text-align: center; font-size: 1.6rem; margin-bottom: 20px; }
+        
+        .control-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; margin-bottom: 20px; }
+        .panel { background: #e9ecef; padding: 15px; border-radius: 8px; border-top: 4px solid #6c757d; }
+        .panel.poly { border-top-color: #0d6efd; } /* Blue */
+        .panel.exp { border-top-color: #dc3545; }  /* Red */
+        .panel.log { border-top-color: #198754; }  /* Green */
+        
+        .panel-header { display: flex; align-items: center; justify-content: space-between; font-weight: bold; margin-bottom: 10px; font-size: 1.1rem; }
+        .switch-container { display: flex; align-items: center; gap: 8px; }
+        input[type="checkbox"].toggle { transform: scale(1.3); cursor: pointer; }
+        
+        .input-row { display: flex; align-items: center; margin-bottom: 8px; gap: 5px; font-size: 0.9rem; flex-wrap: wrap; }
+        input[type="number"] { padding: 4px; width: 60px; border-radius: 4px; border: 1px solid #ced4da; text-align: right; }
+        button.btn-small { padding: 4px 8px; cursor: pointer; border: none; border-radius: 4px; background-color: #343a40; color: white; }
+        
+        .poly-coeffs { display: grid; grid-template-columns: repeat(auto-fit, minmax(100px, 1fr)); gap: 5px; margin-top: 10px; }
+        .poly-item { background: #fff; padding: 5px; border-radius: 4px; border: 1px solid #dee2e6; text-align: center; font-size: 0.85rem; }
+        .poly-item input { width: 50px; }
+
+        #math-display { text-align: center; font-size: 1.3rem; margin: 15px 0; min-height: 80px; padding: 15px; background: #fdfdfe; border-radius: 8px; border: 1px solid #e9ecef; }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <h1>연속 함수 및 점근적 거동 시각화 모델</h1>
+    <h1>다항함수, 지수함수, 로그함수 점근적 증가율 비교 모델</h1>
     
-    <div class="control-panel">
-        <div class="func-selector">
-            <label for="funcType"><strong>함수 유형 선택 : </strong></label>
-            <select id="funcType" onchange="switchFunctionType()">
-                <option value="poly">N차 다항함수 (Polynomial)</option>
-                <option value="exp">지수함수 (Exponential)</option>
-                <option value="log">로그함수 (Logarithmic)</option>
-            </select>
-        </div>
-
-        <!-- N차 다항함수 컨트롤 -->
-        <div id="polyControls">
-            <div class="input-group">
+    <div class="control-grid">
+        <!-- N차 다항함수 패널 -->
+        <div class="panel poly">
+            <div class="panel-header">
+                <span style="color: #0d6efd;">다항함수 P(x)</span>
+                <div class="switch-container">
+                    <input type="checkbox" id="polyActive" class="toggle" checked onchange="updatePlot()"> <label for="polyActive">활성화</label>
+                </div>
+            </div>
+            <div class="input-row">
                 <label>차수 (N) : </label>
                 <input type="number" id="polyDegree" min="1" max="10" value="2" step="1">
-                <button onclick="generatePolyInputs()">계수 입력란 생성</button>
+                <button class="btn-small" onclick="generatePolyInputs()">계수 생성</button>
             </div>
-            <div id="polyInputsContainer" class="poly-coeff-grid"></div>
+            <div id="polyInputsContainer" class="poly-coeffs"></div>
         </div>
 
-        <!-- 지수함수 컨트롤 -->
-        <div id="expControls" style="display: none;">
-            <div class="input-group">
-                <label>계수 (C) : </label><input type="number" id="expC" value="1" step="0.5" oninput="updatePlot()">
-                <label>밑 (a) : </label><input type="number" id="expBase" value="2" min="0.1" step="0.1" oninput="updatePlot()">
-                <label>상수 (K) : </label><input type="number" id="expK" value="0" step="1" oninput="updatePlot()">
+        <!-- 지수함수 패널 -->
+        <div class="panel exp">
+            <div class="panel-header">
+                <span style="color: #dc3545;">지수함수 E(x)</span>
+                <div class="switch-container">
+                    <input type="checkbox" id="expActive" class="toggle" checked onchange="updatePlot()"> <label for="expActive">활성화</label>
+                </div>
             </div>
-            <p style="text-align:center; font-size: 0.85rem; color:#6c757d;">(조건: 밑 a > 0, a ≠ 1)</p>
+            <div class="input-row"><label>계수 (C):</label><input type="number" id="expC" value="1" step="0.5" oninput="updatePlot()"></div>
+            <div class="input-row"><label>밑 (a):</label><input type="number" id="expBase" value="2" min="0.1" step="0.1" oninput="updatePlot()"></div>
+            <div class="input-row"><label>상수 (K):</label><input type="number" id="expK" value="0" step="1" oninput="updatePlot()"></div>
         </div>
 
-        <!-- 로그함수 컨트롤 -->
-        <div id="logControls" style="display: none;">
-            <div class="input-group">
-                <label>계수 (C) : </label><input type="number" id="logC" value="1" step="0.5" oninput="updatePlot()">
-                <label>밑 (a) : </label><input type="number" id="logBase" value="2" min="0.1" step="0.1" oninput="updatePlot()">
-                <label>상수 (K) : </label><input type="number" id="logK" value="0" step="1" oninput="updatePlot()">
+        <!-- 로그함수 패널 -->
+        <div class="panel log">
+            <div class="panel-header">
+                <span style="color: #198754;">로그함수 L(x)</span>
+                <div class="switch-container">
+                    <input type="checkbox" id="logActive" class="toggle" checked onchange="updatePlot()"> <label for="logActive">활성화</label>
+                </div>
             </div>
-            <p style="text-align:center; font-size: 0.85rem; color:#6c757d;">(조건: 밑 a > 0, a ≠ 1 / 정의역 x > 0)</p>
+            <div class="input-row"><label>계수 (C):</label><input type="number" id="logC" value="1" step="0.5" oninput="updatePlot()"></div>
+            <div class="input-row"><label>밑 (a):</label><input type="number" id="logBase" value="2" min="0.1" step="0.1" oninput="updatePlot()"></div>
+            <div class="input-row"><label>상수 (K):</label><input type="number" id="logK" value="0" step="1" oninput="updatePlot()"></div>
         </div>
     </div>
 
     <!-- 수학 공식 렌더링 영역 -->
-    <div id="math-display">$$f(x) = x^2$$</div>
+    <div id="math-display"></div>
 
-    <!-- 그래프 렌더링 영역 -->
+    <!-- 그래프 영역 -->
     <div id="graphPlot"></div>
 </div>
 
 <script>
-    let currentMode = 'poly';
-    let polyCoeffs = []; // [a_0, a_1, a_2, ..., a_N] (인덱스가 차수)
+    let polyCoeffs = [];
 
-    function switchFunctionType() {
-        currentMode = document.getElementById('funcType').value;
-        document.getElementById('polyControls').style.display = currentMode === 'poly' ? 'block' : 'none';
-        document.getElementById('expControls').style.display = currentMode === 'exp' ? 'block' : 'none';
-        document.getElementById('logControls').style.display = currentMode === 'log' ? 'block' : 'none';
-        
-        if(currentMode === 'poly' && polyCoeffs.length === 0) {
-            generatePolyInputs();
-        } else {
-            updatePlot();
-        }
-    }
-
-    // N차 다항함수 계수 입력란 동적 생성
+    // N차 다항함수 입력란 생성
     function generatePolyInputs() {
         let degree = parseInt(document.getElementById('polyDegree').value);
-        if (degree < 1) degree = 1;
-        if (degree > 10) { degree = 10; document.getElementById('polyDegree').value = 10; } // 클라이언트 메모리 부하 방지용 상한
+        if (isNaN(degree) || degree < 1) degree = 1;
+        if (degree > 10) { degree = 10; document.getElementById('polyDegree').value = 10; }
         
         const container = document.getElementById('polyInputsContainer');
         container.innerHTML = '';
         polyCoeffs = new Array(degree + 1).fill(0);
-        
-        // 기본값: 최고차항 1, 나머지 0
-        polyCoeffs[degree] = 1;
+        polyCoeffs[degree] = 1; // 기본값 y = x^n
 
         for (let i = degree; i >= 0; i--) {
             const div = document.createElement('div');
             div.className = 'poly-item';
             div.innerHTML = `
-                <label>x<sup>${i}</sup> 계수</label><br>
+                <label>x<sup>${i}</sup></label><br>
                 <input type="number" id="poly_c_${i}" value="${polyCoeffs[i]}" step="0.5" oninput="syncPolyCoeffs(${i})">
             `;
             container.appendChild(div);
@@ -119,108 +114,125 @@
         updatePlot();
     }
 
-    // 배열 동기화 및 그래프 업데이트
     function syncPolyCoeffs(index) {
         polyCoeffs[index] = parseFloat(document.getElementById(`poly_c_${index}`).value) || 0;
         updatePlot();
     }
 
-    // LaTeX 수식 문자열 생성기
-    function generateLatex() {
-        let latex = 'f(x) = ';
-        if (currentMode === 'poly') {
+    // 활성화된 함수들에 대한 다중 LaTeX 문자열 생성기
+    function generateLatexAll() {
+        let latexLines = [];
+
+        // 다항함수 P(x)
+        if (document.getElementById('polyActive').checked) {
             let terms = [];
             for (let i = polyCoeffs.length - 1; i >= 0; i--) {
                 let c = polyCoeffs[i];
                 if (c === 0) continue;
-                
                 let term = '';
                 if (c > 0 && terms.length > 0) term += '+ ';
                 else if (c < 0) term += '- ';
-                
                 let absC = Math.abs(c);
                 if (absC !== 1 || i === 0) term += absC;
-                
                 if (i > 0) {
                     term += 'x';
                     if (i > 1) term += '^' + i;
                 }
                 terms.push(term);
             }
-            latex += terms.length > 0 ? terms.join(' ') : '0';
-        } else if (currentMode === 'exp') {
+            let polyStr = terms.length > 0 ? terms.join(' ') : '0';
+            latexLines.push(`\\color{#0d6efd}{P(x) = ${polyStr}}`);
+        }
+
+        // 지수함수 E(x)
+        if (document.getElementById('expActive').checked) {
             let c = parseFloat(document.getElementById('expC').value) || 1;
             let a = parseFloat(document.getElementById('expBase').value) || 2;
             let k = parseFloat(document.getElementById('expK').value) || 0;
-            
-            latex += `${c !== 1 ? c + ' \\cdot ' : ''}${a}^x`;
-            if (k > 0) latex += ` + ${k}`;
-            else if (k < 0) latex += ` - ${Math.abs(k)}`;
-        } else if (currentMode === 'log') {
+            let expStr = `${c !== 1 ? c + ' \\cdot ' : ''}${a}^x`;
+            if (k > 0) expStr += ` + ${k}`; else if (k < 0) expStr += ` - ${Math.abs(k)}`;
+            latexLines.push(`\\color{#dc3545}{E(x) = ${expStr}}`);
+        }
+
+        // 로그함수 L(x)
+        if (document.getElementById('logActive').checked) {
             let c = parseFloat(document.getElementById('logC').value) || 1;
             let a = parseFloat(document.getElementById('logBase').value) || 2;
             let k = parseFloat(document.getElementById('logK').value) || 0;
-            
-            latex += `${c !== 1 ? c + ' \\cdot ' : ''}\\log_{${a}}(x)`;
-            if (k > 0) latex += ` + ${k}`;
-            else if (k < 0) latex += ` - ${Math.abs(k)}`;
+            let logStr = `${c !== 1 ? c + ' \\cdot ' : ''}\\log_{${a}}(x)`;
+            if (k > 0) logStr += ` + ${k}`; else if (k < 0) logStr += ` - ${Math.abs(k)}`;
+            latexLines.push(`\\color{#198754}{L(x) = ${logStr}}`);
         }
-        return `$$ ${latex} $$`;
+
+        if (latexLines.length === 0) return '$$\\text{선택된 함수가 없습니다.}$$';
+        
+        // 여러 줄로 렌더링
+        return '$$\\begin{matrix} ' + latexLines.join(' \\\\ ') + ' \\end{matrix}$$';
     }
 
-    // 수학적 정의역 기반 데이터 생성 엔진
-    function calculateData(rangeX) {
-        const xValues = [], yValues = [];
+    // 렌더링 엔진: 선택된 함수들의 좌표 데이터 산출
+    function calculateTraces(rangeX) {
+        const traces = [];
         const spanX = rangeX[1] - rangeX[0];
-        const minX = rangeX[0] - spanX; // 여유 도메인
+        const minX = rangeX[0] - spanX;
         const maxX = rangeX[1] + spanX;
-        const step = Math.max((maxX - minX) / 2000, 0.001); // 해상도 최적화
+        const step = Math.max((maxX - minX) / 2000, 0.001);
 
-        if (currentMode === 'poly') {
+        // 1. 다항함수 데이터 산출
+        if (document.getElementById('polyActive').checked) {
+            const xVal = [], yVal = [];
             for (let x = minX; x <= maxX; x += step) {
-                xValues.push(x);
+                xVal.push(x);
                 let y = 0;
-                for (let i = 0; i < polyCoeffs.length; i++) {
-                    y += polyCoeffs[i] * Math.pow(x, i);
-                }
-                yValues.push(y);
+                for (let i = 0; i < polyCoeffs.length; i++) y += polyCoeffs[i] * Math.pow(x, i);
+                yVal.push(y);
             }
-        } else if (currentMode === 'exp') {
+            traces.push({ x: xVal, y: yVal, mode: 'lines', name: 'P(x) 다항함수', line: { color: '#0d6efd', width: 3 }});
+        }
+
+        // 2. 지수함수 데이터 산출
+        if (document.getElementById('expActive').checked) {
+            const xVal = [], yVal = [];
             let c = parseFloat(document.getElementById('expC').value) || 1;
-            let a = Math.max(parseFloat(document.getElementById('expBase').value) || 2, 0.001); // 음수 방어
-            if (a === 1) a = 1.0001; // 특이점 방어
+            let a = Math.max(parseFloat(document.getElementById('expBase').value) || 2, 0.001);
+            if (a === 1) a = 1.0001; // a=1 특이점 예외 처리
             let k = parseFloat(document.getElementById('expK').value) || 0;
 
             for (let x = minX; x <= maxX; x += step) {
-                xValues.push(x);
-                yValues.push(c * Math.pow(a, x) + k);
+                xVal.push(x);
+                yVal.push(c * Math.pow(a, x) + k);
             }
-        } else if (currentMode === 'log') {
+            traces.push({ x: xVal, y: yVal, mode: 'lines', name: 'E(x) 지수함수', line: { color: '#dc3545', width: 3 }});
+        }
+
+        // 3. 로그함수 데이터 산출
+        if (document.getElementById('logActive').checked) {
+            const xVal = [], yVal = [];
             let c = parseFloat(document.getElementById('logC').value) || 1;
             let a = Math.max(parseFloat(document.getElementById('logBase').value) || 2, 0.001);
             if (a === 1) a = 1.0001;
             let k = parseFloat(document.getElementById('logK').value) || 0;
-
-            // 정의역 제한: x > 0 (해석적 연속성을 위해 0.00001 부터 시작)
-            const logMin = Math.max(0.00001, minX);
+            
+            const logMin = Math.max(0.00001, minX); // 로그함수 정의역 (x > 0)
             for (let x = logMin; x <= maxX; x += step) {
-                xValues.push(x);
-                yValues.push(c * (Math.log(x) / Math.log(a)) + k); // 밑변환 공식
+                xVal.push(x);
+                yVal.push(c * (Math.log(x) / Math.log(a)) + k);
             }
+            traces.push({ x: xVal, y: yVal, mode: 'lines', name: 'L(x) 로그함수', line: { color: '#198754', width: 3 }});
         }
-        return { x: xValues, y: yValues };
+
+        return traces;
     }
 
     function getDynamicTick(range) {
         if (!range || range.length < 2) return 0.5;
         const span = Math.abs(range[1] - range[0]);
-        // 범위가 20 이하일 경우 수리적 관찰을 위해 0.5 간격 고정
-        return span <= 20 ? 0.5 : undefined; 
+        return span <= 20 ? 0.5 : undefined; // 최소 눈금 단위 0.5 유지
     }
 
     function updatePlot() {
-        // 수식 렌더링 업데이트
-        document.getElementById('math-display').innerHTML = generateLatex();
+        // 1. MathJax 수식 업데이트
+        document.getElementById('math-display').innerHTML = generateLatexAll();
         MathJax.typesetPromise();
 
         const graphDiv = document.getElementById('graphPlot');
@@ -229,53 +241,44 @@
         const currentXRange = graphDiv.layout.xaxis.range;
         const currentYRange = graphDiv.layout.yaxis.range;
         
-        const data = calculateData(currentXRange);
+        // 2. 동적 데이터 산출
+        const traces = calculateTraces(currentXRange);
 
-        // 눈금 동기화
+        // 3. 레이아웃 갱신 (눈금 조절)
         const updateLayout = {
             'xaxis.dtick': getDynamicTick(currentXRange),
             'yaxis.dtick': getDynamicTick(currentYRange)
         };
 
-        Plotly.restyle('graphPlot', { x: [data.x], y: [data.y] });
+        // Plotly.react를 사용하여 트레이스 개수 증감에 완벽 대응
+        Plotly.react('graphPlot', traces, graphDiv.layout);
         Plotly.relayout('graphPlot', updateLayout);
     }
 
     function initGraph() {
-        const initialRangeX = [-5, 5];
-        const initialRangeY = [-5, 5];
-
         const layout = {
             dragmode: 'pan',
-            xaxis: { 
-                range: initialRangeX, dtick: 0.5, 
-                zeroline: true, zerolinecolor: '#343a40', zerolinewidth: 2, gridcolor: '#e9ecef', title: 'x 축'
-            },
-            yaxis: { 
-                range: initialRangeY, dtick: 0.5, 
-                zeroline: true, zerolinecolor: '#343a40', zerolinewidth: 2, gridcolor: '#e9ecef', title: 'y 축'
-            },
-            width: 900, height: 600,
+            xaxis: { range: [-5, 5], dtick: 0.5, zeroline: true, zerolinecolor: '#343a40', zerolinewidth: 2, gridcolor: '#e9ecef', title: 'x 축 (정의역)' },
+            yaxis: { range: [-5, 5], dtick: 0.5, zeroline: true, zerolinecolor: '#343a40', zerolinewidth: 2, gridcolor: '#e9ecef', title: 'y 축 (치역)' },
+            width: 1100, height: 700,
             margin: { l: 60, r: 40, t: 20, b: 60 },
-            hovermode: 'closest'
+            hovermode: 'closest',
+            legend: { x: 0.02, y: 0.98, bgcolor: 'rgba(255, 255, 255, 0.8)', bordercolor: '#ced4da', borderwidth: 1 }
         };
 
-        // 초기 빈 트레이스로 생성 후 updatePlot이 덮어씀
-        Plotly.newPlot('graphPlot', [{ x: [], y: [], mode: 'lines', line: { color: '#0d6efd', width: 3 } }], layout, {
+        Plotly.newPlot('graphPlot', [], layout, {
             responsive: true, scrollZoom: true, displayModeBar: true, modeBarButtonsToRemove: ['lasso2d', 'select2d']
         });
 
-        // 스크롤 줌 및 팬 이동 시 데이터 동적 재연산 (끊김 방지)
-        document.getElementById('graphPlot').on('plotly_relayout', function(eventData) {
+        // 그래프 이동/확대 시 데이터 재연산
+        document.getElementById('graphPlot').on('plotly_relayout', function() {
             updatePlot();
         });
 
-        generatePolyInputs(); // 초기 함수 세팅
+        generatePolyInputs(); // 다항식 컨트롤 초기화 및 그래프 첫 렌더링
     }
 
-    // 문서 로드 완료 후 초기화
     window.onload = initGraph;
-
 </script>
 </body>
 </html>
