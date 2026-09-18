@@ -35,7 +35,7 @@
         /* 입력 폼 */
         .input-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; font-size: 0.95rem; }
         .input-row input[type="number"] { width: 65px; padding: 4px; border: 1px solid #ced4da; border-radius: 4px; text-align: right; }
-        .poly-coeffs { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 10px; padding: 10px; background: #f8f9fa; border-radius: 6px; }
+        .poly-coeffs { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 5px; padding: 10px; background: #f8f9fa; border-radius: 6px; }
         
         /* 토글 스위치 */
         .switch { position: relative; display: inline-block; width: 36px; height: 20px; }
@@ -87,7 +87,7 @@
     function addFunction() {
         const type = document.getElementById('newFuncType').value;
         const newFunc = {
-            id: Date.now() + Math.random().toString(36).substr(2, 9), // 고유 ID
+            id: Date.now() + Math.random().toString(36).substr(2, 9),
             type: type,
             color: colorPalette[colorIndex % colorPalette.length],
             visible: true
@@ -96,7 +96,7 @@
         if (type === 'poly') {
             newFunc.degree = 2;
             newFunc.coeffs = [0, 0, 1]; // [a_0, a_1, a_2] (2차항 계수 1)
-        } else { // exp, log 공통 파라미터
+        } else {
             newFunc.C = 1;
             newFunc.base = 2;
             newFunc.K = 0;
@@ -105,8 +105,8 @@
         functionsList.push(newFunc);
         colorIndex++;
         
-        renderUI();  // UI 다시 그리기
-        updateAll(); // 그래프 및 수식 갱신
+        renderUI();
+        updateAll();
     }
 
     // 2. 함수 삭제 로직
@@ -131,7 +131,6 @@
             newDeg = Math.max(1, Math.min(newDeg, 10)); // 1~10차 제한
             func.degree = newDeg;
             
-            // 기존 계수 보존하며 배열 크기 재조정
             const newCoeffs = new Array(newDeg + 1).fill(0);
             for (let i = 0; i < Math.min(func.coeffs.length, newCoeffs.length); i++) {
                 newCoeffs[i] = func.coeffs[i];
@@ -139,21 +138,20 @@
             if (newCoeffs[newDeg] === 0) newCoeffs[newDeg] = 1; // 최고차항 0 방지
             func.coeffs = newCoeffs;
             
-            renderUI(); // 차수가 변경되면 UI 요소(계수 입력칸 수)가 달라지므로 재렌더링
+            renderUI();
         } else if (field === 'coeffs') {
             func.coeffs[index] = parseFloat(value) || 0;
-        } else { // C, base, K
+        } else { 
             func[field] = parseFloat(value) || 0;
         }
 
-        // degree 변경 외의 값 갱신은 그래프만 다시 그림 (입력 포커스 유지)
         if (field !== 'degree') updateAll();
     }
 
     // 4. UI 렌더링 (카드 생성)
     function renderUI() {
         const grid = document.getElementById('functionsGrid');
-        grid.innerHTML = ''; // 초기화
+        grid.innerHTML = '';
 
         functionsList.forEach(func => {
             const card = document.createElement('div');
@@ -179,27 +177,25 @@
                 </div>
             `;
 
-            // 다항함수 입력 폼
             if (func.type === 'poly') {
                 innerHTML += `
                     <div class="input-row">
                         <label>차수 (N):</label>
                         <input type="number" min="1" max="10" value="${func.degree}" onchange="updateState('${func.id}', 'degree', this.value)">
                     </div>
+                    <div style="font-size: 0.9rem; font-weight: bold; margin-top: 15px; color: #495057;">항별 계수(Coefficient) 입력</div>
                     <div class="poly-coeffs">
                 `;
                 for (let i = func.degree; i >= 0; i--) {
                     innerHTML += `
                         <div class="input-row" style="margin:0;">
-                            <label>x<sup>${i}</sup></label>
+                            <label>x<sup>${i}</sup> 계수 :</label>
                             <input type="number" step="0.5" value="${func.coeffs[i]}" oninput="updateState('${func.id}', 'coeffs', this.value, ${i})">
                         </div>
                     `;
                 }
                 innerHTML += `</div>`;
-            } 
-            // 지수/로그함수 입력 폼
-            else {
+            } else {
                 innerHTML += `
                     <div class="input-row"><label>계수 (C):</label><input type="number" step="0.5" value="${func.C}" oninput="updateState('${func.id}', 'C', this.value)"></div>
                     <div class="input-row"><label>밑 (a):</label><input type="number" step="0.1" min="0.1" value="${func.base}" oninput="updateState('${func.id}', 'base', this.value)"></div>
@@ -239,7 +235,7 @@
                     }
                     eqStr = terms.length > 0 ? terms.join(' ') : '0';
                 } else if (f.type === 'exp') {
-                    let a = Math.max(f.base, 0.001); if (a === 1) a = 1.0001; // 방어 로직
+                    let a = Math.max(f.base, 0.001); if (a === 1) a = 1.0001;
                     eqStr = `${f.C !== 1 ? f.C + ' \\cdot ' : ''}${a}^x`;
                     if (f.K > 0) eqStr += ` + ${f.K}`; else if (f.K < 0) eqStr += ` - ${Math.abs(f.K)}`;
                 } else if (f.type === 'log') {
@@ -248,7 +244,6 @@
                     if (f.K > 0) eqStr += ` + ${f.K}`; else if (f.K < 0) eqStr += ` - ${Math.abs(f.K)}`;
                 }
 
-                // [핵심 변경] 사용자가 선택한 색상과 y = 수식 결합 (align 환경 내부)
                 tex += `\\color{${f.color}}{y = ${eqStr}} \\\\ `;
             });
         }
@@ -289,7 +284,7 @@
                 }
             } else if (f.type === 'log') {
                 let a = Math.max(f.base, 0.001); if (a === 1) a = 1.0001;
-                const logMin = Math.max(0.00001, minX); // 로그함수 도메인 제한
+                const logMin = Math.max(0.00001, minX);
                 for (let x = logMin; x <= maxX; x += step) {
                     xVal.push(x);
                     yVal.push(f.C * (Math.log(x) / Math.log(a)) + f.K);
@@ -305,7 +300,6 @@
             });
         });
 
-        // 빈 그래프 오류 방지 더미 데이터
         if (traces.length === 0) traces.push({ x: [], y: [], name: '활성화 없음' });
         return traces;
     }
@@ -315,7 +309,7 @@
         return Math.abs(range[1] - range[0]) <= 20 ? 0.5 : undefined; 
     }
 
-    // 7. 메인 업데이트 로직 (모든 데이터 동기화)
+    // 7. 메인 업데이트 로직
     function updateAll() {
         renderLatex();
         const graphDiv = document.getElementById('graphPlot');
@@ -333,7 +327,7 @@
         }
     }
 
-    // 8. 초기화 (초기 빈 그래프 로드 및 기본 함수 하나 추가)
+    // 8. 초기화
     function initGraph() {
         if (typeof Plotly === 'undefined') {
             setTimeout(initGraph, 100);
@@ -353,11 +347,10 @@
         });
 
         document.getElementById('graphPlot').on('plotly_relayout', function(eventData) {
-            if (eventData['xaxis.dtick'] || eventData['yaxis.dtick']) return; // 무한루프 방지
+            if (eventData['xaxis.dtick'] || eventData['yaxis.dtick']) return;
             updateAll();
         });
 
-        // 최초 실행 시 기본 다항함수 1개 자동 추가
         addFunction(); 
     }
 
