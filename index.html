@@ -3,177 +3,265 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>다중 수학 함수 동시 비교 시각화 (안정화 버전)</title>
-    <!-- 비동기 로딩 지연 방지를 위해 동기식으로 확실히 로드 -->
+    <title>함수 비교</title>
+    <!-- Plotly (그래프 렌더링) -->
     <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+    <!-- MathJax (LaTeX 수식 렌더링) -->
     <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
     <style>
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f8f9fa; margin: 0; padding: 20px; }
-        .container { max-width: 1200px; margin: 0 auto; background: white; padding: 20px; border-radius: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
-        h1 { color: #343a40; text-align: center; font-size: 1.6rem; margin-bottom: 20px; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f0f2f5; margin: 0; padding: 20px; }
+        .container { max-width: 1300px; margin: 0 auto; background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.08); }
+        h1 { color: #212529; text-align: center; font-size: 1.8rem; margin-bottom: 25px; font-weight: 800; }
         
-        .dashboard { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; margin-bottom: 20px; }
-        .panel { padding: 15px; border-radius: 8px; border: 2px solid transparent; transition: all 0.3s ease; }
+        /* 컨트롤 패널 상단 (추가 버튼 영역) */
+        .add-controls { display: flex; justify-content: center; align-items: center; gap: 10px; margin-bottom: 25px; padding: 15px; background: #e9ecef; border-radius: 8px; }
+        .add-controls select { padding: 8px 12px; font-size: 1rem; border-radius: 5px; border: 1px solid #ced4da; }
+        .add-controls button { padding: 8px 20px; font-size: 1rem; cursor: pointer; border: none; border-radius: 5px; background-color: #0d6efd; color: white; font-weight: bold; transition: background 0.2s; }
+        .add-controls button:hover { background-color: #0b5ed7; }
+
+        /* 함수 리스트 그리드 */
+        .functions-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 15px; margin-bottom: 20px; }
         
-        .panel.poly { background-color: #e9f2ff; border-color: #0d6efd; }
-        .panel.exp { background-color: #feefef; border-color: #dc3545; }
-        .panel.log { background-color: #eaf6ec; border-color: #198754; }
+        /* 개별 함수 카드 */
+        .func-card { background: #fff; border: 1px solid #dee2e6; border-radius: 8px; padding: 15px; box-shadow: 0 2px 5px rgba(0,0,0,0.04); position: relative; transition: border-color 0.2s; border-left: 5px solid #ccc; }
+        .func-card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; border-bottom: 1px solid #f1f3f5; padding-bottom: 10px; }
+        .func-card-title { font-weight: bold; font-size: 1.1rem; display: flex; align-items: center; gap: 10px; }
         
-        .panel h2 { font-size: 1.2rem; margin-top: 0; display: flex; align-items: center; gap: 10px; }
-        .panel-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(0,0,0,0.1); padding-bottom: 10px; margin-bottom: 15px; }
+        /* 색상 선택기 및 삭제 버튼 */
+        input[type="color"] { border: none; width: 30px; height: 30px; border-radius: 4px; cursor: pointer; padding: 0; background: none; }
+        .btn-delete { background: #dc3545; color: white; border: none; border-radius: 4px; padding: 4px 8px; cursor: pointer; font-size: 0.85rem; }
+        .btn-delete:hover { background: #c82333; }
         
-        .input-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
-        .input-row label { font-size: 0.95rem; font-weight: bold; }
-        .input-row input[type="number"] { width: 70px; padding: 4px; border: 1px solid #ced4da; border-radius: 4px; text-align: right; }
+        /* 입력 폼 */
+        .input-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; font-size: 0.95rem; }
+        .input-row input[type="number"] { width: 65px; padding: 4px; border: 1px solid #ced4da; border-radius: 4px; text-align: right; }
+        .poly-coeffs { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 10px; padding: 10px; background: #f8f9fa; border-radius: 6px; }
         
-        .poly-coeffs { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; max-height: 150px; overflow-y: auto; padding-right: 5px; }
-        .poly-coeff-item { display: flex; justify-content: space-between; align-items: center; background: rgba(255,255,255,0.7); padding: 4px 8px; border-radius: 4px; }
-        
-        .switch { position: relative; display: inline-block; width: 40px; height: 22px; }
+        /* 토글 스위치 */
+        .switch { position: relative; display: inline-block; width: 36px; height: 20px; }
         .switch input { opacity: 0; width: 0; height: 0; }
-        .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #ccc; transition: .4s; border-radius: 22px; }
-        .slider:before { position: absolute; content: ""; height: 16px; width: 16px; left: 3px; bottom: 3px; background-color: white; transition: .4s; border-radius: 50%; }
-        input:checked + .slider { background-color: #2196F3; }
-        .poly input:checked + .slider { background-color: #0d6efd; }
-        .exp input:checked + .slider { background-color: #dc3545; }
-        .log input:checked + .slider { background-color: #198754; }
-        input:checked + .slider:before { transform: translateX(18px); }
-        
-        #math-display { background: #f8f9fa; padding: 15px; border-radius: 8px; border: 1px solid #dee2e6; margin-bottom: 20px; font-size: 1.2rem; overflow-x: auto; min-height: 50px; }
-        #graphPlot { width: 100%; height: 600px; }
+        .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #ccc; transition: .4s; border-radius: 20px; }
+        .slider:before { position: absolute; content: ""; height: 14px; width: 14px; left: 3px; bottom: 3px; background-color: white; transition: .4s; border-radius: 50%; }
+        input:checked + .slider { background-color: #0d6efd; }
+        input:checked + .slider:before { transform: translateX(16px); }
+
+        /* 수식 및 그래프 영역 */
+        #math-display { background: #f8f9fa; padding: 20px; border-radius: 8px; border: 1px solid #dee2e6; margin-bottom: 20px; font-size: 1.2rem; overflow-x: auto; text-align: center; min-height: 50px; }
+        #graphPlot { width: 100%; height: 650px; border-radius: 8px; overflow: hidden; border: 1px solid #dee2e6; }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <h1>다항함수 vs 지수함수 vs 로그함수 점근성 비교 모델</h1>
+    <h1>함수 비교</h1>
     
-    <div class="dashboard">
-        <div class="panel poly">
-            <div class="panel-header">
-                <h2 style="color: #0d6efd;">다항함수 P(x)</h2>
-                <label class="switch"><input type="checkbox" id="polyToggle" checked onchange="updateAll()"><span class="slider"></span></label>
-            </div>
-            <div class="input-row">
-                <label>차수 (N):</label>
-                <div>
-                    <input type="number" id="polyDegree" min="1" max="10" value="2" step="1">
-                    <button onclick="buildPolyInputs()" style="padding: 4px; cursor: pointer;">적용</button>
-                </div>
-            </div>
-            <div id="polyInputsContainer" class="poly-coeffs"></div>
-        </div>
-
-        <div class="panel exp">
-            <div class="panel-header">
-                <h2 style="color: #dc3545;">지수함수 E(x)</h2>
-                <label class="switch"><input type="checkbox" id="expToggle" checked onchange="updateAll()"><span class="slider"></span></label>
-            </div>
-            <div class="input-row"><label>계수 (C):</label><input type="number" id="expC" value="1" step="0.5" oninput="updateAll()"></div>
-            <div class="input-row"><label>밑 (a):</label><input type="number" id="expBase" value="2" min="0.1" step="0.1" oninput="updateAll()"></div>
-            <div class="input-row"><label>상수 (K):</label><input type="number" id="expK" value="0" step="1" oninput="updateAll()"></div>
-        </div>
-
-        <div class="panel log">
-            <div class="panel-header">
-                <h2 style="color: #198754;">로그함수 L(x)</h2>
-                <label class="switch"><input type="checkbox" id="logToggle" onchange="updateAll()"><span class="slider"></span></label>
-            </div>
-            <div class="input-row"><label>계수 (C):</label><input type="number" id="logC" value="1" step="0.5" oninput="updateAll()"></div>
-            <div class="input-row"><label>밑 (a):</label><input type="number" id="logBase" value="2" min="0.1" step="0.1" oninput="updateAll()"></div>
-            <div class="input-row"><label>상수 (K):</label><input type="number" id="logK" value="0" step="1" oninput="updateAll()"></div>
-        </div>
+    <div class="add-controls">
+        <label for="newFuncType"><strong>함수 유형: </strong></label>
+        <select id="newFuncType">
+            <option value="poly">N차 다항함수</option>
+            <option value="exp">지수함수</option>
+            <option value="log">로그함수</option>
+        </select>
+        <button onclick="addFunction()">+ 함수 추가</button>
     </div>
 
+    <!-- 동적으로 함수 카드가 생성될 그리드 -->
+    <div id="functionsGrid" class="functions-grid"></div>
+
+    <!-- 수학 공식 렌더링 영역 -->
     <div id="math-display">수식을 불러오는 중입니다...</div>
+
+    <!-- 그래프 렌더링 영역 -->
     <div id="graphPlot"></div>
 </div>
 
 <script>
-    let polyCoeffs = [];
+    // 상태 관리: 모든 그래프 정보를 담는 배열
+    let functionsList = [];
+    
+    // 기본 색상 팔레트 (새 그래프 추가 시 순차 할당)
+    const colorPalette = ['#0d6efd', '#dc3545', '#198754', '#fd7e14', '#6610f2', '#20c997', '#e83e8c', '#0dcaf0'];
+    let colorIndex = 0;
 
-    function buildPolyInputs() {
-        let degree = parseInt(document.getElementById('polyDegree').value) || 2;
-        if (degree < 1) degree = 1;
-        if (degree > 10) degree = 10;
-        document.getElementById('polyDegree').value = degree;
-        
-        const container = document.getElementById('polyInputsContainer');
-        container.innerHTML = '';
-        polyCoeffs = new Array(degree + 1).fill(0);
-        polyCoeffs[degree] = 1;
+    // 1. 함수 추가 로직
+    function addFunction() {
+        const type = document.getElementById('newFuncType').value;
+        const newFunc = {
+            id: Date.now() + Math.random().toString(36).substr(2, 9), // 고유 ID
+            type: type,
+            color: colorPalette[colorIndex % colorPalette.length],
+            visible: true
+        };
 
-        for (let i = degree; i >= 0; i--) {
-            const div = document.createElement('div');
-            div.className = 'poly-coeff-item';
-            div.innerHTML = `
-                <label>x<sup>${i}</sup></label>
-                <input type="number" id="poly_c_${i}" value="${polyCoeffs[i]}" step="0.5" oninput="syncPolyCoeff(${i})">
-            `;
-            container.appendChild(div);
+        if (type === 'poly') {
+            newFunc.degree = 2;
+            newFunc.coeffs = [0, 0, 1]; // [a_0, a_1, a_2] (2차항 계수 1)
+        } else { // exp, log 공통 파라미터
+            newFunc.C = 1;
+            newFunc.base = 2;
+            newFunc.K = 0;
         }
+
+        functionsList.push(newFunc);
+        colorIndex++;
+        
+        renderUI();  // UI 다시 그리기
+        updateAll(); // 그래프 및 수식 갱신
+    }
+
+    // 2. 함수 삭제 로직
+    function removeFunction(id) {
+        functionsList = functionsList.filter(f => f.id !== id);
+        renderUI();
         updateAll();
     }
 
-    function syncPolyCoeff(index) {
-        polyCoeffs[index] = parseFloat(document.getElementById(`poly_c_${index}`).value) || 0;
-        updateAll();
+    // 3. 상태 업데이트 및 동기화 (입력값 변경 시 호출)
+    function updateState(id, field, value, index = null) {
+        const func = functionsList.find(f => f.id === id);
+        if (!func) return;
+
+        if (field === 'visible') {
+            func.visible = value;
+        } else if (field === 'color') {
+            func.color = value;
+            document.getElementById(`card_${id}`).style.borderLeftColor = value;
+        } else if (field === 'degree') {
+            let newDeg = parseInt(value) || 1;
+            newDeg = Math.max(1, Math.min(newDeg, 10)); // 1~10차 제한
+            func.degree = newDeg;
+            
+            // 기존 계수 보존하며 배열 크기 재조정
+            const newCoeffs = new Array(newDeg + 1).fill(0);
+            for (let i = 0; i < Math.min(func.coeffs.length, newCoeffs.length); i++) {
+                newCoeffs[i] = func.coeffs[i];
+            }
+            if (newCoeffs[newDeg] === 0) newCoeffs[newDeg] = 1; // 최고차항 0 방지
+            func.coeffs = newCoeffs;
+            
+            renderUI(); // 차수가 변경되면 UI 요소(계수 입력칸 수)가 달라지므로 재렌더링
+        } else if (field === 'coeffs') {
+            func.coeffs[index] = parseFloat(value) || 0;
+        } else { // C, base, K
+            func[field] = parseFloat(value) || 0;
+        }
+
+        // degree 변경 외의 값 갱신은 그래프만 다시 그림 (입력 포커스 유지)
+        if (field !== 'degree') updateAll();
     }
 
+    // 4. UI 렌더링 (카드 생성)
+    function renderUI() {
+        const grid = document.getElementById('functionsGrid');
+        grid.innerHTML = ''; // 초기화
+
+        functionsList.forEach(func => {
+            const card = document.createElement('div');
+            card.className = 'func-card';
+            card.id = `card_${func.id}`;
+            card.style.borderLeftColor = func.color;
+
+            let typeName = func.type === 'poly' ? '다항함수' : (func.type === 'exp' ? '지수함수' : '로그함수');
+
+            let innerHTML = `
+                <div class="func-card-header">
+                    <div class="func-card-title">
+                        <input type="color" value="${func.color}" onchange="updateState('${func.id}', 'color', this.value)">
+                        ${typeName}
+                    </div>
+                    <div style="display:flex; align-items:center; gap:10px;">
+                        <label class="switch">
+                            <input type="checkbox" ${func.visible ? 'checked' : ''} onchange="updateState('${func.id}', 'visible', this.checked)">
+                            <span class="slider"></span>
+                        </label>
+                        <button class="btn-delete" onclick="removeFunction('${func.id}')">삭제</button>
+                    </div>
+                </div>
+            `;
+
+            // 다항함수 입력 폼
+            if (func.type === 'poly') {
+                innerHTML += `
+                    <div class="input-row">
+                        <label>차수 (N):</label>
+                        <input type="number" min="1" max="10" value="${func.degree}" onchange="updateState('${func.id}', 'degree', this.value)">
+                    </div>
+                    <div class="poly-coeffs">
+                `;
+                for (let i = func.degree; i >= 0; i--) {
+                    innerHTML += `
+                        <div class="input-row" style="margin:0;">
+                            <label>x<sup>${i}</sup></label>
+                            <input type="number" step="0.5" value="${func.coeffs[i]}" oninput="updateState('${func.id}', 'coeffs', this.value, ${i})">
+                        </div>
+                    `;
+                }
+                innerHTML += `</div>`;
+            } 
+            // 지수/로그함수 입력 폼
+            else {
+                innerHTML += `
+                    <div class="input-row"><label>계수 (C):</label><input type="number" step="0.5" value="${func.C}" oninput="updateState('${func.id}', 'C', this.value)"></div>
+                    <div class="input-row"><label>밑 (a):</label><input type="number" step="0.1" min="0.1" value="${func.base}" oninput="updateState('${func.id}', 'base', this.value)"></div>
+                    <div class="input-row"><label>상수 (K):</label><input type="number" step="1" value="${func.K}" oninput="updateState('${func.id}', 'K', this.value)"></div>
+                `;
+            }
+
+            card.innerHTML = innerHTML;
+            grid.appendChild(card);
+        });
+    }
+
+    // 5. LaTeX 수식 렌더링
     function renderLatex() {
         let tex = '';
-        const isPoly = document.getElementById('polyToggle').checked;
-        const isExp = document.getElementById('expToggle').checked;
-        const isLog = document.getElementById('logToggle').checked;
-
-        if (isPoly) {
-            let terms = [];
-            for (let i = polyCoeffs.length - 1; i >= 0; i--) {
-                let c = polyCoeffs[i];
-                if (c === 0) continue;
-                let term = '';
-                if (c > 0 && terms.length > 0) term += '+ ';
-                else if (c < 0) term += '- ';
-                let absC = Math.abs(c);
-                if (absC !== 1 || i === 0) term += absC;
-                if (i > 0) { term += 'x'; if (i > 1) term += '^' + i; }
-                terms.push(term);
-            }
-            const polyStr = terms.length > 0 ? terms.join(' ') : '0';
-            tex += `\\color{#0d6efd}{P(x) = ${polyStr}} \\\\ `;
-        }
-
-        if (isExp) {
-            let c = parseFloat(document.getElementById('expC').value) || 1;
-            let a = parseFloat(document.getElementById('expBase').value) || 2;
-            let k = parseFloat(document.getElementById('expK').value) || 0;
-            let expStr = `${c !== 1 ? c + ' \\cdot ' : ''}${a}^x`;
-            if (k > 0) expStr += ` + ${k}`; else if (k < 0) expStr += ` - ${Math.abs(k)}`;
-            tex += `\\color{#dc3545}{E(x) = ${expStr}} \\\\ `;
-        }
-
-        if (isLog) {
-            let c = parseFloat(document.getElementById('logC').value) || 1;
-            let a = parseFloat(document.getElementById('logBase').value) || 2;
-            let k = parseFloat(document.getElementById('logK').value) || 0;
-            let logStr = `${c !== 1 ? c + ' \\cdot ' : ''}\\log_{${a}}(x)`;
-            if (k > 0) logStr += ` + ${k}`; else if (k < 0) logStr += ` - ${Math.abs(k)}`;
-            tex += `\\color{#198754}{L(x) = ${logStr}}`;
-        }
-
-        if (tex === '') tex = '\\text{활성화된 함수가 없습니다.}';
         
+        const visibleFunctions = functionsList.filter(f => f.visible);
+
+        if (visibleFunctions.length === 0) {
+            tex = '\\text{추가되거나 활성화된 함수가 없습니다.}';
+        } else {
+            visibleFunctions.forEach(f => {
+                let eqStr = '';
+                if (f.type === 'poly') {
+                    let terms = [];
+                    for (let i = f.degree; i >= 0; i--) {
+                        let c = f.coeffs[i];
+                        if (c === 0) continue;
+                        let term = '';
+                        if (c > 0 && terms.length > 0) term += '+ ';
+                        else if (c < 0) term += '- ';
+                        
+                        let absC = Math.abs(c);
+                        if (absC !== 1 || i === 0) term += absC;
+                        if (i > 0) { term += 'x'; if (i > 1) term += '^' + i; }
+                        terms.push(term);
+                    }
+                    eqStr = terms.length > 0 ? terms.join(' ') : '0';
+                } else if (f.type === 'exp') {
+                    let a = Math.max(f.base, 0.001); if (a === 1) a = 1.0001; // 방어 로직
+                    eqStr = `${f.C !== 1 ? f.C + ' \\cdot ' : ''}${a}^x`;
+                    if (f.K > 0) eqStr += ` + ${f.K}`; else if (f.K < 0) eqStr += ` - ${Math.abs(f.K)}`;
+                } else if (f.type === 'log') {
+                    let a = Math.max(f.base, 0.001); if (a === 1) a = 1.0001;
+                    eqStr = `${f.C !== 1 ? f.C + ' \\cdot ' : ''}\\log_{${a}}(x)`;
+                    if (f.K > 0) eqStr += ` + ${f.K}`; else if (f.K < 0) eqStr += ` - ${Math.abs(f.K)}`;
+                }
+
+                // [핵심 변경] 사용자가 선택한 색상과 y = 수식 결합 (align 환경 내부)
+                tex += `\\color{${f.color}}{y = ${eqStr}} \\\\ `;
+            });
+        }
+
         const display = document.getElementById('math-display');
         display.innerHTML = `$$ \\begin{align*} ${tex} \\end{align*} $$`;
         
-        // [중요 수정] MathJax 로드 상태를 검증하는 예외 처리 방어 로직 추가
         if (typeof MathJax !== 'undefined' && MathJax.typesetPromise) {
-            MathJax.typesetPromise([display]).catch(function (err) {
-                console.warn('MathJax 렌더링 지연:', err.message);
-            });
+            MathJax.typesetPromise([display]).catch(err => console.warn('MathJax 렌더링 오류:', err.message));
         }
     }
 
+    // 6. 좌표 평면 데이터 생성기
     function generateTraces(rangeX) {
         const spanX = rangeX[1] - rangeX[0];
         const minX = rangeX[0] - spanX;
@@ -181,42 +269,43 @@
         const step = Math.max((maxX - minX) / 2000, 0.001);
         const traces = [];
 
-        if (document.getElementById('polyToggle').checked) {
-            const xVal = [], yVal = [];
-            for (let x = minX; x <= maxX; x += step) {
-                xVal.push(x);
-                let y = 0;
-                for (let i = 0; i < polyCoeffs.length; i++) y += polyCoeffs[i] * Math.pow(x, i);
-                yVal.push(y);
-            }
-            traces.push({ x: xVal, y: yVal, mode: 'lines', name: 'P(x) 다항함수', line: { color: '#0d6efd', width: 3 } });
-        }
+        const visibleFunctions = functionsList.filter(f => f.visible);
 
-        if (document.getElementById('expToggle').checked) {
+        visibleFunctions.forEach((f, index) => {
             const xVal = [], yVal = [];
-            let c = parseFloat(document.getElementById('expC').value) || 1;
-            let a = Math.max(parseFloat(document.getElementById('expBase').value) || 2, 0.001);
-            if (a === 1) a = 1.0001;
-            let k = parseFloat(document.getElementById('expK').value) || 0;
-            for (let x = minX; x <= maxX; x += step) {
-                xVal.push(x); yVal.push(c * Math.pow(a, x) + k);
+            
+            if (f.type === 'poly') {
+                for (let x = minX; x <= maxX; x += step) {
+                    xVal.push(x);
+                    let y = 0;
+                    for (let i = 0; i < f.coeffs.length; i++) y += f.coeffs[i] * Math.pow(x, i);
+                    yVal.push(y);
+                }
+            } else if (f.type === 'exp') {
+                let a = Math.max(f.base, 0.001); if (a === 1) a = 1.0001;
+                for (let x = minX; x <= maxX; x += step) {
+                    xVal.push(x);
+                    yVal.push(f.C * Math.pow(a, x) + f.K);
+                }
+            } else if (f.type === 'log') {
+                let a = Math.max(f.base, 0.001); if (a === 1) a = 1.0001;
+                const logMin = Math.max(0.00001, minX); // 로그함수 도메인 제한
+                for (let x = logMin; x <= maxX; x += step) {
+                    xVal.push(x);
+                    yVal.push(f.C * (Math.log(x) / Math.log(a)) + f.K);
+                }
             }
-            traces.push({ x: xVal, y: yVal, mode: 'lines', name: 'E(x) 지수함수', line: { color: '#dc3545', width: 3 } });
-        }
 
-        if (document.getElementById('logToggle').checked) {
-            const xVal = [], yVal = [];
-            let c = parseFloat(document.getElementById('logC').value) || 1;
-            let a = Math.max(parseFloat(document.getElementById('logBase').value) || 2, 0.001);
-            if (a === 1) a = 1.0001;
-            let k = parseFloat(document.getElementById('logK').value) || 0;
-            const logMin = Math.max(0.00001, minX);
-            for (let x = logMin; x <= maxX; x += step) {
-                xVal.push(x); yVal.push(c * (Math.log(x) / Math.log(a)) + k);
-            }
-            traces.push({ x: xVal, y: yVal, mode: 'lines', name: 'L(x) 로그함수', line: { color: '#198754', width: 3 } });
-        }
+            let typeName = f.type === 'poly' ? '다항함수' : (f.type === 'exp' ? '지수함수' : '로그함수');
+            traces.push({
+                x: xVal, y: yVal,
+                mode: 'lines',
+                name: `${typeName} ${index + 1}`,
+                line: { color: f.color, width: 3 }
+            });
+        });
 
+        // 빈 그래프 오류 방지 더미 데이터
         if (traces.length === 0) traces.push({ x: [], y: [], name: '활성화 없음' });
         return traces;
     }
@@ -226,6 +315,7 @@
         return Math.abs(range[1] - range[0]) <= 20 ? 0.5 : undefined; 
     }
 
+    // 7. 메인 업데이트 로직 (모든 데이터 동기화)
     function updateAll() {
         renderLatex();
         const graphDiv = document.getElementById('graphPlot');
@@ -234,7 +324,6 @@
         const currentXRange = graphDiv.layout.xaxis.range;
         const newTraces = generateTraces(currentXRange);
         
-        // [중요 수정] Plotly 로드 상태 검증 로직 추가
         if (typeof Plotly !== 'undefined') {
             Plotly.react('graphPlot', newTraces, graphDiv.layout);
             Plotly.relayout('graphPlot', {
@@ -244,8 +333,8 @@
         }
     }
 
+    // 8. 초기화 (초기 빈 그래프 로드 및 기본 함수 하나 추가)
     function initGraph() {
-        // Plotly 라이브러리가 로드되지 않았다면 0.1초 후 재시도 (재귀적 Polling)
         if (typeof Plotly === 'undefined') {
             setTimeout(initGraph, 100);
             return;
@@ -255,7 +344,8 @@
             dragmode: 'pan',
             xaxis: { range: [-5, 5], dtick: 0.5, zeroline: true, zerolinecolor: '#343a40', zerolinewidth: 2, gridcolor: '#e9ecef', title: 'x 축' },
             yaxis: { range: [-5, 5], dtick: 0.5, zeroline: true, zerolinecolor: '#343a40', zerolinewidth: 2, gridcolor: '#e9ecef', title: 'y 축' },
-            margin: { l: 60, r: 40, t: 20, b: 60 }, hovermode: 'closest'
+            margin: { l: 60, r: 40, t: 30, b: 60 }, hovermode: 'closest',
+            legend: { x: 0.05, y: 0.95, bgcolor: 'rgba(255,255,255,0.8)' }
         };
 
         Plotly.newPlot('graphPlot', [], layout, {
@@ -263,11 +353,12 @@
         });
 
         document.getElementById('graphPlot').on('plotly_relayout', function(eventData) {
-            if (eventData['xaxis.dtick'] || eventData['yaxis.dtick']) return;
+            if (eventData['xaxis.dtick'] || eventData['yaxis.dtick']) return; // 무한루프 방지
             updateAll();
         });
 
-        buildPolyInputs();
+        // 최초 실행 시 기본 다항함수 1개 자동 추가
+        addFunction(); 
     }
 
     window.onload = initGraph;
