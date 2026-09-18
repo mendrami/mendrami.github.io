@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>함수 비교 (독립 넘버링 최적화 모델)</title>
+    <title>함수 비교 (접선 및 역함수 확장 모델)</title>
     <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
     <style>
@@ -14,10 +14,13 @@
         .status-board { text-align: center; background: #e9ecef; padding: 10px; border-radius: 6px; font-weight: bold; color: #495057; margin-bottom: 20px; transition: all 0.3s; }
         .status-board.active { background: #fff3cd; color: #856404; border: 2px dashed #ffe8a1; }
         
-        .add-controls { display: flex; justify-content: center; align-items: center; gap: 10px; margin-bottom: 25px; }
+        .add-controls { display: flex; justify-content: center; align-items: center; gap: 15px; margin-bottom: 25px; background: #fff; padding: 15px; border-radius: 8px; border: 1px solid #dee2e6; }
         .add-controls select { padding: 8px 12px; font-size: 1rem; border-radius: 5px; border: 1px solid #ced4da; }
         .add-controls button { padding: 8px 20px; font-size: 1rem; cursor: pointer; border: none; border-radius: 5px; background-color: #0d6efd; color: white; font-weight: bold; transition: background 0.2s; }
         .add-controls button:hover { background-color: #0b5ed7; }
+        
+        .tangent-toggle { display: flex; align-items: center; gap: 8px; font-weight: bold; padding: 8px 15px; background: #e2e3e5; border-radius: 5px; cursor: pointer; transition: background 0.2s; }
+        .tangent-toggle:hover { background: #d3d6d8; }
 
         .functions-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 15px; margin-bottom: 20px; }
         
@@ -27,7 +30,7 @@
         .func-card-title { font-weight: bold; font-size: 1.1rem; display: flex; align-items: center; gap: 10px; }
         
         input[type="color"] { border: none; width: 30px; height: 30px; border-radius: 4px; cursor: pointer; padding: 0; background: none; }
-        .btn-delete { background: #dc3545; color: white; border: none; border-radius: 4px; padding: 4px 8px; cursor: pointer; font-size: 0.85rem; }
+        .btn-delete { background: #dc3545; color: white; border: none; border-radius: 4px; padding: 4px 8px; cursor: pointer; font-size: 0.85rem; margin-left: 5px;}
         .btn-delete:hover { background: #c82333; }
         
         .input-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; font-size: 0.95rem; }
@@ -60,10 +63,9 @@
 <body>
 
 <div class="container">
-    <h1>함수 비교 및 평행이동 모델</h1>
+    <h1>함수 비교 및 역함수 모델</h1>
     <div id="statusBoard" class="status-board">
-        💡 그래프 선을 <strong>클릭</strong>하여 선택한 후 바탕을 <strong>드래그</strong>하면 평행이동합니다. (바탕 더블클릭 시 선택 해제)<br>
-        곡선 위에 마우스를 올리면 <strong>(x, y) 좌표</strong>가 나타납니다.
+        💡 그래프 선을 <strong>클릭</strong>하여 선택한 후 바탕을 <strong>드래그</strong>하면 평행이동합니다. (바탕 더블클릭 시 선택 해제)
     </div>
 
     <div class="add-controls">
@@ -73,6 +75,11 @@
             <option value="log">로그함수</option>
         </select>
         <button onclick="addFunction()">+ 함수 추가</button>
+        <div style="border-left: 2px solid #dee2e6; height: 30px; margin: 0 10px;"></div>
+        <label class="tangent-toggle">
+            <input type="checkbox" id="tangentModeToggle" onchange="clearTangentShape()"> 
+            <span style="color:#0d6efd;">⤡</span> 실시간 접선 렌더링
+        </label>
     </div>
 
     <div id="functionsGrid" class="functions-grid"></div>
@@ -113,33 +120,22 @@
     let startFuncState = null;
 
     function formatNumber(num) { return Number(Math.round(num + "e3") + "e-3"); }
-
-    function binomial(n, k) {
-        let coeff = 1;
-        for (let i = n - k + 1; i <= n; i++) coeff *= i;
-        for (let i = 1; i <= k; i++) coeff /= i;
-        return coeff;
-    }
+    function binomial(n, k) { let c = 1; for(let i=n-k+1; i<=n; i++) c*=i; for(let i=1; i<=k; i++) c/=i; return c; }
 
     function shiftPolynomial(coeffs, dx, dy) {
-        let n = coeffs.length - 1;
-        let newCoeffs = new Array(n + 1).fill(0);
+        let n = coeffs.length - 1; let newCoeffs = new Array(n + 1).fill(0);
         for (let j = 0; j <= n; j++) {
-            let c_j = coeffs[j];
-            if (c_j === 0) continue;
-            for (let k = 0; k <= j; k++) {
-                let term = c_j * binomial(j, k) * Math.pow(-dx, j - k);
-                newCoeffs[k] += term;
-            }
+            if (coeffs[j] === 0) continue;
+            for (let k = 0; k <= j; k++) newCoeffs[k] += coeffs[j] * binomial(j, k) * Math.pow(-dx, j - k);
         }
-        newCoeffs[0] += dy;
-        return newCoeffs.map(formatNumber);
+        newCoeffs[0] += dy; return newCoeffs.map(formatNumber);
     }
 
     function addFunction() {
         const type = document.getElementById('newFuncType').value;
         const newFunc = {
-            id: 'f_' + Date.now(), type: type, color: colorPalette[colorIndex % colorPalette.length], visible: true
+            id: 'f_' + Date.now(), type: type, color: colorPalette[colorIndex % colorPalette.length], visible: true,
+            showInverse: false // 역함수 상태값 추가
         };
         if (type === 'poly') { newFunc.degree = 2; newFunc.coeffs = [0, 0, 1]; } 
         else { newFunc.C = 1; newFunc.base = 2; newFunc.H = 0; newFunc.K = 0; }
@@ -158,17 +154,18 @@
         const func = functionsList.find(f => f.id === id);
         if (!func) return;
 
-        if (field === 'visible') { func.visible = value; } 
+        if (field === 'visible') func.visible = value;
+        else if (field === 'showInverse') func.showInverse = value;
         else if (field === 'color') { func.color = value; document.getElementById(`card_${id}`).style.borderLeftColor = value; } 
         else if (field === 'degree') {
-            let newDeg = parseInt(value) || 1; newDeg = Math.max(1, Math.min(newDeg, 10)); func.degree = newDeg;
-            const newCoeffs = new Array(newDeg + 1).fill(0);
-            for (let i = 0; i < Math.min(func.coeffs.length, newCoeffs.length); i++) newCoeffs[i] = func.coeffs[i];
-            if (newCoeffs[newDeg] === 0) newCoeffs[newDeg] = 1;
-            func.coeffs = newCoeffs;
+            let newDeg = Math.max(1, Math.min(parseInt(value) || 1, 10)); func.degree = newDeg;
+            const newC = new Array(newDeg + 1).fill(0);
+            for (let i = 0; i < Math.min(func.coeffs.length, newC.length); i++) newC[i] = func.coeffs[i];
+            if (newC[newDeg] === 0) newC[newDeg] = 1; func.coeffs = newC;
             renderUI();
-        } else if (field === 'coeffs') { func.coeffs[index] = parseFloat(value) || 0; } 
-        else { func[field] = parseFloat(value) || 0; }
+        } 
+        else if (field === 'coeffs') func.coeffs[index] = parseFloat(value) || 0;
+        else func[field] = parseFloat(value) || 0;
 
         if (field !== 'degree') updateAll();
     }
@@ -190,7 +187,6 @@
         grid.innerHTML = '';
         
         functionsList.forEach((func) => {
-            // [핵심 변경] 전체 배열이 아닌 동일한 함수족(Type) 내에서의 인덱스 계산
             let sameTypeFuncs = functionsList.filter(x => x.type === func.type);
             let typeIndex = sameTypeFuncs.indexOf(func) + 1;
             
@@ -199,12 +195,16 @@
             card.id = `card_${func.id}`; card.style.borderLeftColor = func.color;
             
             let typeName = func.type === 'poly' ? '다항함수' : (func.type === 'exp' ? '지수함수' : '로그함수');
-            typeName = `${typeName} ${typeIndex}`; // 예: "다항함수 1", "지수함수 1"
+            typeName = `${typeName} ${typeIndex}`;
 
             let innerHTML = `
                 <div class="func-card-header">
                     <div class="func-card-title"><input type="color" value="${func.color}" onchange="updateState('${func.id}', 'color', this.value)"> ${typeName}</div>
-                    <div style="display:flex; align-items:center; gap:10px;">
+                    <div style="display:flex; align-items:center; gap:8px;">
+                        <label title="역함수 대칭 렌더링" style="font-size:0.85rem; display:flex; align-items:center; gap:3px; cursor:pointer; background:#f8f9fa; padding:3px 8px; border-radius:4px; border:1px solid #dee2e6;">
+                            <input type="checkbox" ${func.showInverse ? 'checked' : ''} onchange="updateState('${func.id}', 'showInverse', this.checked)"> 역함수
+                        </label>
+                        <div style="width:1px; height:20px; background:#dee2e6; margin: 0 2px;"></div>
                         <label class="switch"><input type="checkbox" ${func.visible ? 'checked' : ''} onchange="updateState('${func.id}', 'visible', this.checked)"><span class="slider"></span></label>
                         <button class="btn-delete" onclick="removeFunction('${func.id}')">삭제</button>
                     </div>
@@ -233,7 +233,7 @@
         if (visibleFunctions.length === 0) tex = '\\text{활성화된 함수가 없습니다.}';
         else {
             visibleFunctions.forEach(f => {
-                let eqStr = '';
+                let rhs = '';
                 if (f.type === 'poly') {
                     let terms = [];
                     for (let i = f.degree; i >= 0; i--) {
@@ -243,20 +243,28 @@
                         if (i > 0) { term += 'x'; if (i > 1) term += '^' + i; }
                         terms.push(term);
                     }
-                    eqStr = terms.length > 0 ? terms.join(' ') : '0';
+                    rhs = terms.length > 0 ? terms.join(' ') : '0';
                 } else if (f.type === 'exp') {
                     let a = Math.max(f.base, 0.001); if (a === 1) a = 1.0001;
                     let exponent = f.H !== 0 ? `(x ${f.H > 0 ? '-' : '+'} ${Math.abs(f.H)})` : `x`;
-                    eqStr = `${f.C !== 1 ? f.C + ' \\cdot ' : ''}${a}^{${exponent}}`;
-                    if (f.K > 0) eqStr += ` + ${f.K}`; else if (f.K < 0) eqStr += ` - ${Math.abs(f.K)}`;
+                    rhs = `${f.C !== 1 ? f.C + ' \\cdot ' : ''}${a}^{${exponent}}`;
+                    if (f.K > 0) rhs += ` + ${f.K}`; else if (f.K < 0) rhs += ` - ${Math.abs(f.K)}`;
                 } else if (f.type === 'log') {
                     let a = Math.max(f.base, 0.001); if (a === 1) a = 1.0001;
                     let inner = f.H !== 0 ? `(x ${f.H > 0 ? '-' : '+'} ${Math.abs(f.H)})` : `(x)`;
-                    eqStr = `${f.C !== 1 ? f.C + ' \\cdot ' : ''}\\log_{${a}}${inner}`;
-                    if (f.K > 0) eqStr += ` + ${f.K}`; else if (f.K < 0) eqStr += ` - ${Math.abs(f.K)}`;
+                    rhs = `${f.C !== 1 ? f.C + ' \\cdot ' : ''}\\log_{${a}}${inner}`;
+                    if (f.K > 0) rhs += ` + ${f.K}`; else if (f.K < 0) rhs += ` - ${Math.abs(f.K)}`;
                 }
-                if (f.id === selectedFuncId) tex += `\\color{${f.color}}{\\boxed{y = ${eqStr}}} \\\\ `;
-                else tex += `\\color{${f.color}}{y = ${eqStr}} \\\\ `;
+                
+                let eqStr = `y = ${rhs}`;
+                if (f.id === selectedFuncId) tex += `\\color{${f.color}}{\\boxed{${eqStr}}} \\\\ `;
+                else tex += `\\color{${f.color}}{${eqStr}} \\\\ `;
+
+                // 역함수 수학 렌더링 (대수적 구조 치환 x = f(y))
+                if (f.showInverse) {
+                    let rhsInv = rhs.replace(/x/g, 'y');
+                    tex += `\\color{${f.color}}{x = ${rhsInv} \\quad \\text{(역함수)}} \\\\ `;
+                }
             });
         }
         const display = document.getElementById('math-display');
@@ -276,37 +284,35 @@
         return NaN;
     }
 
+    // 중앙 차분법을 활용한 수치해석적 미분 엔진
+    function evaluateDerivative(f, x) {
+        const h = 1e-5;
+        let y1 = evaluateFunction(f, x - h);
+        let y2 = evaluateFunction(f, x + h);
+        
+        // 정의역 밖 예외처리 (전방차분/후방차분 대체)
+        if (isNaN(y1)) { y1 = evaluateFunction(f, x); y2 = evaluateFunction(f, x + h); return (y2 - y1) / h; }
+        if (isNaN(y2)) { y1 = evaluateFunction(f, x - h); y2 = evaluateFunction(f, x); return (y2 - y1) / h; }
+        
+        return (y2 - y1) / (2 * h);
+    }
+
     function updateIntersectionPanel(panelData) {
         const xDiv = document.getElementById('panel-x-axis');
         const yDiv = document.getElementById('panel-y-axis');
         const fDiv = document.getElementById('panel-intersections');
 
         let xHTML = '', yHTML = '', fHTML = '';
-
         if (panelData.xInt.length === 0) xHTML = '<div class="empty-msg">교점이 없습니다.</div>';
-        else {
-            panelData.xInt.forEach(p => {
-                xHTML += `<div class="coord-item" style="border-left-color: ${p.color};"><span style="color:${p.color}">${p.name}</span> : (${p.x.toFixed(2)}, 0.00)</div>`;
-            });
-        }
+        else panelData.xInt.forEach(p => xHTML += `<div class="coord-item" style="border-left-color: ${p.color};"><span style="color:${p.color}">${p.name}</span> : (${p.x.toFixed(2)}, 0.00)</div>`);
 
         if (panelData.yInt.length === 0) yHTML = '<div class="empty-msg">교점이 없습니다.</div>';
-        else {
-            panelData.yInt.forEach(p => {
-                yHTML += `<div class="coord-item" style="border-left-color: ${p.color};"><span style="color:${p.color}">${p.name}</span> : (0.00, ${p.y.toFixed(2)})</div>`;
-            });
-        }
+        else panelData.yInt.forEach(p => yHTML += `<div class="coord-item" style="border-left-color: ${p.color};"><span style="color:${p.color}">${p.name}</span> : (0.00, ${p.y.toFixed(2)})</div>`);
 
         if (panelData.funcInt.length === 0) fHTML = '<div class="empty-msg">두 함수의 교점이 없습니다.</div>';
-        else {
-            panelData.funcInt.forEach(p => {
-                fHTML += `<div class="coord-item"><span style="color:${p.c1}">■</span> <span style="color:${p.c2}">■</span> : (${p.x.toFixed(2)}, ${p.y.toFixed(2)})</div>`;
-            });
-        }
+        else panelData.funcInt.forEach(p => fHTML += `<div class="coord-item"><span style="color:${p.c1}">■</span> <span style="color:${p.c2}">■</span> : (${p.x.toFixed(2)}, ${p.y.toFixed(2)})</div>`);
 
-        xDiv.innerHTML = xHTML;
-        yDiv.innerHTML = yHTML;
-        fDiv.innerHTML = fHTML;
+        xDiv.innerHTML = xHTML; yDiv.innerHTML = yHTML; fDiv.innerHTML = fHTML;
     }
 
     function generateTraces(rangeX, skipHeavy) {
@@ -322,6 +328,8 @@
         const yDataCollection = [];
         const axisIntX = [], axisIntY = [], axisIntText = [];
         const panelData = { yInt: [], xInt: [], funcInt: [] };
+        
+        let hasInverse = false;
 
         visibleFunctions.forEach((f) => {
             const yVal = [];
@@ -332,7 +340,6 @@
             }
             yDataCollection.push(yVal);
 
-            // [핵심 변경] 그래프 트레이스 이름도 유형별 독립 인덱스로 동기화
             let sameTypeFuncs = functionsList.filter(x => x.type === f.type);
             let typeIndex = sameTypeFuncs.indexOf(f) + 1;
             let typeName = f.type === 'poly' ? '다항함수' : (f.type === 'exp' ? '지수함수' : '로그함수');
@@ -342,9 +349,7 @@
                 let y_at_0 = evaluateFunction(f, 0);
                 if (isFinite(y_at_0) && Math.abs(y_at_0) < 1e150) {
                     panelData.yInt.push({ name: fName, color: f.color, x: 0, y: y_at_0 });
-                    if (Math.abs(y_at_0) < 1e-4) {
-                        panelData.xInt.push({ name: fName, color: f.color, x: 0, y: 0 });
-                    }
+                    if (Math.abs(y_at_0) < 1e-4) panelData.xInt.push({ name: fName, color: f.color, x: 0, y: 0 });
                     if (!axisIntX.some(x => Math.abs(x - 0) < 1e-4 && Math.abs(axisIntY[axisIntX.indexOf(x)] - y_at_0) < 1e-4)) {
                         axisIntX.push(0); axisIntY.push(y_at_0); axisIntText.push(`(0.00, ${y_at_0.toFixed(2)})`);
                     }
@@ -356,11 +361,7 @@
                     if (y1 * y2 <= 0 && (y1 !== 0 || y2 !== 0)) {
                         let t = y1 / (y1 - y2);
                         let ix = xVal[k] + t * (xVal[k+1] - xVal[k]);
-                        
-                        if (!panelData.xInt.some(p => p.name === fName && Math.abs(p.x - ix) < 1e-4)) {
-                            panelData.xInt.push({ name: fName, color: f.color, x: ix, y: 0 });
-                        }
-
+                        if (!panelData.xInt.some(p => p.name === fName && Math.abs(p.x - ix) < 1e-4)) panelData.xInt.push({ name: fName, color: f.color, x: ix, y: 0 });
                         if (!axisIntX.some(x => Math.abs(x - ix) < 1e-4 && Math.abs(axisIntY[axisIntX.indexOf(x)] - 0) < 1e-4)) {
                             axisIntX.push(ix); axisIntY.push(0); axisIntText.push(`(${ix.toFixed(2)}, 0.00)`);
                         }
@@ -375,10 +376,32 @@
                 customdata: Array(xVal.length).fill(f.id), 
                 hovertemplate: '(%{x:.2f}, %{y:.2f})<extra></extra>' 
             });
+
+            // 역함수 기하학적 렌더링 (X값과 Y값 배열 스왑)
+            if (f.showInverse) {
+                hasInverse = true;
+                traces.push({ 
+                    x: yVal, y: xVal, mode: 'lines', name: `${fName} 역함수`, 
+                    line: { color: f.color, width: 2, dash: 'dot' },
+                    customdata: Array(xVal.length).fill('inv_' + f.id), 
+                    hovertemplate: '(%{x:.2f}, %{y:.2f})<extra></extra>' 
+                });
+            }
         });
+
+        // 항등함수 y = x 가이드라인 추가 (역함수 존재 시)
+        if (hasInverse) {
+            traces.push({
+                x: [-10000, 10000], y: [-10000, 10000],
+                mode: 'lines', name: 'y = x 대칭축',
+                line: { color: '#adb5bd', width: 2, dash: 'dash' },
+                hoverinfo: 'none'
+            });
+        }
 
         if (!skipHeavy) {
             const intersectX = [], intersectY = [], intersectText = [];
+            // (최적화를 위해 역함수 간의 엄밀한 교점 탐색은 제외하고 원본 함수 간만 비교함)
             for (let i = 0; i < yDataCollection.length; i++) {
                 for (let j = i + 1; j < yDataCollection.length; j++) {
                     const y1 = yDataCollection[i], y2 = yDataCollection[j];
@@ -399,7 +422,6 @@
 
             if (axisIntX.length > 0) traces.push({ x: axisIntX, y: axisIntY, mode: 'markers+text', name: '축 교점', marker: { size: 10, color: '#fd7e14', symbol: 'diamond' }, text: axisIntText, textposition: 'bottom right', textfont: { size: 13, weight: 'bold', color: '#fd7e14' }, hoverinfo: 'text' });
             if (intersectX.length > 0) traces.push({ x: intersectX, y: intersectY, mode: 'markers+text', name: '함수 교점', marker: { size: 10, color: '#212529', symbol: 'circle' }, text: intersectText, textposition: 'top left', textfont: { size: 13, weight: 'bold', color: '#212529' }, hoverinfo: 'text' });
-            
             updateIntersectionPanel(panelData);
         }
 
@@ -412,6 +434,10 @@
         return Math.abs(range[1] - range[0]) <= 20 ? 0.5 : undefined; 
     }
 
+    function clearTangentShape() {
+        Plotly.relayout('graphPlot', { shapes: [] });
+    }
+
     function floatXAxis() {
         const graphDiv = document.getElementById('graphPlot');
         if (!graphDiv) return;
@@ -420,11 +446,7 @@
         const bottomHidden = rect.bottom - window.innerHeight;
 
         xAxisLayers.forEach(layer => {
-            if (bottomHidden > 0) {
-                layer.style.transform = `translateY(-${bottomHidden}px)`;
-            } else {
-                layer.style.transform = `translateY(0px)`;
-            }
+            layer.style.transform = bottomHidden > 0 ? `translateY(-${bottomHidden}px)` : `translateY(0px)`;
         });
     }
 
@@ -478,14 +500,54 @@
 
         graphDiv.on('plotly_afterplot', floatXAxis);
 
+        // --- 실시간 접선(Tangent) 호버 렌더링 시스템 ---
+        graphDiv.on('plotly_hover', function(data) {
+            if (!document.getElementById('tangentModeToggle').checked) return;
+            const pt = data.points[0];
+            const funcId = pt.customdata;
+            if (!funcId) return;
+
+            let m = 0; let px = pt.x, py = pt.y;
+
+            if (funcId.startsWith('inv_')) {
+                const origId = funcId.replace('inv_', '');
+                const f = functionsList.find(x => x.id === origId);
+                const origM = evaluateDerivative(f, py);
+                if (origM === 0 || isNaN(origM)) return;
+                m = 1 / origM; // 역함수의 미분법 기하학적 치환
+            } else {
+                const f = functionsList.find(x => x.id === funcId);
+                m = evaluateDerivative(f, px);
+            }
+
+            if (isNaN(m)) return;
+
+            const tx0 = px - 10, tx1 = px + 10;
+            const ty0 = py - m * 10, ty1 = py + m * 10;
+
+            const shape = {
+                type: 'line', x0: tx0, y0: ty0, x1: tx1, y1: ty1,
+                line: { color: pt.fullData.line.color, width: 2, dash: 'dot' }
+            };
+            Plotly.relayout('graphPlot', { shapes: [shape] });
+        });
+
+        graphDiv.on('plotly_unhover', function() {
+            if (!document.getElementById('tangentModeToggle').checked) return;
+            clearTangentShape();
+        });
+
+        // ---------------------------------------------
+
         graphDiv.on('plotly_click', function(data) {
-            if (data.points && data.points.length > 0 && data.points[0].customdata) selectGraph(data.points[0].customdata);
+            if (data.points && data.points.length > 0 && data.points[0].customdata) selectGraph(data.points[0].customdata.replace('inv_', ''));
         });
 
         graphDiv.on('plotly_doubleclick', function() { deselectGraph(); });
 
         graphDiv.addEventListener('mousedown', function(e) {
             if (!selectedFuncId) return;
+            clearTangentShape(); // 드래그 시 접선 제거
             const bgRect = graphDiv.querySelector('.gridlayer').getBoundingClientRect();
             if (e.clientX < bgRect.left || e.clientX > bgRect.right || e.clientY < bgRect.top || e.clientY > bgRect.bottom) return;
             isDraggingTrace = true;
@@ -514,7 +576,7 @@
         });
 
         graphDiv.on('plotly_relayout', function(eventData) {
-            if (eventData['xaxis.dtick'] || eventData['yaxis.dtick'] || eventData['yaxis.scaleanchor'] || eventData['yaxis.range[0]'] === undefined) return;
+            if (eventData['shapes'] !== undefined || eventData['xaxis.dtick'] || eventData['yaxis.dtick'] || eventData['yaxis.scaleanchor'] || eventData['yaxis.range[0]'] === undefined) return;
             updateAll();
         });
 
