@@ -184,6 +184,23 @@
         if (typeof MathJax !== 'undefined' && MathJax.typesetPromise) MathJax.typesetPromise([display]).catch(err => console.warn(err.message));
     }
 
+    // 함수 f(x)에 특정 x값을 대입하는 연산 엔진 (Y축 절편 계산용)
+    function evaluateFunction(f, x) {
+        if (f.type === 'poly') {
+            let y = 0;
+            for (let j = 0; j < f.coeffs.length; j++) y += f.coeffs[j] * Math.pow(x, j);
+            return y;
+        } else if (f.type === 'exp') {
+            let a = Math.max(f.base, 0.001); if (a === 1) a = 1.0001;
+            return f.C * Math.pow(a, x) + f.K;
+        } else if (f.type === 'log') {
+            if (x <= 0) return NaN; // 로그함수의 정의역 제한
+            let a = Math.max(f.base, 0.001); if (a === 1) a = 1.0001;
+            return f.C * (Math.log(x) / Math.log(a)) + f.K;
+        }
+        return NaN;
+    }
+
     function generateTraces(rangeX) {
         const spanX = rangeX[1] - rangeX[0];
         const minX = rangeX[0] - spanX; const maxX = rangeX[1] + spanX;
@@ -196,36 +213,56 @@
         for (let x = minX; x <= maxX; x += step) xVal.push(x);
 
         const yDataCollection = [];
+        
+        // 1. 축과의 교점(Intercepts)을 저장할 배열
+        const axisIntX = [], axisIntY = [], axisIntText = [];
+
         visibleFunctions.forEach((f, index) => {
             const yVal = [];
             for (let i = 0; i < xVal.length; i++) {
                 let x = xVal[i];
-                let y = NaN;
-                if (f.type === 'poly') {
-                    y = 0; for (let j = 0; j < f.coeffs.length; j++) y += f.coeffs[j] * Math.pow(x, j);
-                } else if (f.type === 'exp') {
-                    let a = Math.max(f.base, 0.001); if (a === 1) a = 1.0001;
-                    y = f.C * Math.pow(a, x) + f.K;
-                } else if (f.type === 'log') {
-                    if (x > 0) {
-                        let a = Math.max(f.base, 0.001); if (a === 1) a = 1.0001;
-                        y = f.C * (Math.log(x) / Math.log(a)) + f.K;
-                    }
-                }
+                let y = evaluateFunction(f, x);
                 
-                // 수학적 오버플로우 방지 로직 (무한 스크롤 허용의 핵심)
-                if (!isFinite(y) || Math.abs(y) > 1e150) {
-                    y = NaN;
-                }
+                // 수학적 오버플로우 방지 로직 (무한 스크롤 허용)
+                if (!isFinite(y) || Math.abs(y) > 1e150) y = NaN;
                 yVal.push(y);
             }
-            
             yDataCollection.push(yVal);
+
+            // 1-1. Y축 교점 (x = 0 일 때 f(0) 값 연산)
+            let y_at_0 = evaluateFunction(f, 0);
+            if (isFinite(y_at_0) && Math.abs(y_at_0) < 1e150) {
+                // 중복 점 필터링 (원점 등)
+                if (!axisIntX.some(x => Math.abs(x - 0) < 1e-4 && Math.abs(axisIntY[axisIntX.indexOf(x)] - y_at_0) < 1e-4)) {
+                    axisIntX.push(0);
+                    axisIntY.push(y_at_0);
+                    axisIntText.push(`(0.00, ${y_at_0.toFixed(2)})`);
+                }
+            }
+
+            // 1-2. X축 교점 (y = 0 부호 변경점 탐색)
+            for (let k = 0; k < xVal.length - 1; k++) {
+                let y1 = yVal[k], y2 = yVal[k+1];
+                if (isNaN(y1) || isNaN(y2)) continue;
+
+                // X축을 통과하는 순간 (사잇값 정리)
+                if (y1 * y2 <= 0 && (y1 !== 0 || y2 !== 0)) {
+                    let t = y1 / (y1 - y2);
+                    let ix = xVal[k] + t * (xVal[k+1] - xVal[k]); // 선형 보간으로 정밀 근 계산
+                    
+                    if (!axisIntX.some(x => Math.abs(x - ix) < 1e-4 && Math.abs(axisIntY[axisIntX.indexOf(x)] - 0) < 1e-4)) {
+                        axisIntX.push(ix);
+                        axisIntY.push(0);
+                        axisIntText.push(`(${ix.toFixed(2)}, 0.00)`);
+                    }
+                }
+            }
 
             let typeName = f.type === 'poly' ? '다항함수' : (f.type === 'exp' ? '지수함수' : '로그함수');
             traces.push({ x: xVal, y: yVal, mode: 'lines', name: `${typeName} ${index + 1}`, line: { color: f.color, width: 3 } });
         });
 
+        // 2. 함수 간의 교점(Intersection) 배열
         const intersectX = [], intersectY = [], intersectText = [];
         
         for (let i = 0; i < yDataCollection.length; i++) {
@@ -245,8 +282,7 @@
                         const iy = y1[k] + t * (y1[k+1] - y1[k]);
                         
                         if (!intersectX.some(x => Math.abs(x - ix) < (step * 5))) {
-                            intersectX.push(ix);
-                            intersectY.push(iy);
+                            intersectX.push(ix); intersectY.push(iy);
                             intersectText.push(`(${ix.toFixed(2)}, ${iy.toFixed(2)})`);
                         }
                     }
@@ -254,15 +290,23 @@
             }
         }
 
+        // 축 교점 시각화 (주황색 마름모)
+        if (axisIntX.length > 0) {
+            traces.push({
+                x: axisIntX, y: axisIntY, mode: 'markers+text', name: '축과의 교점 (Intercepts)',
+                marker: { size: 10, color: '#fd7e14', symbol: 'diamond' },
+                text: axisIntText, textposition: 'bottom right',
+                textfont: { size: 13, weight: 'bold', color: '#fd7e14' },
+                hoverinfo: 'text'
+            });
+        }
+
+        // 함수 교점 시각화 (검은색 원)
         if (intersectX.length > 0) {
             traces.push({
-                x: intersectX,
-                y: intersectY,
-                mode: 'markers+text',
-                name: '교점 (Intersection)',
+                x: intersectX, y: intersectY, mode: 'markers+text', name: '함수 간 교점 (Intersections)',
                 marker: { size: 10, color: '#212529', symbol: 'circle' },
-                text: intersectText,
-                textposition: 'top center',
+                text: intersectText, textposition: 'top left',
                 textfont: { size: 13, weight: 'bold', color: '#212529' },
                 hoverinfo: 'text'
             });
@@ -291,7 +335,7 @@
             Plotly.relayout('graphPlot', {
                 'xaxis.dtick': getDynamicTick(currentXRange),
                 'yaxis.dtick': getDynamicTick(currentYRange),
-                'yaxis.scaleanchor': 'x',  // 중요: 업데이트 시에도 1:1 비율 유지 선언
+                'yaxis.scaleanchor': 'x', // X, Y축 1:1 비율 동기화 보장
                 'yaxis.scaleratio': 1
             });
         }
@@ -304,11 +348,8 @@
             dragmode: 'pan',
             xaxis: { range: [-5, 5], dtick: 0.5, zeroline: true, zerolinecolor: '#343a40', zerolinewidth: 2, gridcolor: '#e9ecef', title: 'X 축' },
             yaxis: { 
-                range: [-5, 5], 
-                dtick: 0.5, 
-                zeroline: true, zerolinecolor: '#343a40', zerolinewidth: 2, gridcolor: '#e9ecef', title: 'Y 축',
-                scaleanchor: 'x', // X축과 1:1 기하학적 비율 영구 고정
-                scaleratio: 1
+                range: [-5, 5], dtick: 0.5, zeroline: true, zerolinecolor: '#343a40', zerolinewidth: 2, gridcolor: '#e9ecef', title: 'Y 축',
+                scaleanchor: 'x', scaleratio: 1 // 기하학적 등방성
             },
             margin: { l: 60, r: 40, t: 30, b: 60 }, hovermode: 'closest',
             legend: { x: 0.05, y: 0.95, bgcolor: 'rgba(255,255,255,0.8)' }
@@ -319,7 +360,6 @@
         });
 
         document.getElementById('graphPlot').on('plotly_relayout', function(eventData) {
-            // dtick 자체 변경 이벤트는 무시하되, 패닝/줌 이벤트 발생 시 데이터 동기화
             if (eventData['xaxis.dtick'] || eventData['yaxis.dtick'] || eventData['yaxis.scaleanchor']) return;
             updateAll();
         });
