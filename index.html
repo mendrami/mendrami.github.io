@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>함수 비교 (드래그 평행이동 지원)</title>
+    <title>함수 비교 (평행이동 및 교점 탐색 모델)</title>
     <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
     <style>
@@ -52,7 +52,7 @@
 <div class="container">
     <h1>함수 비교 및 평행이동 모델</h1>
     <div id="statusBoard" class="status-board">
-        💡 그래프의 선을 <strong>클릭</strong>하면 선택됩니다. 화면의 빈 공간을 <strong>더블클릭</strong>하면 선택이 해제됩니다.
+        💡 그래프 선을 <strong>클릭</strong>하여 선택한 후 바탕을 <strong>드래그</strong>하면 평행이동합니다. (바탕 더블클릭 시 선택 해제)
     </div>
 
     <div class="add-controls">
@@ -75,18 +75,13 @@
     const colorPalette = ['#0d6efd', '#dc3545', '#198754', '#fd7e14', '#6610f2', '#20c997', '#e83e8c', '#0dcaf0'];
     let colorIndex = 0;
 
-    // --- [선택 및 드래그 관련 상태 변수] ---
     let selectedFuncId = null;
     let isDraggingTrace = false;
     let startDataX = 0, startDataY = 0;
     let startFuncState = null;
 
-    // 1. 유틸리티: 소수점 3자리 정리 (연산 오차 방지)
-    function formatNumber(num) {
-        return Number(Math.round(num + "e3") + "e-3");
-    }
+    function formatNumber(num) { return Number(Math.round(num + "e3") + "e-3"); }
 
-    // 2. 이항계수 (Binomial Coefficient) 연산기
     function binomial(n, k) {
         let coeff = 1;
         for (let i = n - k + 1; i <= n; i++) coeff *= i;
@@ -94,7 +89,7 @@
         return coeff;
     }
 
-    // 3. 다항식 평행이동 (Taylor Shift) 알고리즘
+    // 테일러 이항 정리 기반 평행이동 연산
     function shiftPolynomial(coeffs, dx, dy) {
         let n = coeffs.length - 1;
         let newCoeffs = new Array(n + 1).fill(0);
@@ -113,20 +108,13 @@
     function addFunction() {
         const type = document.getElementById('newFuncType').value;
         const newFunc = {
-            id: 'f_' + Date.now(),
-            type: type, color: colorPalette[colorIndex % colorPalette.length], visible: true
+            id: 'f_' + Date.now(), type: type, color: colorPalette[colorIndex % colorPalette.length], visible: true
         };
+        if (type === 'poly') { newFunc.degree = 2; newFunc.coeffs = [0, 0, 1]; } 
+        else { newFunc.C = 1; newFunc.base = 2; newFunc.H = 0; newFunc.K = 0; }
 
-        if (type === 'poly') {
-            newFunc.degree = 2; newFunc.coeffs = [0, 0, 1];
-        } else {
-            newFunc.C = 1; newFunc.base = 2; newFunc.H = 0; newFunc.K = 0;
-        }
-
-        functionsList.push(newFunc);
-        colorIndex++;
-        renderUI();
-        updateAll();
+        functionsList.push(newFunc); colorIndex++;
+        renderUI(); updateAll();
     }
 
     function removeFunction(id) {
@@ -140,9 +128,8 @@
         if (!func) return;
 
         if (field === 'visible') { func.visible = value; } 
-        else if (field === 'color') {
-            func.color = value; document.getElementById(`card_${id}`).style.borderLeftColor = value;
-        } else if (field === 'degree') {
+        else if (field === 'color') { func.color = value; document.getElementById(`card_${id}`).style.borderLeftColor = value; } 
+        else if (field === 'degree') {
             let newDeg = parseInt(value) || 1; newDeg = Math.max(1, Math.min(newDeg, 10)); func.degree = newDeg;
             const newCoeffs = new Array(newDeg + 1).fill(0);
             for (let i = 0; i < Math.min(func.coeffs.length, newCoeffs.length); i++) newCoeffs[i] = func.coeffs[i];
@@ -155,7 +142,6 @@
         if (field !== 'degree') updateAll();
     }
 
-    // UI 입력칸 값만 동적으로 갱신 (드래그 중 깜빡임 방지)
     function syncInputValues(func) {
         if (func.type === 'poly') {
             for (let i = 0; i <= func.degree; i++) {
@@ -163,10 +149,8 @@
                 if (el) el.value = func.coeffs[i];
             }
         } else {
-            let elH = document.getElementById(`input_${func.id}_H`);
-            let elK = document.getElementById(`input_${func.id}_K`);
-            if (elH) elH.value = func.H;
-            if (elK) elK.value = func.K;
+            let elH = document.getElementById(`input_${func.id}_H`); let elK = document.getElementById(`input_${func.id}_K`);
+            if (elH) elH.value = func.H; if (elK) elK.value = func.K;
         }
     }
 
@@ -181,10 +165,7 @@
 
             let innerHTML = `
                 <div class="func-card-header">
-                    <div class="func-card-title">
-                        <input type="color" value="${func.color}" onchange="updateState('${func.id}', 'color', this.value)">
-                        ${typeName}
-                    </div>
+                    <div class="func-card-title"><input type="color" value="${func.color}" onchange="updateState('${func.id}', 'color', this.value)"> ${typeName}</div>
                     <div style="display:flex; align-items:center; gap:10px;">
                         <label class="switch"><input type="checkbox" ${func.visible ? 'checked' : ''} onchange="updateState('${func.id}', 'visible', this.checked)"><span class="slider"></span></label>
                         <button class="btn-delete" onclick="removeFunction('${func.id}')">삭제</button>
@@ -192,8 +173,7 @@
                 </div>
             `;
             if (func.type === 'poly') {
-                innerHTML += `<div class="input-row"><label>차수 (N):</label><input type="number" min="1" max="10" value="${func.degree}" onchange="updateState('${func.id}', 'degree', this.value)"></div>
-                              <div class="poly-coeffs">`;
+                innerHTML += `<div class="input-row"><label>차수 (N):</label><input type="number" min="1" max="10" value="${func.degree}" onchange="updateState('${func.id}', 'degree', this.value)"></div><div class="poly-coeffs">`;
                 for (let i = func.degree; i >= 0; i--) {
                     innerHTML += `<div class="input-row" style="margin:0;"><label>x<sup>${i}</sup> 계수:</label>
                                   <input type="number" step="0.1" id="input_${func.id}_c${i}" value="${func.coeffs[i]}" oninput="updateState('${func.id}', 'coeffs', this.value, ${i})"></div>`;
@@ -237,8 +217,6 @@
                     eqStr = `${f.C !== 1 ? f.C + ' \\cdot ' : ''}\\log_{${a}}${inner}`;
                     if (f.K > 0) eqStr += ` + ${f.K}`; else if (f.K < 0) eqStr += ` - ${Math.abs(f.K)}`;
                 }
-                
-                // 선택된 그래프는 수식 테두리를 씌워 강조 (Boxed)
                 if (f.id === selectedFuncId) tex += `\\color{${f.color}}{\\boxed{y = ${eqStr}}} \\\\ `;
                 else tex += `\\color{${f.color}}{y = ${eqStr}} \\\\ `;
             });
@@ -260,17 +238,21 @@
         return NaN;
     }
 
-    function generateTraces(rangeX) {
+    // skipHeavy 파라미터를 추가하여 드래그 중에는 무거운 교점 연산을 건너뜀
+    function generateTraces(rangeX, skipHeavy) {
         const spanX = rangeX[1] - rangeX[0];
         const minX = rangeX[0] - spanX; const maxX = rangeX[1] + spanX;
         const step = Math.max((maxX - minX) / 2000, 0.001);
         
         const traces = [];
         const visibleFunctions = functionsList.filter(f => f.visible);
-        
         const xVal = [];
         for (let x = minX; x <= maxX; x += step) xVal.push(x);
+        
+        const yDataCollection = [];
+        const axisIntX = [], axisIntY = [], axisIntText = [];
 
+        // 1. 함수 곡선 렌더링 및 축(X/Y) 교점 계산
         visibleFunctions.forEach((f, index) => {
             const yVal = [];
             for (let i = 0; i < xVal.length; i++) {
@@ -278,20 +260,65 @@
                 if (!isFinite(y) || Math.abs(y) > 1e150) y = NaN;
                 yVal.push(y);
             }
+            yDataCollection.push(yVal);
+
+            // 무거운 연산(교점)은 마우스를 놓았을 때(!skipHeavy)만 수행하여 FPS 방어
+            if (!skipHeavy) {
+                // Y축 절편 (x=0)
+                let y_at_0 = evaluateFunction(f, 0);
+                if (isFinite(y_at_0) && Math.abs(y_at_0) < 1e150) {
+                    if (!axisIntX.some(x => Math.abs(x - 0) < 1e-4 && Math.abs(axisIntY[axisIntX.indexOf(x)] - y_at_0) < 1e-4)) {
+                        axisIntX.push(0); axisIntY.push(y_at_0); axisIntText.push(`(0.00, ${y_at_0.toFixed(2)})`);
+                    }
+                }
+
+                // X축 절편 (y=0 통과점 사잇값 정리)
+                for (let k = 0; k < xVal.length - 1; k++) {
+                    let y1 = yVal[k], y2 = yVal[k+1];
+                    if (isNaN(y1) || isNaN(y2)) continue;
+                    if (y1 * y2 <= 0 && (y1 !== 0 || y2 !== 0)) {
+                        let t = y1 / (y1 - y2);
+                        let ix = xVal[k] + t * (xVal[k+1] - xVal[k]);
+                        if (!axisIntX.some(x => Math.abs(x - ix) < 1e-4 && Math.abs(axisIntY[axisIntX.indexOf(x)] - 0) < 1e-4)) {
+                            axisIntX.push(ix); axisIntY.push(0); axisIntText.push(`(${ix.toFixed(2)}, 0.00)`);
+                        }
+                    }
+                }
+            }
 
             let typeName = f.type === 'poly' ? '다항함수' : (f.type === 'exp' ? '지수함수' : '로그함수');
-            
-            // 선택된 그래프는 굵기를 7로 하여 시각적 강조
             let isSelected = (f.id === selectedFuncId);
-            
             traces.push({ 
-                x: xVal, y: yVal, mode: 'lines', 
-                name: `${typeName} ${index + 1}`, 
+                x: xVal, y: yVal, mode: 'lines', name: `${typeName} ${index + 1}`, 
                 line: { color: f.color, width: isSelected ? 7 : 3 },
-                customdata: Array(xVal.length).fill(f.id), // 클릭 이벤트를 위한 태깅
-                hoverinfo: 'name'
+                customdata: Array(xVal.length).fill(f.id), hoverinfo: 'name'
             });
         });
+
+        // 2. 함수 간의 교점 연산 (선형 보간법)
+        if (!skipHeavy) {
+            const intersectX = [], intersectY = [], intersectText = [];
+            for (let i = 0; i < yDataCollection.length; i++) {
+                for (let j = i + 1; j < yDataCollection.length; j++) {
+                    const y1 = yDataCollection[i], y2 = yDataCollection[j];
+                    for (let k = 0; k < xVal.length - 1; k++) {
+                        if (isNaN(y1[k]) || isNaN(y2[k]) || isNaN(y1[k+1]) || isNaN(y2[k+1])) continue;
+                        const d1 = y1[k] - y2[k], d2 = y1[k+1] - y2[k+1];
+                        if (d1 * d2 <= 0 && (d1 !== 0 || d2 !== 0)) {
+                            const t = d1 / (d1 - d2);
+                            const ix = xVal[k] + t * (xVal[k+1] - xVal[k]), iy = y1[k] + t * (y1[k+1] - y1[k]);
+                            if (!intersectX.some(x => Math.abs(x - ix) < (step * 5))) {
+                                intersectX.push(ix); intersectY.push(iy); intersectText.push(`(${ix.toFixed(2)}, ${iy.toFixed(2)})`);
+                            }
+                        }
+                    }
+                }
+            }
+
+            // 마커 렌더링
+            if (axisIntX.length > 0) traces.push({ x: axisIntX, y: axisIntY, mode: 'markers+text', name: '축 교점', marker: { size: 10, color: '#fd7e14', symbol: 'diamond' }, text: axisIntText, textposition: 'bottom right', textfont: { size: 13, weight: 'bold', color: '#fd7e14' }, hoverinfo: 'text' });
+            if (intersectX.length > 0) traces.push({ x: intersectX, y: intersectY, mode: 'markers+text', name: '함수 교점', marker: { size: 10, color: '#212529', symbol: 'circle' }, text: intersectText, textposition: 'top left', textfont: { size: 13, weight: 'bold', color: '#212529' }, hoverinfo: 'text' });
+        }
 
         if (traces.length === 0) traces.push({ x: [], y: [], name: '활성화 없음' });
         return traces;
@@ -302,14 +329,14 @@
         return Math.abs(range[1] - range[0]) <= 20 ? 0.5 : undefined; 
     }
 
-    // skipLatex가 true면 무거운 수식 렌더링을 생략함 (드래그 시 사용)
-    function updateAll(skipLatex = false) {
-        if (!skipLatex) renderLatex();
+    // skipHeavy 파라미터를 통해 드래그 중 교점/수식 연산을 패스함
+    function updateAll(skipHeavy = false) {
+        if (!skipHeavy) renderLatex();
         const graphDiv = document.getElementById('graphPlot');
         if (!graphDiv || !graphDiv.layout) return;
 
         const currentXRange = graphDiv.layout.xaxis.range;
-        const newTraces = generateTraces(currentXRange);
+        const newTraces = generateTraces(currentXRange, skipHeavy);
         
         if (typeof Plotly !== 'undefined') {
             Plotly.react('graphPlot', newTraces, graphDiv.layout);
@@ -321,31 +348,22 @@
         }
     }
 
-    // --- [핵심] 그래프 선택 및 드래그 제어 컨트롤러 ---
     function selectGraph(funcId) {
         selectedFuncId = funcId;
-        renderUI();
-        updateAll();
-        
+        renderUI(); updateAll();
         const sb = document.getElementById('statusBoard');
         const f = functionsList.find(x => x.id === funcId);
         sb.className = 'status-board active';
         sb.innerHTML = `✅ <span style="color:${f.color}">선택됨</span> - 그래프를 마우스로 잡고 당겨보세요. (바탕 더블클릭 시 선택 해제)`;
-        
-        // 플롯리 기본 패닝 중지 -> 드래그가 커스텀 이벤트로 넘어가도록 설정
         Plotly.relayout('graphPlot', {dragmode: false});
     }
 
     function deselectGraph() {
         selectedFuncId = null;
-        renderUI();
-        updateAll();
-        
+        renderUI(); updateAll();
         const sb = document.getElementById('statusBoard');
         sb.className = 'status-board';
-        sb.innerHTML = `💡 그래프의 선을 <strong>클릭</strong>하면 선택됩니다. 화면의 빈 공간을 <strong>더블클릭</strong>하면 선택이 해제됩니다.`;
-        
-        // 플롯리 기본 패닝 복구
+        sb.innerHTML = `💡 그래프 선을 <strong>클릭</strong>하여 선택한 후 바탕을 <strong>드래그</strong>하면 평행이동합니다. (바탕 더블클릭 시 선택 해제)`;
         Plotly.relayout('graphPlot', {dragmode: 'pan'});
     }
 
@@ -354,69 +372,66 @@
 
         const layout = {
             dragmode: 'pan',
-            xaxis: { range: [-5, 5], dtick: 0.5, zeroline: true, zerolinecolor: '#343a40', zerolinewidth: 2, gridcolor: '#e9ecef' },
-            yaxis: { range: [-5, 5], dtick: 0.5, zeroline: true, zerolinecolor: '#343a40', zerolinewidth: 2, gridcolor: '#e9ecef', scaleanchor: 'x', scaleratio: 1 },
+            xaxis: { 
+                range: [-5, 5], dtick: 0.5, 
+                zeroline: true, zerolinecolor: '#343a40', zerolinewidth: 2, gridcolor: '#e9ecef',
+                showticklabels: true, tickfont: { size: 14, color: '#212529', weight: 'bold' } // X축 눈금 숫자 가시성 강화
+            },
+            yaxis: { 
+                range: [-5, 5], dtick: 0.5, 
+                zeroline: true, zerolinecolor: '#343a40', zerolinewidth: 2, gridcolor: '#e9ecef', 
+                scaleanchor: 'x', scaleratio: 1,
+                showticklabels: true, tickfont: { size: 14, color: '#212529', weight: 'bold' } // Y축 눈금 숫자 가시성 강화
+            },
             margin: { l: 60, r: 40, t: 30, b: 60 }, hovermode: 'closest'
         };
 
         Plotly.newPlot('graphPlot', [], layout, { responsive: true, scrollZoom: true, displayModeBar: false });
-
         const graphDiv = document.getElementById('graphPlot');
 
-        // [이벤트] 선 클릭 시 선택
         graphDiv.on('plotly_click', function(data) {
-            if (data.points && data.points.length > 0 && data.points[0].customdata) {
-                selectGraph(data.points[0].customdata);
-            }
+            if (data.points && data.points.length > 0 && data.points[0].customdata) selectGraph(data.points[0].customdata);
         });
 
-        // [이벤트] 바탕 더블클릭 시 해제
         graphDiv.on('plotly_doubleclick', function() { deselectGraph(); });
 
-        // [이벤트] 드래그 (평행이동) 시작
         graphDiv.addEventListener('mousedown', function(e) {
             if (!selectedFuncId) return;
             const bgRect = graphDiv.querySelector('.gridlayer').getBoundingClientRect();
-            // 캔버스 내부 클릭인지 검증
             if (e.clientX < bgRect.left || e.clientX > bgRect.right || e.clientY < bgRect.top || e.clientY > bgRect.bottom) return;
-
             isDraggingTrace = true;
             startDataX = graphDiv._fullLayout.xaxis.p2d(e.clientX - bgRect.left);
             startDataY = graphDiv._fullLayout.yaxis.p2d(e.clientY - bgRect.top);
             startFuncState = JSON.parse(JSON.stringify(functionsList.find(f => f.id === selectedFuncId)));
         });
 
-        // [이벤트] 드래그 중 (실시간 연산)
         window.addEventListener('mousemove', function(e) {
             if (!isDraggingTrace || !selectedFuncId) return;
             const bgRect = graphDiv.querySelector('.gridlayer').getBoundingClientRect();
             let currDataX = graphDiv._fullLayout.xaxis.p2d(e.clientX - bgRect.left);
             let currDataY = graphDiv._fullLayout.yaxis.p2d(e.clientY - bgRect.top);
 
-            let dx = currDataX - startDataX;
-            let dy = currDataY - startDataY;
-
+            let dx = currDataX - startDataX; let dy = currDataY - startDataY;
             let targetFunc = functionsList.find(f => f.id === selectedFuncId);
             if (targetFunc.type === 'poly') {
                 targetFunc.coeffs = shiftPolynomial(startFuncState.coeffs, dx, dy);
             } else {
-                targetFunc.H = formatNumber(startFuncState.H + dx);
-                targetFunc.K = formatNumber(startFuncState.K + dy);
+                targetFunc.H = formatNumber(startFuncState.H + dx); targetFunc.K = formatNumber(startFuncState.K + dy);
             }
 
-            syncInputValues(targetFunc); // 입력칸 깜빡임 없이 즉시 반영
-            updateAll(true); // 수식 렌더링은 생략하고 그래프만 즉각 반응 (최적화)
+            syncInputValues(targetFunc); 
+            // 드래그 중에는 무거운 교점 연산과 수식 렌더링을 생략하여 60fps 부드러운 이동 보장
+            updateAll(true); 
         });
 
-        // [이벤트] 드래그 종료 (최종 수식 렌더링)
         window.addEventListener('mouseup', function() {
             if (isDraggingTrace) {
                 isDraggingTrace = false;
-                updateAll(false); // 드래그가 끝나면 비로소 MathJax 수식을 갱신함
+                // 드래그 종료 시 교점 및 수식을 최종 재연산하여 표출
+                updateAll(false); 
             }
         });
 
-        // 패닝 및 스크롤 줌 업데이트
         graphDiv.on('plotly_relayout', function(eventData) {
             if (eventData['xaxis.dtick'] || eventData['yaxis.dtick'] || eventData['yaxis.scaleanchor'] || eventData['yaxis.range[0]'] === undefined) return;
             updateAll();
@@ -427,7 +442,6 @@
 
     window.onload = initGraph;
 
-    // 무한 스크롤(Infinite Scroll) 캔버스 확장 로직
     let isResizing = false;
     window.addEventListener('scroll', function() {
         if ((window.innerHeight + window.scrollY) >= document.body.offsetHeight - 50) {
@@ -446,7 +460,6 @@
                 let plotAreaHeight = graphDiv.clientHeight - graphDiv.layout.margin.t - graphDiv.layout.margin.b;
                 let plotAreaWidth = graphDiv.clientWidth - graphDiv.layout.margin.l - graphDiv.layout.margin.r;
                 let newYSpan = plotAreaHeight * (currentXSpan / plotAreaWidth);
-                
                 Plotly.relayout(graphDiv, { 'yaxis.range': [currentYMax - newYSpan, currentYMax] }).then(() => { isResizing = false; });
             });
         }
