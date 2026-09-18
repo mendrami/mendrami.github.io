@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>함수 비교 (평행이동 및 X축 고정 모델)</title>
+    <title>함수 비교 (UI 최적화 모델)</title>
     <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
     <style>
@@ -76,6 +76,7 @@
         <button onclick="addFunction()">+ 함수 추가</button>
     </div>
 
+    <!-- UI 카드가 렌더링될 영역 -->
     <div id="functionsGrid" class="functions-grid"></div>
     <div id="math-display">수식을 불러오는 중입니다...</div>
     
@@ -189,11 +190,15 @@
     function renderUI() {
         const grid = document.getElementById('functionsGrid');
         grid.innerHTML = '';
-        functionsList.forEach(func => {
+        
+        // 함수 UI 카드를 렌더링할 때 배열의 고유 인덱스를 참조하여 타이틀 생성 (동기화)
+        functionsList.forEach((func, index) => {
             const card = document.createElement('div');
             card.className = 'func-card' + (selectedFuncId === func.id ? ' selected' : '');
             card.id = `card_${func.id}`; card.style.borderLeftColor = func.color;
+            
             let typeName = func.type === 'poly' ? '다항함수' : (func.type === 'exp' ? '지수함수' : '로그함수');
+            typeName = `${typeName} ${index + 1}`; // 예: "다항함수 1", "지수함수 2"
 
             let innerHTML = `
                 <div class="func-card-header">
@@ -317,7 +322,7 @@
         const axisIntX = [], axisIntY = [], axisIntText = [];
         const panelData = { yInt: [], xInt: [], funcInt: [] };
 
-        visibleFunctions.forEach((f, index) => {
+        visibleFunctions.forEach((f) => {
             const yVal = [];
             for (let i = 0; i < xVal.length; i++) {
                 let y = evaluateFunction(f, xVal[i]);
@@ -326,27 +331,23 @@
             }
             yDataCollection.push(yVal);
 
+            // 전체 리스트 기준 고유 인덱스로 이름 생성
+            let overallIndex = functionsList.indexOf(f) + 1;
             let typeName = f.type === 'poly' ? '다항함수' : (f.type === 'exp' ? '지수함수' : '로그함수');
-            let fName = `${typeName} ${index + 1}`;
+            let fName = `${typeName} ${overallIndex}`;
 
             if (!skipHeavy) {
-                // Y축 절편 (x=0)
                 let y_at_0 = evaluateFunction(f, 0);
                 if (isFinite(y_at_0) && Math.abs(y_at_0) < 1e150) {
                     panelData.yInt.push({ name: fName, color: f.color, x: 0, y: y_at_0 });
-                    
-                    // 원점(0,0)을 지날 경우 X축 교점 패널에도 추가 (중복 허용 표시)
                     if (Math.abs(y_at_0) < 1e-4) {
                         panelData.xInt.push({ name: fName, color: f.color, x: 0, y: 0 });
                     }
-
-                    // 그래프 마커는 한 번만 찍음
                     if (!axisIntX.some(x => Math.abs(x - 0) < 1e-4 && Math.abs(axisIntY[axisIntX.indexOf(x)] - y_at_0) < 1e-4)) {
                         axisIntX.push(0); axisIntY.push(y_at_0); axisIntText.push(`(0.00, ${y_at_0.toFixed(2)})`);
                     }
                 }
 
-                // X축 절편 (y=0) 사잇값 정리
                 for (let k = 0; k < xVal.length - 1; k++) {
                     let y1 = yVal[k], y2 = yVal[k+1];
                     if (isNaN(y1) || isNaN(y2)) continue;
@@ -354,7 +355,6 @@
                         let t = y1 / (y1 - y2);
                         let ix = xVal[k] + t * (xVal[k+1] - xVal[k]);
                         
-                        // 원점으로 처리된 것은 중복 추가하지 않음
                         if (!panelData.xInt.some(p => p.name === fName && Math.abs(p.x - ix) < 1e-4)) {
                             panelData.xInt.push({ name: fName, color: f.color, x: ix, y: 0 });
                         }
@@ -371,7 +371,8 @@
                 x: xVal, y: yVal, mode: 'lines', name: fName, 
                 line: { color: f.color, width: isSelected ? 7 : 3 },
                 customdata: Array(xVal.length).fill(f.id), 
-                hovertemplate: '(%{x:.2f}, %{y:.2f})<extra>%{name}</extra>' // 호버 좌표 툴팁
+                // [해결] <extra></extra> 안을 비워서 불필요한 %{name} 박스 제거, 깔끔한 좌표만 표기
+                hovertemplate: '(%{x:.2f}, %{y:.2f})<extra></extra>' 
             });
         });
 
@@ -410,21 +411,15 @@
         return Math.abs(range[1] - range[0]) <= 20 ? 0.5 : undefined; 
     }
 
-    // --- [핵심 추가] X축 눈금 플로팅 기능 (화면에 항상 노출) ---
     function floatXAxis() {
         const graphDiv = document.getElementById('graphPlot');
         if (!graphDiv) return;
-        
-        // Plotly 렌더링 엔진이 생성한 X축 레이어를 선택
         const xAxisLayers = graphDiv.querySelectorAll('.xaxislayer-above');
         const rect = graphDiv.getBoundingClientRect();
-        
-        // 화면 하단 대비 캔버스 끝단이 얼마나 밑으로 파묻혔는지 계산
         const bottomHidden = rect.bottom - window.innerHeight;
 
         xAxisLayers.forEach(layer => {
             if (bottomHidden > 0) {
-                // 파묻힌 만큼 위로 끌어올려 항상 화면 밑바닥에 위치하도록 CSS 변환
                 layer.style.transform = `translateY(-${bottomHidden}px)`;
             } else {
                 layer.style.transform = `translateY(0px)`;
@@ -480,7 +475,6 @@
         Plotly.newPlot('graphPlot', [], layout, { responsive: true, scrollZoom: true, displayModeBar: false });
         const graphDiv = document.getElementById('graphPlot');
 
-        // 매 렌더링 직후 플로팅 함수 실행
         graphDiv.on('plotly_afterplot', floatXAxis);
 
         graphDiv.on('plotly_click', function(data) {
@@ -529,9 +523,8 @@
     window.onload = initGraph;
 
     let isResizing = false;
-    // 브라우저 화면 스크롤 이벤트에 X축 플로팅 리스너 병합
     window.addEventListener('scroll', function() {
-        floatXAxis(); // 스크롤 시 X축 항상 보장
+        floatXAxis(); 
         
         if ((window.innerHeight + window.scrollY) >= document.body.offsetHeight - 50) {
             if (isResizing) return;
