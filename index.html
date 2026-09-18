@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>지수함수와 로그함수 대칭성 시각화</title>
+    <title>지수함수와 로그함수 대칭성 시각화 (Zoom 기능 포함)</title>
     <!-- 시각화를 위한 Plotly 라이브러리 로드 -->
     <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
     <style>
@@ -27,6 +27,24 @@
             background: #e9ecef;
             border-radius: 8px;
         }
+        .zoom-controls {
+            margin-top: 15px;
+        }
+        button {
+            padding: 8px 16px;
+            margin: 0 5px;
+            font-size: 1rem;
+            font-weight: bold;
+            cursor: pointer;
+            border: none;
+            border-radius: 5px;
+            background-color: #0d6efd;
+            color: white;
+            transition: background-color 0.2s;
+        }
+        button:hover {
+            background-color: #0b5ed7;
+        }
         input[type=range] {
             width: 60%;
             cursor: pointer;
@@ -44,29 +62,67 @@
             <label for="baseSlider"><strong>밑 (Base) <span class="math-text">a</span> : </strong></label>
             <span id="baseValue" class="math-text" style="font-size: 1.2rem; color: #d63384;">2.0</span><br><br>
             <input type="range" id="baseSlider" min="0.1" max="5.0" step="0.1" value="2.0">
-            <p style="font-size: 0.9rem; color: #6c757d;">(슬라이더를 움직여 밑 $a$의 값을 변경해 보세요. $a=1$인 경우는 정의되지 않아 제외됩니다.)</p>
+            <p style="font-size: 0.9rem; color: #6c757d;">(슬라이더를 움직여 밑 $a$의 값을 변경해 보세요.)</p>
+            
+            <div class="zoom-controls">
+                <button onclick="zoom(0.5)">+ 줌 인 (확대)</button>
+                <button onclick="zoom(2.0)">- 줌 아웃 (축소)</button>
+                <button onclick="resetZoom()" style="background-color: #6c757d;">초기화</button>
+            </div>
+            <p style="font-size: 0.85rem; color: #6c757d; margin-top: 10px;">그래프 영역에서 <strong>마우스 휠(스크롤)</strong>을 사용하거나 <strong>드래그</strong>하여 영역을 확대/축소할 수도 있습니다.</p>
         </div>
 
         <div id="graphPlot"></div>
     </div>
 
     <script>
+        // 전역 범위(Range) 변수 설정 (초기값 -5 ~ 5)
+        let currentRange = [-5, 5];
+        let currentBase = 2.0;
+
         // 초기 그래프 렌더링
         drawGraph();
 
         // 슬라이더 이벤트 리스너 설정
         document.getElementById('baseSlider').addEventListener('input', function() {
             let a = parseFloat(this.value);
-            // 밑이 1이 되는 경우, 로그함수 분모가 0이 되는 것을 방지
             if (a === 1.0) {
                 a = 1.1; 
                 this.value = 1.1;
             }
+            currentBase = a;
             document.getElementById('baseValue').innerText = a.toFixed(1);
-            drawGraph(a);
+            updatePlot(); // 전체를 다시 그리지 않고 데이터만 업데이트
         });
 
-        function drawGraph(a = 2.0) {
+        // 줌 기능 함수 (배율에 따라 범위 조정)
+        function zoom(factor) {
+            const center = (currentRange[0] + currentRange[1]) / 2;
+            const span = (currentRange[1] - currentRange[0]) / 2;
+            
+            currentRange[0] = center - (span * factor);
+            currentRange[1] = center + (span * factor);
+            
+            updateLayout();
+        }
+
+        // 줌 초기화 함수
+        function resetZoom() {
+            currentRange = [-5, 5];
+            updateLayout();
+        }
+
+        // Plotly 레이아웃(범위)만 업데이트
+        function updateLayout() {
+            const update = {
+                'xaxis.range': currentRange,
+                'yaxis.range': currentRange
+            };
+            Plotly.relayout('graphPlot', update);
+        }
+
+        // 데이터 생성 로직 모듈화
+        function generateData(a, range) {
             const xValuesExp = [];
             const yValuesExp = [];
             const xValuesLog = [];
@@ -74,73 +130,106 @@
             const xValuesLine = [];
             const yValuesLine = [];
 
-            // 1. 지수함수 데이터 및 y=x 데이터 생성 (-5 <= x <= 5)
-            for (let x = -5; x <= 5; x += 0.05) {
+            // 계산을 위한 충분한 도메인 확보 (화면 밖의 데이터도 일부 생성)
+            const minX = Math.min(-10, range[0] * 2);
+            const maxX = Math.max(10, range[1] * 2);
+            const step = (maxX - minX) / 1000; // 해상도 유지
+
+            for (let x = minX; x <= maxX; x += step) {
+                // 지수함수 & 항등함수
                 xValuesExp.push(x);
-                yValuesExp.push(Math.pow(a, x)); // f(x) = a^x
-
+                yValuesExp.push(Math.pow(a, x));
+                
                 xValuesLine.push(x);
-                yValuesLine.push(x); // f(x) = x
+                yValuesLine.push(x);
+
+                // 로그함수 (x > 0 조건 필수)
+                if (x > 0) {
+                    xValuesLog.push(x);
+                    yValuesLog.push(Math.log(x) / Math.log(a));
+                }
             }
 
-            // 2. 로그함수 데이터 생성 (x > 0, 정의역 제한)
-            for (let x = 0.001; x <= 5; x += 0.05) {
-                xValuesLog.push(x);
-                yValuesLog.push(Math.log(x) / Math.log(a)); // 밑변환 공식: log_a(x) = ln(x) / ln(a)
-            }
+            return [
+                { x: xValuesExp, y: yValuesExp },
+                { x: xValuesLog, y: yValuesLog },
+                { x: xValuesLine, y: yValuesLine }
+            ];
+        }
 
-            // 지수함수 트레이스
+        // 데이터만 갱신 (슬라이더 이동 시)
+        function updatePlot() {
+            const dataSets = generateData(currentBase, currentRange);
+            
+            const update = {
+                x: [dataSets[0].x, dataSets[1].x, dataSets[2].x],
+                y: [dataSets[0].y, dataSets[1].y, dataSets[2].y],
+                name: [
+                    `y = ${currentBase.toFixed(1)}<sup>x</sup>`,
+                    `y = log<sub>${currentBase.toFixed(1)}</sub>(x)`,
+                    'y = x (대칭축)'
+                ]
+            };
+            
+            Plotly.restyle('graphPlot', update);
+        }
+
+        // 초기 그래프 생성 함수
+        function drawGraph() {
+            const dataSets = generateData(currentBase, currentRange);
+
             const traceExp = {
-                x: xValuesExp,
-                y: yValuesExp,
-                mode: 'lines',
-                name: `y = ${a.toFixed(1)}<sup>x</sup>`,
+                x: dataSets[0].x, y: dataSets[0].y,
+                mode: 'lines', name: `y = ${currentBase.toFixed(1)}<sup>x</sup>`,
                 line: { color: '#0d6efd', width: 3 }
             };
 
-            // 로그함수 트레이스
             const traceLog = {
-                x: xValuesLog,
-                y: yValuesLog,
-                mode: 'lines',
-                name: `y = log<sub>${a.toFixed(1)}</sub>(x)`,
+                x: dataSets[1].x, y: dataSets[1].y,
+                mode: 'lines', name: `y = log<sub>${currentBase.toFixed(1)}</sub>(x)`,
                 line: { color: '#dc3545', width: 3 }
             };
 
-            // 항등함수 (y = x) 트레이스
             const traceIdentity = {
-                x: xValuesLine,
-                y: yValuesLine,
-                mode: 'lines',
-                name: 'y = x (대칭축)',
+                x: dataSets[2].x, y: dataSets[2].y,
+                mode: 'lines', name: 'y = x (대칭축)',
                 line: { color: '#6c757d', width: 2, dash: 'dash' }
             };
 
-            const data = [traceExp, traceLog, traceIdentity];
-
             const layout = {
                 xaxis: { 
-                    range: [-5, 5], 
-                    zeroline: true, 
-                    zerolinecolor: 'black',
+                    range: currentRange, 
+                    zeroline: true, zerolinecolor: '#343a40', zerolinewidth: 2,
                     title: 'x 축'
                 },
                 yaxis: { 
-                    range: [-5, 5], 
-                    zeroline: true, 
-                    zerolinecolor: 'black',
+                    range: currentRange, 
+                    zeroline: true, zerolinecolor: '#343a40', zerolinewidth: 2,
                     title: 'y 축',
-                    scaleanchor: "x", // x, y축 비율을 1:1로 고정하여 기하학적 대칭을 정확히 표현
+                    scaleanchor: "x", // x:y 비율 1:1 고정 (대칭성 유지)
                     scaleratio: 1 
                 },
                 width: 700,
                 height: 700,
                 margin: { l: 50, r: 50, t: 50, b: 50 },
-                legend: { x: 0.05, y: 0.95 }
+                legend: { x: 0.05, y: 0.95 },
+                hovermode: 'closest'
             };
 
-            // Plotly를 이용해 지정된 div에 그래프 렌더링
-            Plotly.newPlot('graphPlot', data, layout, {responsive: true});
+            // scrollZoom: true 옵션을 추가하여 마우스 휠 줌을 활성화
+            Plotly.newPlot('graphPlot', [traceExp, traceLog, traceIdentity], layout, {
+                responsive: true,
+                scrollZoom: true,
+                displayModeBar: true // 플롯리 기본 도구 모음 표시
+            });
+
+            // 마우스 휠/드래그로 줌을 했을 때 내부 상태(currentRange) 동기화
+            document.getElementById('graphPlot').on('plotly_relayout', function(eventData) {
+                if (eventData['xaxis.range[0]'] !== undefined) {
+                    currentRange[0] = eventData['xaxis.range[0]'];
+                    currentRange[1] = eventData['xaxis.range[1]'];
+                }
+            });
         }
     </script>
 </body>
