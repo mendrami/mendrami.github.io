@@ -24,7 +24,7 @@
         .functions-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 15px; margin-bottom: 20px; }
         
         .func-card { background: #fff; border: 2px solid #dee2e6; border-radius: 8px; padding: 12px; box-shadow: 0 2px 5px rgba(0,0,0,0.04); position: relative; transition: all 0.2s; border-left-width: 6px; }
-        .func-card.selected { border-color: #212529; box-shadow: 0 0 12px rgba(0,0,0,0.2); }
+        .func-card.selected { border-color: #212529; box-shadow: 0 0 12px rgba(0,0,0,0.2); transform: scale(1.02); }
         .func-card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; border-bottom: 1px solid #f1f3f5; padding-bottom: 8px; }
         .func-card-title { font-weight: bold; font-size: 1.05rem; display: flex; align-items: center; gap: 8px; }
         
@@ -73,7 +73,8 @@
 <div class="container">
     <h1>함수 비교</h1>
     <div id="statusBoard" class="status-board">
-        💡 그래프를 살짝 터치하면 <strong>실시간 접선</strong>이 뜨고, <strong>오래 누르면(0.6초)</strong> 선택되어 이동할 수 있습니다.
+        💡 <b>[데스크탑]</b> 그래프 선 클릭 시 선택<br>
+        💡 <b>[모바일]</b> 가볍게 스치면 <b>접선</b> 표시, <b>지긋이 0.6초간 누르면</b> 그래프 <b>이동(선택) 모드</b> 전환
     </div>
 
     <div class="add-controls">
@@ -85,10 +86,10 @@
             <option value="custom">자유 입력 함수 (직접 쓰기)</option>
         </select>
         <button onclick="addFunction()">+ 함수 추가</button>
-        <div style="border-left: 2px solid #dee2e6; height: 25px;" id="controlDivider"></div>
+        <div style="border-left: 2px solid #dee2e6; height: 25px;"></div>
         <label class="tangent-toggle">
             <input type="checkbox" id="tangentModeToggle" onchange="clearTangentShape()"> 
-            <span style="color:#0d6efd;">⤡</span> 실시간 접선
+            <span style="color:#0d6efd;">⤡</span> 실시간 접선 렌더링
         </label>
     </div>
 
@@ -523,6 +524,7 @@
         selectedFuncId = funcId; renderUI(); updateAll();
         const sb = document.getElementById('statusBoard');
         const f = functionsList.find(x => x.id === funcId);
+        if (!f) return;
         let sameTypeFuncs = functionsList.filter(x => x.type === f.type);
         let typeIndex = sameTypeFuncs.indexOf(f) + 1;
         let typeName = f.type === 'poly' ? '다항함수' : (f.type === 'power' ? '멱함수' : (f.type === 'exp' ? '지수함수' : (f.type === 'log' ? '로그함수' : '자유입력')));
@@ -538,8 +540,66 @@
         selectedFuncId = null; renderUI(); updateAll();
         const sb = document.getElementById('statusBoard');
         sb.className = 'status-board';
-        sb.innerHTML = `💡 그래프를 살짝 터치하면 <strong>실시간 접선</strong>이 뜨고, <strong>오래 누르면(0.6초)</strong> 선택되어 이동할 수 있습니다.`;
+        sb.innerHTML = `💡 <b>[데스크탑]</b> 선 클릭 시 선택 / <b>[모바일]</b> 가볍게 스치면 <b>접선</b> 표시, <b>0.6초간 누르면</b> 이동 모드 전환`;
         Plotly.relayout('graphPlot', {dragmode: 'pan'});
+    }
+
+    // --- 공용 접선 그리기 함수 (PC + Mobile 통일) ---
+    function drawTangentFromObj(f, px, py, isInverse) {
+        let m = 0;
+        if (isInverse) {
+            const origM = evaluateDerivative(f, py);
+            if (Math.abs(origM) < 1e-8 || isNaN(origM)) return;
+            m = 1 / origM;
+        } else {
+            m = evaluateDerivative(f, px);
+        }
+        if (isNaN(m)) return;
+
+        const tx0 = px - 10, tx1 = px + 10;
+        const ty0 = py - m * 10, ty1 = py + m * 10;
+
+        const shape = { type: 'line', x0: tx0, y0: ty0, x1: tx1, y1: ty1, line: { color: f.color, width: 2, dash: 'dot' } };
+        const annotation = {
+            x: px, y: py, text: `<b>기울기(m) = ${m.toFixed(3)}</b>`,
+            showarrow: true, arrowhead: 2, ax: 0, ay: -40,
+            font: { size: 14, color: '#fff' }, bgcolor: '#212529', bordercolor: f.color, borderpad: 4, borderwidth: 2
+        };
+        Plotly.relayout('graphPlot', { shapes: [shape], annotations: [annotation] });
+    }
+
+    // --- 가장 가까운 그래프 곡선을 찾는 수학적 엔진 (터치 추적용) ---
+    function findClosestFunction(px, py) {
+        let closest = null;
+        let minDist = Infinity;
+        let graphDiv = document.getElementById('graphPlot');
+        if (!graphDiv || !graphDiv.layout) return null;
+
+        let yRange = graphDiv.layout.yaxis.range;
+        let threshold = Math.abs(yRange[1] - yRange[0]) * 0.08; // Y축 화면 비율 8% 이내 판정
+
+        functionsList.forEach(f => {
+            if (!f.visible) return;
+            // 일반 함수 거리 측정
+            let y = evaluateFunction(f, px);
+            if (!isNaN(y)) {
+                let dist = Math.abs(y - py);
+                if (dist < minDist && dist < threshold) {
+                    minDist = dist; closest = { f: f, isInverse: false, px: px, py: y };
+                }
+            }
+            // 역함수 대칭축 거리 측정
+            if (f.showInverse && f.type !== 'custom') {
+                let invX = evaluateFunction(f, py);
+                if (!isNaN(invX)) {
+                    let dist = Math.abs(invX - px);
+                    if (dist < minDist && dist < threshold) {
+                        minDist = dist; closest = { f: f, isInverse: true, px: invX, py: py };
+                    }
+                }
+            }
+        });
+        return closest;
     }
 
     function initGraph() {
@@ -557,106 +617,125 @@
 
         graphDiv.on('plotly_afterplot', floatXAxis);
 
-        let lastHoveredFuncId = null;
-
-        // --- 실시간 접선 및 역함수 미분 기울기 렌더링 ---
+        // --- 1. [데스크탑 PC 전용] 마우스 호버 및 클릭 로직 ---
         graphDiv.on('plotly_hover', function(data) {
             if (!document.getElementById('tangentModeToggle').checked) return;
+            if (data.event && data.event.pointerType === 'touch') return; // 모바일 터치 이벤트 겹침 방지
+            
             const pt = data.points[0];
             const funcId = pt.customdata;
             if (!funcId) return;
 
-            lastHoveredFuncId = funcId;
+            let isInverse = false;
+            let origId = funcId;
+            if (typeof funcId === 'string' && funcId.startsWith('inv_')) { origId = funcId.replace('inv_', ''); isInverse = true; }
+            
+            const f = functionsList.find(x => x.id === origId);
+            if (!f) return;
+            drawTangentFromObj(f, pt.x, pt.y, isInverse);
+        });
 
-            let m = 0; let px = pt.x, py = pt.y;
+        graphDiv.on('plotly_unhover', function(data) {
+            if (data.event && data.event.pointerType === 'touch') return;
+            if (document.getElementById('tangentModeToggle').checked) clearTangentShape();
+        });
 
-            if (typeof funcId === 'string' && funcId.startsWith('inv_')) {
-                const origId = funcId.replace('inv_', '');
-                const f = functionsList.find(x => x.id === origId);
-                if (!f) return;
-                const origM = evaluateDerivative(f, py);
-                if (Math.abs(origM) < 1e-8 || isNaN(origM)) return;
-                m = 1 / origM;
-            } else {
-                const f = functionsList.find(x => x.id === funcId);
-                if (!f) return;
-                m = evaluateDerivative(f, px);
+        graphDiv.on('plotly_click', function(data) {
+            if (data.event && data.event.pointerType === 'touch') return; // 모바일 클릭 오작동 방지
+            if (data.points && data.points.length > 0 && data.points[0].customdata) {
+                let id = data.points[0].customdata;
+                if (typeof id === 'string' && id.startsWith('inv_')) id = id.replace('inv_', '');
+                selectGraph(id);
+            }
+        });
+
+
+        // --- 2. [모바일 터치 전용] 롱프레스 및 실시간 드래그 접선 엔진 ---
+        let touchTimer = null;
+        let touchStartClientX = 0, touchStartClientY = 0;
+        let touchTargetObj = null;
+
+        function getClientCoords(e) { return (e.touches && e.touches.length > 0) ? { clientX: e.touches[0].clientX, clientY: e.touches[0].clientY } : { clientX: e.clientX, clientY: e.clientY }; }
+
+        graphDiv.addEventListener('touchstart', function(e) {
+            if (e.touches.length > 1) return; 
+            const coords = getClientCoords(e);
+            touchStartClientX = coords.clientX; touchStartClientY = coords.clientY;
+
+            const bgRect = graphDiv.querySelector('.gridlayer').getBoundingClientRect();
+            if (coords.clientX < bgRect.left || coords.clientX > bgRect.right || coords.clientY < bgRect.top || coords.clientY > bgRect.bottom) return;
+
+            let px = graphDiv._fullLayout.xaxis.p2d(coords.clientX - bgRect.left);
+            let py = graphDiv._fullLayout.yaxis.p2d(coords.clientY - bgRect.top);
+
+            touchTargetObj = findClosestFunction(px, py);
+
+            // [롱프레스 기능] 그래프 위에 손가락을 대고 0.6초 유지하면 선택
+            if (touchTimer) clearTimeout(touchTimer);
+            if (touchTargetObj && !selectedFuncId) {
+                touchTimer = setTimeout(() => {
+                    selectGraph(touchTargetObj.f.id);
+                    touchTargetObj = null;
+                    if(navigator.vibrate) navigator.vibrate(50); // 햅틱 피드백 (모바일 지원시)
+                }, 600);
             }
 
-            if (isNaN(m)) return;
+            // 그래프가 선택된 상태라면 터치 시 드래그 준비
+            if (selectedFuncId) {
+                handleDragStart(coords.clientX, coords.clientY);
+            }
 
-            const tx0 = px - 10, tx1 = px + 10;
-            const ty0 = py - m * 10, ty1 = py + m * 10;
+            // [가볍게 터치] 접선 모드일 때 터치 즉시 접선 그리기
+            if (document.getElementById('tangentModeToggle').checked && touchTargetObj && !selectedFuncId) {
+                drawTangentFromObj(touchTargetObj.f, touchTargetObj.px, touchTargetObj.py, touchTargetObj.isInverse);
+            }
+        }, { passive: false });
 
-            const shape = {
-                type: 'line', x0: tx0, y0: ty0, x1: tx1, y1: ty1,
-                line: { color: pt.fullData.line.color, width: 2, dash: 'dot' }
-            };
+        graphDiv.addEventListener('touchmove', function(e) {
+            if (e.touches.length > 1) return;
+            const coords = getClientCoords(e);
 
-            const annotation = {
-                x: px, y: py,
-                text: `<b>기울기(m) = ${m.toFixed(3)}</b>`,
-                showarrow: true, arrowhead: 2, ax: 0, ay: -40,
-                font: { size: 14, color: '#fff' },
-                bgcolor: '#212529', bordercolor: pt.fullData.line.color, borderpad: 4, borderwidth: 2
-            };
+            // 손가락이 10px 이상 움직이면 롱프레스(선택) 취소
+            if (touchTimer) {
+                let dx = coords.clientX - touchStartClientX; let dy = coords.clientY - touchStartClientY;
+                if (Math.sqrt(dx*dx + dy*dy) > 10) { clearTimeout(touchTimer); touchTimer = null; }
+            }
 
-            Plotly.relayout('graphPlot', { shapes: [shape], annotations: [annotation] });
-        });
+            // [드래그 평행이동] 선택된 그래프를 손가락으로 끌고 다닐 때
+            if (isDraggingTrace && selectedFuncId) {
+                handleDragMove(coords.clientX, coords.clientY);
+                if(e.cancelable) e.preventDefault(); // 스크롤 방지
+                return;
+            }
 
-        graphDiv.on('plotly_unhover', function() {
-            lastHoveredFuncId = null;
-            if (!document.getElementById('tangentModeToggle').checked) return;
-            clearTangentShape();
-        });
+            // [터치 실시간 접선] 접선 모드일 때 손가락을 곡선 위로 비비면 접선 추적
+            if (document.getElementById('tangentModeToggle').checked && !selectedFuncId) {
+                const bgRect = graphDiv.querySelector('.gridlayer').getBoundingClientRect();
+                let px = graphDiv._fullLayout.xaxis.p2d(coords.clientX - bgRect.left);
+                let py = graphDiv._fullLayout.yaxis.p2d(coords.clientY - bgRect.top);
 
-        // 데스크탑 클릭은 즉시 선택, 모바일은 탭으로 바로 선택되지 않게 방지
-        graphDiv.on('plotly_click', function(data) {
-            if (data.event && data.event.pointerType === 'mouse') {
-                if (data.points && data.points.length > 0 && data.points[0].customdata) {
-                    let id = data.points[0].customdata;
-                    if (typeof id === 'string' && id.startsWith('inv_')) id = id.replace('inv_', '');
-                    selectGraph(id);
+                touchTargetObj = findClosestFunction(px, py);
+                if (touchTargetObj) {
+                    drawTangentFromObj(touchTargetObj.f, touchTargetObj.px, touchTargetObj.py, touchTargetObj.isInverse);
+                    if(e.cancelable) e.preventDefault(); // 접선을 그리는 중에는 화면 스크롤 정지
+                } else {
+                    clearTangentShape();
                 }
             }
-        });
-
-        // --- 모바일 롱프레스(오래 누르기)로 그래프 선택 기능 추가 ---
-        let touchTimer = null;
-        graphDiv.addEventListener('touchstart', function(e) {
-            if (touchTimer) clearTimeout(touchTimer);
-            if (lastHoveredFuncId) {
-                let targetId = lastHoveredFuncId;
-                if (typeof targetId === 'string' && targetId.startsWith('inv_')) targetId = targetId.replace('inv_', '');
-                touchTimer = setTimeout(function() {
-                    selectGraph(targetId);
-                    touchTimer = null;
-                }, 600); // 0.6초 동안 손가락을 대고 있으면 선택됨
-            }
-        }, { passive: true });
-
-        window.addEventListener('touchmove', function() {
-            if (touchTimer) {
-                clearTimeout(touchTimer);
-                touchTimer = null;
-            }
-        }, { passive: true });
+        }, { passive: false });
 
         window.addEventListener('touchend', function() {
-            if (touchTimer) {
-                clearTimeout(touchTimer);
-                touchTimer = null;
+            if (touchTimer) { clearTimeout(touchTimer); touchTimer = null; }
+            if (isDraggingTrace) { handleDragEnd(); }
+            
+            // 손가락을 떼면 접선 잔상 1초 유지 후 제거 (수치 확인용 편의 기능)
+            if (document.getElementById('tangentModeToggle').checked && !selectedFuncId) {
+                setTimeout(() => { if (!isDraggingTrace) clearTangentShape(); }, 1000);
             }
         });
 
-        // --- 드래그 평행이동 지원 (PC 마우스 + 모바일 터치) ---
-        function getClientCoords(e) {
-            if (e.touches && e.touches.length > 0) {
-                return { clientX: e.touches[0].clientX, clientY: e.touches[0].clientY };
-            }
-            return { clientX: e.clientX, clientY: e.clientY };
-        }
 
+        // --- 3. [공통] 데스크탑 마우스 드래그 로직 ---
         function handleDragStart(clientX, clientY) {
             if (!selectedFuncId) return;
             clearTangentShape(); 
@@ -691,23 +770,7 @@
         window.addEventListener('mousemove', function(e) { handleDragMove(e.clientX, e.clientY); });
         window.addEventListener('mouseup', handleDragEnd);
 
-        graphDiv.addEventListener('touchstart', function(e) {
-            // 드래그 중이거나 선택된 상태일 때의 터치 이동 처리
-            if (selectedFuncId) {
-                const coords = getClientCoords(e);
-                handleDragStart(coords.clientX, coords.clientY);
-            }
-        }, { passive: true });
-
-        window.addEventListener('touchmove', function(e) {
-            if (isDraggingTrace) {
-                const coords = getClientCoords(e);
-                handleDragMove(coords.clientX, coords.clientY);
-            }
-        }, { passive: true });
-
-        window.addEventListener('touchend', handleDragEnd);
-
+        // 렌더링 무한 루프 방지 로직 (annotations 변경 무시)
         graphDiv.on('plotly_relayout', function(eventData) {
             if (eventData['shapes'] !== undefined || eventData['annotations'] !== undefined || eventData['xaxis.dtick'] || eventData['yaxis.dtick'] || eventData['yaxis.scaleanchor'] || eventData['yaxis.range[0]'] === undefined) return;
             updateAll();
