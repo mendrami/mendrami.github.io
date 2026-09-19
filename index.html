@@ -73,7 +73,7 @@
 <div class="container">
     <h1>함수 비교</h1>
     <div id="statusBoard" class="status-board">
-        💡 그래프 선을 <strong>클릭(터치)</strong>하여 선택한 후 화면을 <strong>드래그</strong>하면 평행이동합니다.
+        💡 그래프를 살짝 터치하면 <strong>실시간 접선</strong>이 뜨고, <strong>오래 누르면(0.6초)</strong> 선택되어 이동할 수 있습니다.
     </div>
 
     <div class="add-controls">
@@ -85,7 +85,7 @@
             <option value="custom">자유 입력 함수 (직접 쓰기)</option>
         </select>
         <button onclick="addFunction()">+ 함수 추가</button>
-        <div style="border-left: 2px solid #dee2e6; height: 25px; display: none;" id="controlDivider"></div>
+        <div style="border-left: 2px solid #dee2e6; height: 25px;" id="controlDivider"></div>
         <label class="tangent-toggle">
             <input type="checkbox" id="tangentModeToggle" onchange="clearTangentShape()"> 
             <span style="color:#0d6efd;">⤡</span> 실시간 접선
@@ -538,7 +538,7 @@
         selectedFuncId = null; renderUI(); updateAll();
         const sb = document.getElementById('statusBoard');
         sb.className = 'status-board';
-        sb.innerHTML = `💡 그래프 선을 <strong>클릭(터치)</strong>하여 선택한 후 화면을 <strong>드래그</strong>하면 평행이동합니다.`;
+        sb.innerHTML = `💡 그래프를 살짝 터치하면 <strong>실시간 접선</strong>이 뜨고, <strong>오래 누르면(0.6초)</strong> 선택되어 이동할 수 있습니다.`;
         Plotly.relayout('graphPlot', {dragmode: 'pan'});
     }
 
@@ -557,12 +557,16 @@
 
         graphDiv.on('plotly_afterplot', floatXAxis);
 
-        // --- 마우스 및 터치 호버 (접선 및 기울기) ---
+        let lastHoveredFuncId = null;
+
+        // --- 실시간 접선 및 역함수 미분 기울기 렌더링 ---
         graphDiv.on('plotly_hover', function(data) {
             if (!document.getElementById('tangentModeToggle').checked) return;
             const pt = data.points[0];
             const funcId = pt.customdata;
             if (!funcId) return;
+
+            lastHoveredFuncId = funcId;
 
             let m = 0; let px = pt.x, py = pt.y;
 
@@ -601,19 +605,51 @@
         });
 
         graphDiv.on('plotly_unhover', function() {
+            lastHoveredFuncId = null;
             if (!document.getElementById('tangentModeToggle').checked) return;
             clearTangentShape();
         });
 
+        // 데스크탑 클릭은 즉시 선택, 모바일은 탭으로 바로 선택되지 않게 방지
         graphDiv.on('plotly_click', function(data) {
-            if (data.points && data.points.length > 0 && data.points[0].customdata) {
-                let id = data.points[0].customdata;
-                if (typeof id === 'string' && id.startsWith('inv_')) id = id.replace('inv_', '');
-                selectGraph(id);
+            if (data.event && data.event.pointerType === 'mouse') {
+                if (data.points && data.points.length > 0 && data.points[0].customdata) {
+                    let id = data.points[0].customdata;
+                    if (typeof id === 'string' && id.startsWith('inv_')) id = id.replace('inv_', '');
+                    selectGraph(id);
+                }
             }
         });
 
-        // --- 마우스 및 터치 드래그 평행이동 지원 (PC + Mobile 통일) ---
+        // --- 모바일 롱프레스(오래 누르기)로 그래프 선택 기능 추가 ---
+        let touchTimer = null;
+        graphDiv.addEventListener('touchstart', function(e) {
+            if (touchTimer) clearTimeout(touchTimer);
+            if (lastHoveredFuncId) {
+                let targetId = lastHoveredFuncId;
+                if (typeof targetId === 'string' && targetId.startsWith('inv_')) targetId = targetId.replace('inv_', '');
+                touchTimer = setTimeout(function() {
+                    selectGraph(targetId);
+                    touchTimer = null;
+                }, 600); // 0.6초 동안 손가락을 대고 있으면 선택됨
+            }
+        }, { passive: true });
+
+        window.addEventListener('touchmove', function() {
+            if (touchTimer) {
+                clearTimeout(touchTimer);
+                touchTimer = null;
+            }
+        }, { passive: true });
+
+        window.addEventListener('touchend', function() {
+            if (touchTimer) {
+                clearTimeout(touchTimer);
+                touchTimer = null;
+            }
+        });
+
+        // --- 드래그 평행이동 지원 (PC 마우스 + 모바일 터치) ---
         function getClientCoords(e) {
             if (e.touches && e.touches.length > 0) {
                 return { clientX: e.touches[0].clientX, clientY: e.touches[0].clientY };
@@ -651,20 +687,23 @@
             if (isDraggingTrace) { isDraggingTrace = false; updateAll(false); }
         }
 
-        // PC 마우스 이벤트
         graphDiv.addEventListener('mousedown', function(e) { handleDragStart(e.clientX, e.clientY); });
         window.addEventListener('mousemove', function(e) { handleDragMove(e.clientX, e.clientY); });
         window.addEventListener('mouseup', handleDragEnd);
 
-        // 모바일 터치 이벤트
         graphDiv.addEventListener('touchstart', function(e) {
-            const coords = getClientCoords(e);
-            handleDragStart(coords.clientX, coords.clientY);
+            // 드래그 중이거나 선택된 상태일 때의 터치 이동 처리
+            if (selectedFuncId) {
+                const coords = getClientCoords(e);
+                handleDragStart(coords.clientX, coords.clientY);
+            }
         }, { passive: true });
 
         window.addEventListener('touchmove', function(e) {
-            const coords = getClientCoords(e);
-            handleDragMove(coords.clientX, coords.clientY);
+            if (isDraggingTrace) {
+                const coords = getClientCoords(e);
+                handleDragMove(coords.clientX, coords.clientY);
+            }
         }, { passive: true });
 
         window.addEventListener('touchend', handleDragEnd);
