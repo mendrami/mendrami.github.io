@@ -74,7 +74,7 @@
 <div class="container">
     <h1>함수 비교</h1>
     <div id="statusBoard" class="status-board">
-        💡 <b>[데스크탑]</b> 선 클릭 시 선택 / <b>[모바일]</b> <b>1초 이상 길게 누르면</b> 그래프 선택(이동 가능)<br>
+        💡 <b>[데스크탑]</b> 선 클릭 시 선택 / <b>[모바일] 두 손가락 줌인·줌아웃 지원</b>, <b>1초 이상 길게 누르면</b> 그래프 이동 모드 진입<br>
         ※ 실시간 접선 기능은 <b>[실시간 접선 모드] 버튼을 ON</b>으로 켰을 때만 작동합니다.
     </div>
 
@@ -131,7 +131,6 @@
     let startDataX = 0, startDataY = 0;
     let startFuncState = null;
 
-    // 모바일 환경에서 가짜 클릭을 무시하기 위한 상태 변수
     let isTangentMode = false;
     let isTouchInteraction = false;
     let touchIgnoreTimeout = null;
@@ -560,12 +559,11 @@
         selectedFuncId = null; renderUI(); updateAll();
         const sb = document.getElementById('statusBoard');
         sb.className = 'status-board';
-        sb.innerHTML = `💡 <b>[데스크탑]</b> 선 클릭 시 선택 / <b>[모바일]</b> <b>1초 이상 길게 누르면</b> 그래프 선택(이동 가능)<br>
-                        ※ 실시간 접선 기능은 <b>[실시간 접선 모드] 버튼을 ON</b>으로 켰을 때만 작동합니다.`;
+        sb.innerHTML = `💡 <b>[데스크탑]</b> 선 클릭 시 선택 / <b>[모바일] 줌인·줌아웃 지원</b>, <b>1초 이상 꾹 누르면</b> 이동 모드 진입<br>
+                        ※ 실시간 접선은 상단의 <b>[ON]</b> 버튼을 켰을 때만 작동합니다.`;
         Plotly.relayout('graphPlot', {dragmode: 'pan'});
     }
 
-    // --- 공용 접선 렌더링 함수 ---
     function drawTangentFromObj(f, px, py, isInverse) {
         let m = 0;
         if (isInverse) {
@@ -625,10 +623,10 @@
 
         const layout = {
             dragmode: 'pan',
-            hovermode: false, // 초기엔 버튼이 OFF 이므로 호버 완전 차단
+            hovermode: false, 
             xaxis: { range: [-5, 5], dtick: 0.5, zeroline: true, zerolinecolor: '#343a40', zerolinewidth: 2, gridcolor: '#e9ecef', showticklabels: true, tickfont: { size: 14, color: '#212529', weight: 'bold' } },
             yaxis: { range: [-5, 5], dtick: 0.5, zeroline: true, zerolinecolor: '#343a40', zerolinewidth: 2, gridcolor: '#e9ecef', scaleanchor: 'x', scaleratio: 1, showticklabels: true, tickfont: { size: 14, color: '#212529', weight: 'bold' } },
-            margin: { l: 60, r: 40, t: 30, b: 60 }, hovermode: false
+            margin: { l: 60, r: 40, t: 30, b: 60 }
         };
 
         Plotly.newPlot('graphPlot', [], layout, { responsive: true, scrollZoom: true, displayModeBar: false, doubleClick: false });
@@ -636,10 +634,10 @@
 
         graphDiv.on('plotly_afterplot', floatXAxis);
 
-        // --- 1. [데스크탑] 마우스 호버 처리 ---
+        // --- 1. [데스크탑] 마우스 기능 ---
         graphDiv.on('plotly_hover', function(data) {
             if (!isTangentMode || selectedFuncId) return;
-            if (isTouchInteraction) return; // [핵심] 터치 중일 때 가짜 마우스 호버 차단
+            if (isTouchInteraction) return; 
             
             const pt = data.points[0];
             const funcId = pt.customdata;
@@ -659,9 +657,8 @@
             if (isTangentMode) clearTangentShape();
         });
 
-        // --- 2. [데스크탑] 마우스 클릭 처리 ---
         graphDiv.on('plotly_click', function(data) {
-            if (isTouchInteraction) return; // [핵심] 모바일 터치로 인해 브라우저가 강제로 발생시키는 가짜 클릭 완벽 차단
+            if (isTouchInteraction) return; 
             
             if (data.points && data.points.length > 0 && data.points[0].customdata) {
                 let id = data.points[0].customdata;
@@ -670,7 +667,7 @@
             }
         });
 
-        // --- 3. [모바일] 터치 환경 처리 ---
+        // --- 2. [모바일] 터치 환경 처리 ---
         let touchTimer = null;
         let touchStartClientX = 0, touchStartClientY = 0;
         let touchTargetObj = null;
@@ -678,8 +675,13 @@
         function getClientCoords(e) { return (e.touches && e.touches.length > 0) ? { clientX: e.touches[0].clientX, clientY: e.touches[0].clientY } : { clientX: e.clientX, clientY: e.clientY }; }
 
         graphDiv.addEventListener('touchstart', function(e) {
-            if (e.touches.length > 1) return; 
-            isTouchInteraction = true; // 가짜 마우스 클릭을 막기 위한 플래그 활성화
+            // [해결포인트 2] 멀티터치(핀치 줌)가 시작되면 타이머 즉시 폐기, Plotly 네이티브 줌 권한 양도
+            if (e.touches.length > 1) {
+                if (touchTimer) { clearTimeout(touchTimer); touchTimer = null; }
+                return;
+            }
+
+            isTouchInteraction = true; 
             if (touchIgnoreTimeout) clearTimeout(touchIgnoreTimeout);
 
             const coords = getClientCoords(e);
@@ -693,7 +695,7 @@
 
             touchTargetObj = findClosestFunction(px, py);
 
-            // [수정 완료] 타이머를 1초(1000ms)로 연장
+            // [해결포인트 3] 정확히 1초(1000ms) 동안 손가락을 떼지 않아야 선택되도록 적용
             if (touchTimer) clearTimeout(touchTimer);
             if (touchTargetObj && !selectedFuncId) {
                 touchTimer = setTimeout(() => {
@@ -711,7 +713,11 @@
         }, { passive: false });
 
         graphDiv.addEventListener('touchmove', function(e) {
-            if (e.touches.length > 1) return;
+            if (e.touches.length > 1) {
+                if (touchTimer) { clearTimeout(touchTimer); touchTimer = null; }
+                return;
+            }
+            
             const coords = getClientCoords(e);
 
             if (touchTimer) {
@@ -744,7 +750,6 @@
             if (touchTimer) { clearTimeout(touchTimer); touchTimer = null; }
             if (isDraggingTrace) handleDragEnd();
             
-            // 터치 종료 후 약 1초(1000ms) 동안 플래그를 유지하여 뒤늦게 날아오는 가짜 click 이벤트를 완전 소화(Swallow)
             touchIgnoreTimeout = setTimeout(() => { isTouchInteraction = false; }, 1000);
 
             if (isTangentMode && !selectedFuncId) {
@@ -752,7 +757,7 @@
             }
         });
 
-        // --- 공통 드래그 이동 (PC + Mobile) ---
+        // --- 3. 공통 드래그 이동 ---
         function handleDragStart(clientX, clientY) {
             if (!selectedFuncId) return;
             clearTangentShape(); 
@@ -787,9 +792,16 @@
         window.addEventListener('mousemove', function(e) { handleDragMove(e.clientX, e.clientY); });
         window.addEventListener('mouseup', handleDragEnd);
 
+        // [해결포인트 1] 줌인/줌아웃 작동 시 캔버스 재생성을 지연시키는 디바운스(Debounce) 로직
+        let relayoutDebounceTimer = null;
         graphDiv.on('plotly_relayout', function(eventData) {
-            if (eventData['shapes'] !== undefined || eventData['annotations'] !== undefined || eventData['xaxis.dtick'] || eventData['yaxis.dtick'] || eventData['yaxis.scaleanchor'] || eventData['yaxis.range[0]'] === undefined) return;
-            updateAll();
+            if (eventData['shapes'] !== undefined || eventData['annotations'] !== undefined || eventData['hovermode'] !== undefined) return;
+            if (eventData['xaxis.dtick'] !== undefined || eventData['yaxis.dtick'] !== undefined || eventData['yaxis.scaleanchor'] !== undefined) return;
+            
+            if (relayoutDebounceTimer) clearTimeout(relayoutDebounceTimer);
+            relayoutDebounceTimer = setTimeout(() => {
+                updateAll(false);
+            }, 250); // 줌아웃 제스처가 완전히 끝난 0.25초 후 교점 및 곡선을 연장 연산함.
         });
 
         addFunction(); 
