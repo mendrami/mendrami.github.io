@@ -55,6 +55,11 @@
         .graph-wrapper { flex: 1; min-width: 280px; position: relative; }
         #graphPlot { width: 100%; height: 650px; border-radius: 8px; overflow: hidden; border: 1px solid #dee2e6; background-color: white; touch-action: none; }
         
+        /* 줌 컨트롤 UI 추가 */
+        .zoom-controls { position: absolute; top: 15px; right: 15px; display: flex; flex-direction: column; gap: 8px; z-index: 100; }
+        .zoom-controls button { width: 44px; height: 44px; border-radius: 8px; border: 1px solid #ced4da; background: rgba(255, 255, 255, 0.95); font-size: 1.6rem; font-weight: bold; color: #495057; cursor: pointer; box-shadow: 0 2px 6px rgba(0,0,0,0.15); display: flex; justify-content: center; align-items: center; transition: all 0.2s; backdrop-filter: blur(4px); }
+        .zoom-controls button:hover { background: #e9ecef; color: #0d6efd; transform: scale(1.05); }
+
         .info-panel { width: 100%; max-width: 350px; background: #fff; border: 1px solid #dee2e6; border-radius: 8px; padding: 15px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); position: sticky; top: 15px; max-height: 75vh; overflow-y: auto; flex-shrink: 0; margin: 0 auto; }
         .info-panel h3 { margin-top: 0; font-size: 1.1rem; border-bottom: 2px solid #212529; padding-bottom: 8px; margin-bottom: 12px; color: #212529; }
         .info-group { margin-bottom: 15px; }
@@ -74,7 +79,7 @@
 <div class="container">
     <h1>함수 비교</h1>
     <div id="statusBoard" class="status-board">
-        💡 <b>[데스크탑]</b> 선 클릭 시 선택 / <b>[모바일] 두 손가락 줌인·줌아웃 지원</b>, <b>1초 이상 길게 누르면</b> 그래프 이동 모드 진입<br>
+        💡 <b>[데스크탑]</b> 선 클릭 시 선택 (마우스 휠 줌 지원) / <b>[모바일] 1초 이상 길게 누르면</b> 그래프 이동 선택 (버튼 줌 지원)<br>
         ※ 실시간 접선 기능은 <b>[실시간 접선 모드] 버튼을 ON</b>으로 켰을 때만 작동합니다.
     </div>
 
@@ -99,6 +104,11 @@
     
     <div class="workspace">
         <div class="graph-wrapper">
+            <!-- 명시적 줌인/줌아웃 버튼 오버레이 추가 -->
+            <div class="zoom-controls">
+                <button onclick="zoomGraph('in')" title="확대(줌인)">＋</button>
+                <button onclick="zoomGraph('out')" title="축소(줌아웃)">－</button>
+            </div>
             <div id="graphPlot"></div>
             <div class="scroll-notice">▼ 스크롤을 내리면 캔버스가 Y축 하단으로 무한 확장됩니다 ▼</div>
         </div>
@@ -141,11 +151,35 @@
         if (isTangentMode) {
             btn.className = 'tangent-btn active';
             btn.innerHTML = `<span style="font-size:1.1rem;">⤡</span> 실시간 접선 모드: ON`;
+            Plotly.relayout('graphPlot', { hovermode: 'closest' });
         } else {
             btn.className = 'tangent-btn';
             btn.innerHTML = `<span style="font-size:1.1rem;">⤡</span> 실시간 접선 모드: OFF`;
-            Plotly.relayout('graphPlot', { shapes: [], annotations: [] }); // hovermode는 변경하지 않고 형상만 제거
+            Plotly.relayout('graphPlot', { shapes: [], annotations: [], hovermode: 'closest' }); 
+            // hovermode는 closest로 유지해야 클릭 레이어가 죽지 않음
         }
+    }
+
+    // 중앙 좌표 기준 화면 배율 스케일링 엔진 (아핀 변환)
+    function zoomGraph(direction) {
+        const graphDiv = document.getElementById('graphPlot');
+        if (!graphDiv || !graphDiv.layout) return;
+
+        const xRange = graphDiv.layout.xaxis.range;
+        const yRange = graphDiv.layout.yaxis.range;
+
+        const xSpan = xRange[1] - xRange[0];
+        const ySpan = yRange[1] - yRange[0];
+        const xCenter = (xRange[1] + xRange[0]) / 2;
+        const yCenter = (yRange[1] + yRange[0]) / 2;
+
+        // 확대(in): 범위를 75%로 줄임 / 축소(out): 범위를 133%로 넓힘
+        const factor = direction === 'in' ? 0.75 : 1.333333; 
+
+        Plotly.relayout(graphDiv, {
+            'xaxis.range': [xCenter - (xSpan * factor / 2), xCenter + (xSpan * factor / 2)],
+            'yaxis.range': [yCenter - (ySpan * factor / 2), yCenter + (ySpan * factor / 2)]
+        });
     }
 
     function formatNumber(num) { return Number(Math.round(num + "e3") + "e-3"); }
@@ -558,8 +592,8 @@
         selectedFuncId = null; renderUI(); updateAll();
         const sb = document.getElementById('statusBoard');
         sb.className = 'status-board';
-        sb.innerHTML = `💡 <b>[데스크탑]</b> 선 클릭 시 선택 / <b>[모바일] 줌인·줌아웃 지원</b>, <b>1초 이상 꾹 누르면</b> 이동 모드 진입<br>
-                        ※ 실시간 접선은 상단의 <b>[ON]</b> 버튼을 켰을 때만 작동합니다.`;
+        sb.innerHTML = `💡 <b>[데스크탑]</b> 선 클릭 시 선택 (마우스 휠 줌 지원) / <b>[모바일] 1초 이상 길게 누르면</b> 그래프 이동 선택 (버튼 줌 지원)<br>
+                        ※ 실시간 접선 기능은 <b>[실시간 접선 모드] 버튼을 ON</b>으로 켰을 때만 작동합니다.`;
         Plotly.relayout('graphPlot', {dragmode: 'pan'});
     }
 
@@ -620,7 +654,6 @@
     function initGraph() {
         if (typeof Plotly === 'undefined') { setTimeout(initGraph, 100); return; }
 
-        // [핵심 변경] hovermode: 'closest' 를 항시 유지하여, OFF 상태일 때도 네이티브 클릭 레이어(Raycasting)가 꺼지지 않도록 보장합니다.
         const layout = {
             dragmode: 'pan',
             hovermode: 'closest', 
@@ -636,7 +669,7 @@
 
         // --- 1. [데스크탑] 마우스 기능 ---
         graphDiv.on('plotly_hover', function(data) {
-            if (!isTangentMode || selectedFuncId) return; // [핵심 방어] 모드가 꺼져있으면 여기서 즉시 Return 시켜 선을 그리지 않음
+            if (!isTangentMode || selectedFuncId) return; 
             if (isTouchInteraction) return; 
             
             const pt = data.points[0];
@@ -675,6 +708,7 @@
         function getClientCoords(e) { return (e.touches && e.touches.length > 0) ? { clientX: e.touches[0].clientX, clientY: e.touches[0].clientY } : { clientX: e.clientX, clientY: e.clientY }; }
 
         graphDiv.addEventListener('touchstart', function(e) {
+            // [멀티 터치 우회] 2개 이상의 손가락이 감지되면 롱프레스 선택 타이머 폐기 (오작동 원천 차단)
             if (e.touches.length > 1) {
                 if (touchTimer) { clearTimeout(touchTimer); touchTimer = null; }
                 return;
@@ -790,6 +824,7 @@
         window.addEventListener('mousemove', function(e) { handleDragMove(e.clientX, e.clientY); });
         window.addEventListener('mouseup', handleDragEnd);
 
+        // [이벤트 디바운싱] 줌인/줌아웃 후 렌더링 무한루프 및 렉 방지
         let relayoutDebounceTimer = null;
         graphDiv.on('plotly_relayout', function(eventData) {
             if (eventData['shapes'] !== undefined || eventData['annotations'] !== undefined || eventData['hovermode'] !== undefined) return;
