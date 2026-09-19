@@ -7,62 +7,65 @@
     <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
     <style>
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f0f2f5; margin: 0; padding: 20px; }
-        .container { max-width: 1450px; margin: 0 auto; background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.08); }
-        h1 { color: #212529; text-align: center; font-size: 1.8rem; margin-bottom: 5px; font-weight: 800; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f0f2f5; margin: 0; padding: 15px; }
+        .container { max-width: 1450px; margin: 0 auto; background: white; padding: 15px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.08); }
+        h1 { color: #212529; text-align: center; font-size: 1.6rem; margin-bottom: 5px; font-weight: 800; }
         
-        .status-board { text-align: center; background: #e9ecef; padding: 10px; border-radius: 6px; font-weight: bold; color: #495057; margin-bottom: 20px; transition: all 0.3s; display: flex; justify-content: center; align-items: center; gap: 10px; }
+        .status-board { text-align: center; background: #e9ecef; padding: 10px; border-radius: 6px; font-weight: bold; color: #495057; margin-bottom: 20px; transition: all 0.3s; display: flex; justify-content: center; align-items: center; gap: 10px; flex-wrap: wrap; font-size: 0.95rem; }
         .status-board.active { background: #fff3cd; color: #856404; border: 2px dashed #ffe8a1; }
         
-        .add-controls { display: flex; justify-content: center; align-items: center; gap: 15px; margin-bottom: 25px; background: #fff; padding: 15px; border-radius: 8px; border: 1px solid #dee2e6; }
+        .add-controls { display: flex; justify-content: center; align-items: center; gap: 10px; margin-bottom: 20px; background: #fff; padding: 12px; border-radius: 8px; border: 1px solid #dee2e6; flex-wrap: wrap; }
         .add-controls select { padding: 8px 12px; font-size: 1rem; border-radius: 5px; border: 1px solid #ced4da; }
-        .add-controls button { padding: 8px 20px; font-size: 1rem; cursor: pointer; border: none; border-radius: 5px; background-color: #0d6efd; color: white; font-weight: bold; transition: background 0.2s; }
+        .add-controls button { padding: 8px 16px; font-size: 1rem; cursor: pointer; border: none; border-radius: 5px; background-color: #0d6efd; color: white; font-weight: bold; transition: background 0.2s; }
         .add-controls button:hover { background-color: #0b5ed7; }
         
-        .tangent-toggle { display: flex; align-items: center; gap: 8px; font-weight: bold; padding: 8px 15px; background: #e2e3e5; border-radius: 5px; cursor: pointer; transition: background 0.2s; }
-        .tangent-toggle:hover { background: #d3d6d8; }
+        .tangent-toggle { display: flex; align-items: center; gap: 6px; font-weight: bold; padding: 8px 12px; background: #e2e3e5; border-radius: 5px; cursor: pointer; font-size: 0.95rem; }
 
-        .functions-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 15px; margin-bottom: 20px; }
+        .functions-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 15px; margin-bottom: 20px; }
         
-        .func-card { background: #fff; border: 2px solid #dee2e6; border-radius: 8px; padding: 15px; box-shadow: 0 2px 5px rgba(0,0,0,0.04); position: relative; transition: all 0.2s; border-left-width: 6px; }
-        .func-card.selected { border-color: #212529; box-shadow: 0 0 12px rgba(0,0,0,0.2); transform: scale(1.02); }
-        .func-card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; border-bottom: 1px solid #f1f3f5; padding-bottom: 10px; }
-        .func-card-title { font-weight: bold; font-size: 1.1rem; display: flex; align-items: center; gap: 10px; }
+        .func-card { background: #fff; border: 2px solid #dee2e6; border-radius: 8px; padding: 12px; box-shadow: 0 2px 5px rgba(0,0,0,0.04); position: relative; transition: all 0.2s; border-left-width: 6px; }
+        .func-card.selected { border-color: #212529; box-shadow: 0 0 12px rgba(0,0,0,0.2); }
+        .func-card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; border-bottom: 1px solid #f1f3f5; padding-bottom: 8px; }
+        .func-card-title { font-weight: bold; font-size: 1.05rem; display: flex; align-items: center; gap: 8px; }
         
-        input[type="color"] { border: none; width: 30px; height: 30px; border-radius: 4px; cursor: pointer; padding: 0; background: none; }
-        .btn-delete { background: #dc3545; color: white; border: none; border-radius: 4px; padding: 4px 8px; cursor: pointer; font-size: 0.85rem; margin-left: 5px;}
+        input[type="color"] { border: none; width: 28px; height: 28px; border-radius: 4px; cursor: pointer; padding: 0; background: none; }
+        .btn-delete { background: #dc3545; color: white; border: none; border-radius: 4px; padding: 4px 8px; cursor: pointer; font-size: 0.8rem; margin-left: 4px;}
         .btn-delete:hover { background: #c82333; }
         
         .input-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; font-size: 0.9rem; white-space: nowrap; gap: 5px; }
-        .input-row input[type="number"] { width: 75px; padding: 4px; border: 1px solid #ced4da; border-radius: 4px; text-align: right; }
+        .input-row input[type="number"] { width: 70px; padding: 4px; border: 1px solid #ced4da; border-radius: 4px; text-align: right; }
         
-        .poly-coeffs { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 5px; padding: 10px; background: #f8f9fa; border-radius: 6px; }
-        .poly-coeffs .input-row input[type="number"] { width: 55px; }
+        .poly-coeffs { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-top: 5px; padding: 8px; background: #f8f9fa; border-radius: 6px; }
+        .poly-coeffs .input-row input[type="number"] { width: 50px; }
         
         .custom-expr-row { display: flex; flex-direction: column; align-items: flex-start; gap: 5px; width: 100%; margin-bottom: 8px; }
         .custom-expr-row input[type="text"] { width: 100%; padding: 6px; border: 1px solid #ced4da; border-radius: 4px; font-family: monospace; box-sizing: border-box; }
         
-        .switch { position: relative; display: inline-block; width: 36px; height: 20px; }
+        .switch { position: relative; display: inline-block; width: 34px; height: 18px; }
         .switch input { opacity: 0; width: 0; height: 0; }
-        .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #ccc; transition: .4s; border-radius: 20px; }
-        .slider:before { position: absolute; content: ""; height: 14px; width: 14px; left: 3px; bottom: 3px; background-color: white; transition: .4s; border-radius: 50%; }
+        .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #ccc; transition: .4s; border-radius: 18px; }
+        .slider:before { position: absolute; content: ""; height: 12px; width: 12px; left: 3px; bottom: 3px; background-color: white; transition: .4s; border-radius: 50%; }
         input:checked + .slider { background-color: #0d6efd; }
         input:checked + .slider:before { transform: translateX(16px); }
 
-        #math-display { background: #f8f9fa; padding: 20px; border-radius: 8px; border: 1px solid #dee2e6; margin-bottom: 20px; font-size: 1.2rem; overflow-x: auto; text-align: center; min-height: 50px; }
+        #math-display { background: #f8f9fa; padding: 15px; border-radius: 8px; border: 1px solid #dee2e6; margin-bottom: 20px; font-size: 1.1rem; overflow-x: auto; text-align: center; min-height: 45px; }
         
-        .workspace { display: flex; gap: 20px; align-items: flex-start; }
-        .graph-wrapper { flex: 1; min-width: 0; position: relative; }
-        #graphPlot { width: 100%; height: 750px; border-radius: 8px; overflow: hidden; border: 1px solid #dee2e6; background-color: white; cursor: crosshair; }
+        .workspace { display: flex; gap: 20px; align-items: flex-start; flex-wrap: wrap; }
+        .graph-wrapper { flex: 1; min-width: 280px; position: relative; }
+        #graphPlot { width: 100%; height: 650px; border-radius: 8px; overflow: hidden; border: 1px solid #dee2e6; background-color: white; touch-action: none; }
         
-        .info-panel { width: 320px; background: #fff; border: 1px solid #dee2e6; border-radius: 8px; padding: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); position: sticky; top: 20px; max-height: 80vh; overflow-y: auto; flex-shrink: 0; }
-        .info-panel h3 { margin-top: 0; font-size: 1.2rem; border-bottom: 2px solid #212529; padding-bottom: 10px; margin-bottom: 15px; color: #212529; }
-        .info-group { margin-bottom: 20px; }
-        .info-group h4 { margin: 0 0 10px 0; font-size: 1rem; color: #495057; display: flex; align-items: center; gap: 8px; }
-        .coord-item { font-family: 'Courier New', Courier, monospace; font-size: 0.95rem; background: #f8f9fa; padding: 8px 10px; border-radius: 6px; margin-bottom: 6px; border-left: 4px solid #ccc; font-weight: bold; color: #212529; }
-        .empty-msg { font-size: 0.9rem; color: #adb5bd; font-style: italic; }
+        .info-panel { width: 100%; max-width: 350px; background: #fff; border: 1px solid #dee2e6; border-radius: 8px; padding: 15px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); position: sticky; top: 15px; max-height: 75vh; overflow-y: auto; flex-shrink: 0; margin: 0 auto; }
+        .info-panel h3 { margin-top: 0; font-size: 1.1rem; border-bottom: 2px solid #212529; padding-bottom: 8px; margin-bottom: 12px; color: #212529; }
+        .info-group { margin-bottom: 15px; }
+        .info-group h4 { margin: 0 0 8px 0; font-size: 0.95rem; color: #495057; display: flex; align-items: center; gap: 6px; }
+        .coord-item { font-family: 'Courier New', Courier, monospace; font-size: 0.9rem; background: #f8f9fa; padding: 6px 8px; border-radius: 6px; margin-bottom: 5px; border-left: 4px solid #ccc; font-weight: bold; color: #212529; }
+        .empty-msg { font-size: 0.85rem; color: #adb5bd; font-style: italic; }
 
-        .scroll-notice { text-align: center; color: #6c757d; font-size: 0.9rem; margin-top: 10px; font-weight: bold; padding-bottom: 50px; }
+        .scroll-notice { text-align: center; color: #6c757d; font-size: 0.85rem; margin-top: 10px; font-weight: bold; padding-bottom: 40px; }
+
+        @media (min-width: 900px) {
+            .info-panel { width: 320px; }
+        }
     </style>
 </head>
 <body>
@@ -70,7 +73,7 @@
 <div class="container">
     <h1>함수 비교</h1>
     <div id="statusBoard" class="status-board">
-        💡 그래프 선을 <strong>클릭</strong>하여 선택한 후 바탕을 <strong>드래그</strong>하면 평행이동합니다.
+        💡 그래프 선을 <strong>클릭(터치)</strong>하여 선택한 후 화면을 <strong>드래그</strong>하면 평행이동합니다.
     </div>
 
     <div class="add-controls">
@@ -82,10 +85,10 @@
             <option value="custom">자유 입력 함수 (직접 쓰기)</option>
         </select>
         <button onclick="addFunction()">+ 함수 추가</button>
-        <div style="border-left: 2px solid #dee2e6; height: 30px; margin: 0 10px;"></div>
+        <div style="border-left: 2px solid #dee2e6; height: 25px; display: none;" id="controlDivider"></div>
         <label class="tangent-toggle">
             <input type="checkbox" id="tangentModeToggle" onchange="clearTangentShape()"> 
-            <span style="color:#0d6efd;">⤡</span> 실시간 접선 렌더링
+            <span style="color:#0d6efd;">⤡</span> 실시간 접선
         </label>
     </div>
 
@@ -215,12 +218,12 @@
             let innerHTML = `
                 <div class="func-card-header">
                     <div class="func-card-title"><input type="color" value="${func.color}" onchange="updateState('${func.id}', 'color', this.value)"> ${typeName}</div>
-                    <div style="display:flex; align-items:center; gap:8px;">
+                    <div style="display:flex; align-items:center; gap:6px;">
                         ${func.type !== 'custom' ? `
-                        <label title="역함수 대칭 렌더링" style="font-size:0.85rem; display:flex; align-items:center; gap:3px; cursor:pointer; background:#f8f9fa; padding:3px 8px; border-radius:4px; border:1px solid #dee2e6;">
+                        <label title="역함수 대칭 렌더링" style="font-size:0.8rem; display:flex; align-items:center; gap:2px; cursor:pointer; background:#f8f9fa; padding:3px 6px; border-radius:4px; border:1px solid #dee2e6;">
                             <input type="checkbox" ${func.showInverse ? 'checked' : ''} onchange="updateState('${func.id}', 'showInverse', this.checked)"> 역함수
                         </label>
-                        <div style="width:1px; height:20px; background:#dee2e6; margin: 0 2px;"></div>` : ''}
+                        <div style="width:1px; height:18px; background:#dee2e6; margin: 0 2px;"></div>` : ''}
                         <label class="switch"><input type="checkbox" ${func.visible ? 'checked' : ''} onchange="updateState('${func.id}', 'visible', this.checked)"><span class="slider"></span></label>
                         <button class="btn-delete" onclick="removeFunction('${func.id}')">삭제</button>
                     </div>
@@ -242,7 +245,7 @@
                 innerHTML += `<div class="custom-expr-row">
                                 <label><strong>함수식 입력:</strong></label>
                                 <input type="text" id="input_${func.id}_expr" value="${func.expr}" oninput="updateState('${func.id}', 'expr', this.value)" placeholder="예: (2*x+1)/(x-1)">
-                                <span style="font-size:0.75rem; color:#6c757d;">* 변수는 x를 사용. 곱하기(*), 나누기(/), 제곱(^) 기호 사용 가능</span>
+                                <span style="font-size:0.75rem; color:#6c757d;">* 변수는 x. 곱하기(*), 나누기(/), 제곱(^) 사용 가능</span>
                               </div>`;
             } else {
                 innerHTML += `<div class="input-row"><label>계수 (C):</label><input type="number" step="0.5" value="${func.C}" oninput="updateState('${func.id}', 'C', this.value)"></div>
@@ -526,8 +529,8 @@
         let fName = `${typeName} ${typeIndex}`;
 
         sb.className = 'status-board active';
-        sb.innerHTML = `✅ <span style="color:${f.color}">선택됨 (${fName})</span> - 바탕을 <strong>드래그</strong>하면 평행이동합니다. 
-                        <button onclick="deselectGraph()" style="margin-left:12px; padding:3px 10px; cursor:pointer; border:1px solid #ced4da; background:white; border-radius:4px; font-weight:bold; color:#495057;">선택 해제</button>`;
+        sb.innerHTML = `✅ <span style="color:${f.color}">선택됨 (${fName})</span> - 화면을 <strong>드래그</strong>하면 평행이동합니다. 
+                        <button onclick="deselectGraph()" style="margin-left:8px; padding:3px 10px; cursor:pointer; border:1px solid #ced4da; background:white; border-radius:4px; font-weight:bold; color:#495057;">선택 해제</button>`;
         Plotly.relayout('graphPlot', {dragmode: false});
     }
 
@@ -535,7 +538,7 @@
         selectedFuncId = null; renderUI(); updateAll();
         const sb = document.getElementById('statusBoard');
         sb.className = 'status-board';
-        sb.innerHTML = `💡 그래프 선을 <strong>클릭</strong>하여 선택한 후 바탕을 <strong>드래그</strong>하면 평행이동합니다.`;
+        sb.innerHTML = `💡 그래프 선을 <strong>클릭(터치)</strong>하여 선택한 후 화면을 <strong>드래그</strong>하면 평행이동합니다.`;
         Plotly.relayout('graphPlot', {dragmode: 'pan'});
     }
 
@@ -554,7 +557,7 @@
 
         graphDiv.on('plotly_afterplot', floatXAxis);
 
-        // --- 실시간 접선 및 역함수 미분 기울기 렌더링 ---
+        // --- 마우스 및 터치 호버 (접선 및 기울기) ---
         graphDiv.on('plotly_hover', function(data) {
             if (!document.getElementById('tangentModeToggle').checked) return;
             const pt = data.points[0];
@@ -610,22 +613,30 @@
             }
         });
 
-        graphDiv.addEventListener('mousedown', function(e) {
+        // --- 마우스 및 터치 드래그 평행이동 지원 (PC + Mobile 통일) ---
+        function getClientCoords(e) {
+            if (e.touches && e.touches.length > 0) {
+                return { clientX: e.touches[0].clientX, clientY: e.touches[0].clientY };
+            }
+            return { clientX: e.clientX, clientY: e.clientY };
+        }
+
+        function handleDragStart(clientX, clientY) {
             if (!selectedFuncId) return;
             clearTangentShape(); 
             const bgRect = graphDiv.querySelector('.gridlayer').getBoundingClientRect();
-            if (e.clientX < bgRect.left || e.clientX > bgRect.right || e.clientY < bgRect.top || e.clientY > bgRect.bottom) return;
+            if (clientX < bgRect.left || clientX > bgRect.right || clientY < bgRect.top || clientY > bgRect.bottom) return;
             isDraggingTrace = true;
-            startDataX = graphDiv._fullLayout.xaxis.p2d(e.clientX - bgRect.left);
-            startDataY = graphDiv._fullLayout.yaxis.p2d(e.clientY - bgRect.top);
+            startDataX = graphDiv._fullLayout.xaxis.p2d(clientX - bgRect.left);
+            startDataY = graphDiv._fullLayout.yaxis.p2d(clientY - bgRect.top);
             startFuncState = JSON.parse(JSON.stringify(functionsList.find(f => f.id === selectedFuncId)));
-        });
+        }
 
-        window.addEventListener('mousemove', function(e) {
+        function handleDragMove(clientX, clientY) {
             if (!isDraggingTrace || !selectedFuncId) return;
             const bgRect = graphDiv.querySelector('.gridlayer').getBoundingClientRect();
-            let currDataX = graphDiv._fullLayout.xaxis.p2d(e.clientX - bgRect.left);
-            let currDataY = graphDiv._fullLayout.yaxis.p2d(e.clientY - bgRect.top);
+            let currDataX = graphDiv._fullLayout.xaxis.p2d(clientX - bgRect.left);
+            let currDataY = graphDiv._fullLayout.yaxis.p2d(clientY - bgRect.top);
 
             let dx = currDataX - startDataX; let dy = currDataY - startDataY;
             let targetFunc = functionsList.find(f => f.id === selectedFuncId);
@@ -634,11 +645,29 @@
 
             syncInputValues(targetFunc); 
             updateAll(true); 
-        });
+        }
 
-        window.addEventListener('mouseup', function() {
+        function handleDragEnd() {
             if (isDraggingTrace) { isDraggingTrace = false; updateAll(false); }
-        });
+        }
+
+        // PC 마우스 이벤트
+        graphDiv.addEventListener('mousedown', function(e) { handleDragStart(e.clientX, e.clientY); });
+        window.addEventListener('mousemove', function(e) { handleDragMove(e.clientX, e.clientY); });
+        window.addEventListener('mouseup', handleDragEnd);
+
+        // 모바일 터치 이벤트
+        graphDiv.addEventListener('touchstart', function(e) {
+            const coords = getClientCoords(e);
+            handleDragStart(coords.clientX, coords.clientY);
+        }, { passive: true });
+
+        window.addEventListener('touchmove', function(e) {
+            const coords = getClientCoords(e);
+            handleDragMove(coords.clientX, coords.clientY);
+        }, { passive: true });
+
+        window.addEventListener('touchend', handleDragEnd);
 
         graphDiv.on('plotly_relayout', function(eventData) {
             if (eventData['shapes'] !== undefined || eventData['annotations'] !== undefined || eventData['xaxis.dtick'] || eventData['yaxis.dtick'] || eventData['yaxis.scaleanchor'] || eventData['yaxis.range[0]'] === undefined) return;
