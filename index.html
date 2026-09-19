@@ -51,21 +51,21 @@
 
         #math-display { background: #f8f9fa; padding: 15px; border-radius: 8px; border: 1px solid #dee2e6; margin-bottom: 15px; font-size: 1.1rem; overflow-x: auto; text-align: center; min-height: 45px; }
         
-        /* 상단 교점 정보 패널 스타일 */
         .top-info-panel { background: #fff; border: 1px solid #dee2e6; border-radius: 8px; padding: 15px; margin-bottom: 20px; box-shadow: 0 2px 6px rgba(0,0,0,0.03); display: flex; gap: 20px; flex-wrap: wrap; justify-content: space-around; }
         .top-info-group { flex: 1; min-width: 250px; }
         .top-info-group h4 { margin: 0 0 8px 0; font-size: 0.95rem; color: #495057; display: flex; align-items: center; gap: 6px; border-bottom: 1px solid #f1f3f5; padding-bottom: 5px; }
         .coord-item { font-family: 'Courier New', Courier, monospace; font-size: 0.9rem; background: #f8f9fa; padding: 6px 10px; border-radius: 6px; margin-bottom: 5px; border-left: 4px solid #0d6efd; font-weight: bold; color: #212529; }
         .empty-msg { font-size: 0.85rem; color: #adb5bd; font-style: italic; }
 
-        .workspace { display: flex; gap: 20px; align-items: flex-start; flex-wrap: wrap; }
-        .graph-wrapper { flex: 1; min-width: 280px; position: relative; }
+        .workspace { display: block; }
+        .graph-wrapper { position: relative; width: 100%; }
         #graphPlot { width: 100%; height: 650px; border-radius: 8px; overflow: hidden; border: 1px solid #dee2e6; background-color: white; touch-action: none; }
         
         .zoom-controls { position: absolute; top: 60px; right: 20px; display: flex; flex-direction: row; gap: 8px; z-index: 100; }
         .zoom-controls button { height: 36px; border-radius: 8px; border: 1px solid rgba(206, 212, 218, 0.6); background: rgba(255, 255, 255, 0.6); font-weight: bold; color: #495057; cursor: pointer; box-shadow: 0 2px 6px rgba(0,0,0,0.1); display: flex; justify-content: center; align-items: center; transition: all 0.2s; backdrop-filter: blur(3px); }
         .zoom-controls button:hover { background: rgba(255, 255, 255, 0.95); color: #0d6efd; transform: scale(1.05); }
         .zoom-btn-icon { width: 36px; font-size: 1.2rem; }
+        
         .zoom-btn-text { padding: 0 12px; font-size: 0.9rem; display: none; background: rgba(33, 37, 41, 0.7) !important; color: white !important; border-color: rgba(33, 37, 41, 0.7) !important; }
         .zoom-btn-text:hover { background: rgba(73, 80, 87, 0.9) !important; border-color: rgba(73, 80, 87, 0.9) !important; color: white !important; }
 
@@ -103,23 +103,22 @@
     <div id="functionsGrid" class="functions-grid"></div>
     <div id="math-display">수식을 불러오는 중입니다...</div>
     
-    <!-- 캡처 파일 정보를 담은 주요 교점 패널을 상단으로 배치 -->
     <div class="top-info-panel">
         <div class="top-info-group">
             <h4><span style="color:#212529;">●</span> 함수 간의 교점</h4>
             <div id="panel-intersections"><div class="empty-msg">계산 중...</div></div>
         </div>
         <div class="top-info-group">
-            <h4><span style="color:#fd7e14;">◆</span> X축 교점 (y=0)[cite: 3]</h4>
+            <h4><span style="color:#fd7e14;">◆</span> X축 교점 (y=0)</h4>
             <div id="panel-x-axis"><div class="empty-msg">계산 중...</div></div>
         </div>
         <div class="top-info-group">
-            <h4><span style="color:#fd7e14;">◆</span> Y축 교점 (x=0)[cite: 3]</h4>
+            <h4><span style="color:#fd7e14;">◆</span> Y축 교점 (x=0)</h4>
             <div id="panel-y-axis"><div class="empty-msg">계산 중...</div></div>
         </div>
     </div>
 
-    <div class="workspace" style="display: block;">
+    <div class="workspace">
         <div class="graph-wrapper">
             <div class="zoom-controls">
                 <button id="deselectBtn" class="zoom-btn-text" style="display: none;" onclick="deselectGraph()">선택 해제</button>
@@ -258,9 +257,15 @@
         } else if (func.type === 'custom') {
             let elExpr = document.getElementById(`input_${func.id}_expr`);
             if (elExpr) elExpr.value = func.expr;
+            let elH = document.getElementById(`input_${func.id}_H`);
+            let elK = document.getElementById(`input_${func.id}_K`);
+            if (elH) elH.value = func.H;
+            if (elK) elK.value = func.K;
         } else {
-            let elH = document.getElementById(`input_${func.id}_H`); let elK = document.getElementById(`input_${func.id}_K`);
-            if (elH) elH.value = func.H; if (elK) elK.value = func.K;
+            let elH = document.getElementById(`input_${func.id}_H`); 
+            let elK = document.getElementById(`input_${func.id}_K`);
+            if (elH) elH.value = func.H; 
+            if (elK) elK.value = func.K;
         }
     }
 
@@ -376,7 +381,6 @@
         if (typeof MathJax !== 'undefined' && MathJax.typesetPromise) MathJax.typesetPromise([display]).catch(e => {});
     }
 
-    // --- 팩토리얼 구현 함수 (감마 함수 기반 정수/실수 확장 지원) ---
     function gamma(n) {
         let g = 7, p = [0.99999999999980993, 676.5203681218851, -1259.1392167224028, 771.32342877765313, -176.12853995850013, 12.507343278693905, -0.13857109526572012, 9.9843695780195716e-6, 1.5056327351493116e-7];
         if (n < 0.5) return Math.PI / (Math.sin(Math.PI * n) * gamma(1 - n));
@@ -386,6 +390,7 @@
         let t = n + g + 0.5;
         return Math.sqrt(2 * Math.PI) * Math.pow(t, n + 0.5) * Math.exp(-t) * x;
     }
+
     function factorial(n) {
         if (n < 0) return NaN;
         return gamma(n + 1);
@@ -393,9 +398,7 @@
 
     function evaluateCustomExpr(expr, rawX) {
         try {
-            // 평행이동 H, K 반영된 실질적 x 좌표 계산
             let x = rawX; 
-            // ^를 **로 변환, 숫자뒤 x를 *x로 변환, n! 구문 지원 (정규식 교정)
             let cleanExpr = expr
                 .replace(/([0-9.]+)\s*!/g, 'factorial($1)')
                 .replace(/x\s*!/g, 'factorial(x)')
@@ -426,7 +429,6 @@
             }
             return val + (f.K || 0);
         } else if (f.type === 'custom') {
-            // 자유 입력 함수에 평행이동 H, K 적용
             let shiftedX = x - (f.H || 0);
             let val = evaluateCustomExpr(f.expr, shiftedX);
             return val + (f.K || 0);
@@ -460,7 +462,7 @@
         if (panelData.yInt.length === 0) yHTML = '<div class="empty-msg">교점이 없습니다.</div>';
         else panelData.yInt.forEach(p => yHTML += `<div class="coord-item" style="border-left-color: ${p.color};"><span style="color:${p.color}">${p.name}</span> : (0.00, ${p.y.toFixed(2)})</div>`);
 
-        if (panelData.funcInt.length === 0) fHTML = '<div class="empty-msg">두 함수의 교점이 없습니다.[cite: 3]</div>';
+        if (panelData.funcInt.length === 0) fHTML = '<div class="empty-msg">두 함수의 교점이 없습니다.</div>';
         else panelData.funcInt.forEach(p => fHTML += `<div class="coord-item"><span style="color:${p.c1}">■</span> <span style="color:${p.c2}">■</span> : (${p.x.toFixed(2)}, ${p.y.toFixed(2)})</div>`);
 
         xDiv.innerHTML = xHTML; yDiv.innerHTML = yHTML; fDiv.innerHTML = fHTML;
