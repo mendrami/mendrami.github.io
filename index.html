@@ -69,9 +69,9 @@
         .zoom-btn-text { padding: 0 12px; font-size: 0.9rem; display: none; background: rgba(33, 37, 41, 0.7) !important; color: white !important; border-color: rgba(33, 37, 41, 0.7) !important; }
         .zoom-btn-text:hover { background: rgba(73, 80, 87, 0.9) !important; border-color: rgba(73, 80, 87, 0.9) !important; color: white !important; }
 
-        /* 모바일 화면에 항상 떠 있는 반투명 원점 복귀 버튼 */
-        .floating-origin-btn { position: fixed; bottom: 25px; right: 25px; height: 46px; padding: 0 16px; border-radius: 23px; border: 1px solid rgba(255,255,255,0.4); background: rgba(13, 110, 253, 0.75); color: #ffffff; font-size: 0.95rem; font-weight: bold; cursor: pointer; z-index: 9999; backdrop-filter: blur(6px); transition: all 0.2s; display: flex; justify-content: center; align-items: center; gap: 6px; box-shadow: 0 4px 15px rgba(0,0,0,0.25); }
-        .floating-origin-btn:hover { background: rgba(13, 110, 253, 0.95); transform: scale(1.05); }
+        /* 글자 없이 화살표만 남긴 반투명 원형 플로팅 버튼 */
+        .floating-origin-btn { position: fixed; bottom: 25px; right: 25px; width: 48px; height: 48px; border-radius: 50%; border: 1px solid rgba(255,255,255,0.4); background: rgba(13, 110, 253, 0.65); color: #ffffff; font-size: 1.4rem; font-weight: bold; cursor: pointer; z-index: 9999; backdrop-filter: blur(6px); transition: all 0.2s; display: flex; justify-content: center; align-items: center; box-shadow: 0 4px 15px rgba(0,0,0,0.25); }
+        .floating-origin-btn:hover { background: rgba(13, 110, 253, 0.95); transform: scale(1.08); }
 
         .scroll-notice { text-align: center; color: #6c757d; font-size: 0.85rem; margin-top: 10px; font-weight: bold; padding-bottom: 60px; }
     </style>
@@ -133,10 +133,8 @@
     </div>
 </div>
 
-<!-- 화면 어디서든 클릭하면 위로 복귀하고 원점 중심으로 리셋하는 플로팅 버튼 -->
-<button class="floating-origin-btn" onclick="resetAndScrollUp()" title="함수 추가로 복귀 및 원점 정렬">
-    <span style="font-size: 1.1rem;">⬆</span> 원점 복귀
-</button>
+<!-- 텍스트 없이 화살표만 남긴 플로팅 원점 복귀 버튼 -->
+<button class="floating-origin-btn" onclick="resetAndScrollUp()" title="함수 추가로 복귀 및 원점 정렬">⬆</button>
 
 <script>
     let functionsList = [];
@@ -152,7 +150,6 @@
     let isTouchInteraction = false;
     let touchIgnoreTimeout = null;
 
-    // 함수 추가 영역으로 부드럽게 스크롤 & 그래프 높이 리셋 및 원점 중심 정렬
     function resetAndScrollUp() {
         const addSection = document.getElementById('addControlsSection');
         if (addSection) addSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
