@@ -214,6 +214,39 @@
         return newCoeffs.map(formatNumber);
     }
 
+    // [핵심] 수식 문자열 자체를 dx, dy만큼 평행이동 변환하는 수학적 치환 알고리즘
+    function shiftCustomExpression(expr, dx, dy) {
+        let clean = expr.trim();
+        let signX = dx >= 0 ? `- ${formatNumber(dx)}` : `+ ${formatNumber(Math.abs(dx))}`;
+        let signY = dy >= 0 ? `- ${formatNumber(dy)}` : `+ ${formatNumber(Math.abs(dy))}`;
+        
+        let subX = Math.abs(dx) > 1e-4 ? `(x ${signX})` : `x`;
+        let subY = Math.abs(dy) > 1e-4 ? `(y ${signY})` : `y`;
+
+        if (clean.includes('=')) {
+            let parts = clean.split('=');
+            let L = parts[0].replace(/X/g, 'x').replace(/Y/g, 'y');
+            let R = parts[1].replace(/X/g, 'x').replace(/Y/g, 'y');
+            
+            // x, y 단어 단위 치환
+            let newL = L.replace(/\bx\b/g, subX).replace(/\by\b/g, subY);
+            let newR = R.replace(/\bx\b/g, subX).replace(/\by\b/g, subY);
+            return `${newL.trim()} = ${newR.trim()}`;
+        } else if (clean.toLowerCase().includes('y')) {
+            let L = clean.replace(/X/g, 'x').replace(/Y/g, 'y');
+            return L.replace(/\bx\b/g, subX).replace(/\by\b/g, subY);
+        } else {
+            // y = f(x) 형태: f(x - dx) + dy 로 식 자체를 갱신
+            let L = clean.replace(/X/g, 'x');
+            let newExpr = L.replace(/\bx\b/g, subX);
+            if (Math.abs(dy) > 1e-4) {
+                let signVal = dy > 0 ? `+ ${formatNumber(dy)}` : `- ${formatNumber(Math.abs(dy))}`;
+                return `${newExpr} ${signVal}`;
+            }
+            return newExpr;
+        }
+    }
+
     function addFunction() {
         const type = document.getElementById('newFuncType').value;
         const newFunc = {
@@ -256,12 +289,16 @@
         if (field !== 'degree') updateAll();
     }
 
+    // 입력창 실시간 값 동기화 함수
     function syncInputValues(func) {
         if (func.type === 'poly') {
             for (let i = 0; i <= func.degree; i++) {
                 let el = document.getElementById(`input_${func.id}_c${i}`);
                 if (el) el.value = func.coeffs[i];
             }
+        } else if (func.type === 'custom') {
+            let elExpr = document.getElementById(`input_${func.id}_expr`);
+            if (elExpr) elExpr.value = func.expr; // 수식 입력창 텍스트 직접 갱신
         } else {
             let elH = document.getElementById(`input_${func.id}_H`); 
             let elK = document.getElementById(`input_${func.id}_K`);
@@ -316,10 +353,8 @@
                                 <label><strong>함수/음함수 식 입력:</strong></label>
                                 <input type="text" id="input_${func.id}_expr" value="${func.expr}" oninput="updateState('${func.id}', 'expr', this.value)" placeholder="예: x^2 + y^2 = 4 또는 sin(x)">
                                 <span style="font-size:0.75rem; color:#0d6efd; font-weight:bold;">* 삼각함수(sin, cos, tan)의 x축 단위는 라디안(rad)입니다. (예: 180° = π = pi)</span>
-                                <span style="font-size:0.75rem; color:#6c757d;">* 대소문자 혼용 가능. 팩토리얼(!) 연산 지원</span>
-                              </div>
-                              <div class="input-row"><label>X 이동 (H):</label><input type="number" step="0.5" id="input_${func.id}_H" value="${func.H}" oninput="updateState('${func.id}', 'H', this.value)"></div>
-                              <div class="input-row"><label>Y 이동 (K):</label><input type="number" step="0.5" id="input_${func.id}_K" value="${func.K}" oninput="updateState('${func.id}', 'K', this.value)"></div>`;
+                                <span style="font-size:0.75rem; color:#6c757d;">* 대소문자 혼용 가능. 팩토리얼(!) 지원. 드래그 이동 시 식이 자동 갱신됩니다.</span>
+                              </div>`;
             } else {
                 innerHTML += `<div class="input-row"><label>계수 (C):</label><input type="number" step="0.5" value="${func.C}" oninput="updateState('${func.id}', 'C', this.value)"></div>
                               <div class="input-row"><label>밑 (a):</label><input type="number" step="0.1" min="0.1" value="${func.base}" oninput="updateState('${func.id}', 'base', this.value)"></div>
@@ -426,15 +461,13 @@
     }
 
     function evaluateImplicit(f, x, y) {
-        let shiftedX = x - (f.H || 0);
-        let shiftedY = y - (f.K || 0);
         let parts = f.expr.split('=');
         if (parts.length === 2) {
-            let L = evaluateCustomExpr(parts[0], shiftedX, shiftedY);
-            let R = evaluateCustomExpr(parts[1], shiftedX, shiftedY);
+            let L = evaluateCustomExpr(parts[0], x, y);
+            let R = evaluateCustomExpr(parts[1], x, y);
             return L - R;
         } else {
-            return evaluateCustomExpr(f.expr, shiftedX, shiftedY); 
+            return evaluateCustomExpr(f.expr, x, y); 
         }
     }
 
@@ -454,8 +487,7 @@
             }
             return val + (f.K || 0);
         } else if (f.type === 'custom') {
-            let shiftedX = x - (f.H || 0);
-            return evaluateCustomExpr(f.expr, shiftedX, 0) + (f.K || 0);
+            return evaluateCustomExpr(f.expr, x, 0);
         } else if (f.type === 'exp') {
             let a = Math.max(f.base, 0.001); if (a === 1) a = 1.0001; return f.C * Math.pow(a, x - (f.H || 0)) + (f.K || 0);
         } else if (f.type === 'log') {
@@ -482,7 +514,6 @@
         return -Fx / Fy;
     }
 
-    // [핵심] 1차원 이분법(Bisection) 근 찾기 수치해석 함수
     function bisectionRoot(fn, a, b, maxIter = 15) {
         let fa = fn(a), fb = fn(b);
         if (isNaN(fa) || isNaN(fb) || fa * fb > 0) return NaN;
@@ -544,7 +575,6 @@
             let isSelected = (f.id === selectedFuncId);
 
             if (isImplicitFunc(f)) {
-                // 음함수 등고선 렌더링
                 let steps = skipHeavy ? 60 : 160; 
                 let dx = (maxX - minX) / steps;
                 let dy = (maxY - minY) / steps;
@@ -567,11 +597,9 @@
                     showscale: false, name: fName, hoverinfo: 'none', customdata: Array(zGrid.length).fill(f.id)
                 });
                 
-                yDataCollection.push(null); // 음함수는 1D yVal 없음
+                yDataCollection.push(null);
 
-                // [음함수 전용 축 교점 계산]
                 if (!skipHeavy) {
-                    // X축 교점: F(x, 0) = 0
                     for (let k = 0; k < xVal.length - 1; k++) {
                         let root = bisectionRoot(x => evaluateImplicit(f, x, 0), xVal[k], xVal[k+1]);
                         if (!isNaN(root)) {
@@ -581,7 +609,6 @@
                             }
                         }
                     }
-                    // Y축 교점: F(0, y) = 0
                     let ySteps = [];
                     for (let y = minY; y <= maxY; y += step) ySteps.push(y);
                     for (let k = 0; k < ySteps.length - 1; k++) {
@@ -597,7 +624,6 @@
                 return; 
             }
 
-            // 일반 양함수 연산 처리
             const yVal = [];
             for (let i = 0; i < xVal.length; i++) {
                 let y = evaluateFunction(f, xVal[i]);
@@ -657,7 +683,6 @@
             });
         }
 
-        // [핵심 해결] 양함수 간, 음함수와 양함수 간, 음함수 간 통합 교점 수치해석 엔진
         if (!skipHeavy) {
             const intersectX = [], intersectY = [], intersectText = [];
             
@@ -666,7 +691,6 @@
                     const f1 = visibleFunctions[i], f2 = visibleFunctions[j];
                     const isImp1 = isImplicitFunc(f1), isImp2 = isImplicitFunc(f2);
 
-                    // 케이스 1: 양함수 vs 양함수 (기존 로직 정밀화)
                     if (!isImp1 && !isImp2) {
                         const y1 = yDataCollection[i], y2 = yDataCollection[j];
                         for (let k = 0; k < xVal.length - 1; k++) {
@@ -682,9 +706,7 @@
                                 }
                             }
                         }
-                    }
-                    // 케이스 2: 음함수 vs 양함수 (F(x, g(x)) = 0 수치해석)
-                    else if (isImp1 !== isImp2) {
+                    } else if (isImp1 !== isImp2) {
                         const impF = isImp1 ? f1 : f2;
                         const expF = isImp1 ? f2 : f1;
                         
@@ -712,9 +734,7 @@
                                 }
                             }
                         }
-                    }
-                    // 케이스 3: 음함수 vs 음함수 (2D Grid 등고선 교차점 스캔)
-                    else {
+                    } else {
                         let steps = 70;
                         let dx = (maxX - minX) / steps;
                         let dy = (maxY - minY) / steps;
@@ -1021,23 +1041,38 @@
             startFuncState = JSON.parse(JSON.stringify(functionsList.find(f => f.id === selectedFuncId)));
         }
 
+        // [핵심] 자유 입력 함수 이동 시 수식 문자열(계수)을 직접 변경하는 드래그 처리
         function handleDragMove(clientX, clientY) {
             if (!isDraggingTrace || !selectedFuncId) return;
             const bgRect = graphDiv.querySelector('.gridlayer').getBoundingClientRect();
             let currDataX = graphDiv._fullLayout.xaxis.p2d(clientX - bgRect.left);
             let currDataY = graphDiv._fullLayout.yaxis.p2d(clientY - bgRect.top);
 
-            let dx = currDataX - startDataX; let dy = currDataY - startDataY;
+            let dx = currDataX - startDataX; 
+            let dy = currDataY - startDataY;
             let targetFunc = functionsList.find(f => f.id === selectedFuncId);
-            if (targetFunc.type === 'poly') { targetFunc.coeffs = shiftPolynomial(startFuncState.coeffs, dx, dy); } 
-            else { targetFunc.H = formatNumber((startFuncState.H || 0) + dx); targetFunc.K = formatNumber((startFuncState.K || 0) + dy); }
+            
+            if (targetFunc.type === 'poly') { 
+                targetFunc.coeffs = shiftPolynomial(startFuncState.coeffs, dx, dy); 
+            } else if (targetFunc.type === 'custom') {
+                // 수식 자체의 계수를 실시간 수학적 변환
+                targetFunc.expr = shiftCustomExpression(startFuncState.expr, dx, dy);
+            } else { 
+                targetFunc.H = formatNumber((startFuncState.H || 0) + dx); 
+                targetFunc.K = formatNumber((startFuncState.K || 0) + dy); 
+            }
 
             syncInputValues(targetFunc); 
             updateAll(true); 
         }
 
         function handleDragEnd() {
-            if (isDraggingTrace) { isDraggingTrace = false; updateAll(false); }
+            if (isDraggingTrace) { 
+                isDraggingTrace = false; 
+                let targetFunc = functionsList.find(f => f.id === selectedFuncId);
+                if (targetFunc) syncInputValues(targetFunc);
+                updateAll(false); 
+            }
         }
 
         graphDiv.addEventListener('mousedown', function(e) { 
