@@ -51,18 +51,14 @@
 
         #math-display { background: #f8f9fa; padding: 15px; border-radius: 8px; border: 1px solid #dee2e6; margin-bottom: 15px; font-size: 1.1rem; overflow-x: auto; text-align: center; min-height: 45px; }
         
-        /* 상단 교점 정보 패널 스타일 */
         .top-info-panel { background: #fff; border: 1px solid #dee2e6; border-radius: 8px; padding: 15px; margin-bottom: 20px; box-shadow: 0 2px 6px rgba(0,0,0,0.03); display: flex; gap: 20px; flex-wrap: wrap; justify-content: space-around; }
         .top-info-group { flex: 1; min-width: 250px; }
         .top-info-group h4 { margin: 0 0 8px 0; font-size: 0.95rem; color: #495057; display: flex; align-items: center; gap: 6px; border-bottom: 1px solid #f1f3f5; padding-bottom: 5px; }
         .coord-item { font-family: 'Courier New', Courier, monospace; font-size: 0.9rem; background: #f8f9fa; padding: 6px 10px; border-radius: 6px; margin-bottom: 5px; border-left: 4px solid #0d6efd; font-weight: bold; color: #212529; }
         .empty-msg { font-size: 0.85rem; color: #adb5bd; font-style: italic; }
 
-        /* [핵심] 모바일(화면 폭 768px 이하) 환경에서는 상단 교점 패널 완전 숨김 */
         @media (max-width: 768px) {
-            .top-info-panel {
-                display: none !important;
-            }
+            .top-info-panel { display: none !important; }
         }
 
         .workspace { display: block; }
@@ -77,7 +73,6 @@
         .zoom-btn-text { padding: 0 12px; font-size: 0.9rem; display: none; background: rgba(33, 37, 41, 0.7) !important; color: white !important; border-color: rgba(33, 37, 41, 0.7) !important; }
         .zoom-btn-text:hover { background: rgba(73, 80, 87, 0.9) !important; border-color: rgba(73, 80, 87, 0.9) !important; color: white !important; }
 
-        /* 글자 없이 화살표만 남긴 반투명 원형 플로팅 버튼 */
         .floating-origin-btn { position: fixed; bottom: 25px; right: 25px; width: 48px; height: 48px; border-radius: 50%; border: 1px solid rgba(255,255,255,0.4); background: rgba(13, 110, 253, 0.65); color: #ffffff; font-size: 1.4rem; font-weight: bold; cursor: pointer; z-index: 9999; backdrop-filter: blur(6px); transition: all 0.2s; display: flex; justify-content: center; align-items: center; box-shadow: 0 4px 15px rgba(0,0,0,0.25); }
         .floating-origin-btn:hover { background: rgba(13, 110, 253, 0.95); transform: scale(1.08); }
 
@@ -112,7 +107,6 @@
     <div id="functionsGrid" class="functions-grid"></div>
     <div id="math-display">수식을 불러오는 중입니다...</div>
     
-    <!-- 모바일에서는 자동으로 숨겨지는 교점 정보 패널 -->
     <div class="top-info-panel">
         <div class="top-info-group">
             <h4><span style="color:#212529;">●</span> 함수 간의 교점</h4>
@@ -142,7 +136,6 @@
     </div>
 </div>
 
-<!-- 플로팅 원점 복귀 버튼 -->
 <button class="floating-origin-btn" onclick="resetAndScrollUp()" title="함수 추가로 복귀 및 원점 정렬">⬆</button>
 
 <script>
@@ -331,7 +324,7 @@
                 innerHTML += `<div class="custom-expr-row">
                                 <label><strong>함수식 입력:</strong></label>
                                 <input type="text" id="input_${func.id}_expr" value="${func.expr}" oninput="updateState('${func.id}', 'expr', this.value)" placeholder="예: x! + sin(x)">
-                                <span style="font-size:0.75rem; color:#6c757d;">* x!, factorial(x), 곱(*), 나누기(/), 제곱(^) 사용 가능</span>
+                                <span style="font-size:0.75rem; color:#6c757d;">* 대소문자 무관. x!, factorial(x), 곱(*), 나누기(/), 제곱(^) 사용 가능</span>
                               </div>
                               <div class="input-row"><label>X 이동 (H):</label><input type="number" step="0.5" id="input_${func.id}_H" value="${func.H}" oninput="updateState('${func.id}', 'H', this.value)"></div>
                               <div class="input-row"><label>Y 이동 (K):</label><input type="number" step="0.5" id="input_${func.id}_K" value="${func.K}" oninput="updateState('${func.id}', 'K', this.value)"></div>`;
@@ -368,7 +361,8 @@
                     if (f.K > 0) rhs += ` + ${f.K}`; else if (f.K < 0) rhs += ` - ${Math.abs(f.K)}`;
                 } else if (f.type === 'custom') {
                     let innerX = f.H !== 0 ? `(x ${f.H > 0 ? '-' : '+'} ${Math.abs(f.H)})` : `x`;
-                    let cleanExpr = f.expr.replace(/x/g, innerX);
+                    // 대소문자 교정 후 렌더링
+                    let cleanExpr = f.expr.replace(/X/g, 'x').replace(/x/g, innerX);
                     rhs = cleanExpr;
                     if (f.K > 0) rhs += ` + ${f.K}`; else if (f.K < 0) rhs += ` - ${Math.abs(f.K)}`;
                 } else if (f.type === 'exp') {
@@ -417,6 +411,7 @@
         try {
             let x = rawX; 
             let cleanExpr = expr
+                .replace(/X/g, 'x') // 대문자 X 자동 치환
                 .replace(/([0-9.]+)\s*!/g, 'factorial($1)')
                 .replace(/x\s*!/g, 'factorial(x)')
                 .replace(/\^/g, '**')
