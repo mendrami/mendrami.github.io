@@ -57,9 +57,7 @@
         .coord-item { font-family: 'Courier New', Courier, monospace; font-size: 0.9rem; background: #f8f9fa; padding: 6px 10px; border-radius: 6px; margin-bottom: 5px; border-left: 4px solid #0d6efd; font-weight: bold; color: #212529; }
         .empty-msg { font-size: 0.85rem; color: #adb5bd; font-style: italic; }
 
-        @media (max-width: 768px) {
-            .top-info-panel { display: none !important; }
-        }
+        @media (max-width: 768px) { .top-info-panel { display: none !important; } }
 
         .workspace { display: block; }
         .graph-wrapper { position: relative; width: 100%; }
@@ -94,7 +92,7 @@
             <option value="power">멱함수 (실수 지수)</option>
             <option value="exp">지수함수</option>
             <option value="log">로그함수</option>
-            <option value="custom">자유 입력 함수 (직접 쓰기)</option>
+            <option value="custom">자유 입력 (방정식 가능)</option>
         </select>
         <button onclick="addFunction()">+ 함수 추가</button>
         <div style="border-left: 2px solid #dee2e6; height: 25px;"></div>
@@ -224,7 +222,7 @@
         };
         if (type === 'poly') { newFunc.degree = 2; newFunc.coeffs = [0, 0, 1]; } 
         else if (type === 'power') { newFunc.C = 1; newFunc.p = 0.5; }
-        else if (type === 'custom') { newFunc.expr = 'x^2 - 4'; } 
+        else if (type === 'custom') { newFunc.expr = 'x^2 + y^2 = 1'; } 
         else { newFunc.C = 1; newFunc.base = 2; }
 
         functionsList.push(newFunc); colorIndex++;
@@ -322,9 +320,9 @@
                               <div class="input-row"><label>Y 이동 (K):</label><input type="number" step="0.5" id="input_${func.id}_K" value="${func.K}" oninput="updateState('${func.id}', 'K', this.value)"></div>`;
             } else if (func.type === 'custom') {
                 innerHTML += `<div class="custom-expr-row">
-                                <label><strong>함수식 입력:</strong></label>
-                                <input type="text" id="input_${func.id}_expr" value="${func.expr}" oninput="updateState('${func.id}', 'expr', this.value)" placeholder="예: x! + sin(x)">
-                                <span style="font-size:0.75rem; color:#6c757d;">* 대소문자 무관. x!, factorial(x), 곱(*), 나누기(/), 제곱(^) 사용 가능</span>
+                                <label><strong>함수/음함수 식 입력:</strong></label>
+                                <input type="text" id="input_${func.id}_expr" value="${func.expr}" oninput="updateState('${func.id}', 'expr', this.value)" placeholder="예: x^2 + y^2 = 1 또는 sin(x)">
+                                <span style="font-size:0.75rem; color:#6c757d;">* 대소문자 혼용 가능. 삼각함수(sin, cos), 팩토리얼(!) 지원</span>
                               </div>
                               <div class="input-row"><label>X 이동 (H):</label><input type="number" step="0.5" id="input_${func.id}_H" value="${func.H}" oninput="updateState('${func.id}', 'H', this.value)"></div>
                               <div class="input-row"><label>Y 이동 (K):</label><input type="number" step="0.5" id="input_${func.id}_K" value="${func.K}" oninput="updateState('${func.id}', 'K', this.value)"></div>`;
@@ -360,11 +358,14 @@
                     rhs = `${f.C !== 1 ? f.C + ' \\cdot ' : ''}${baseStr}^{${f.p}}`;
                     if (f.K > 0) rhs += ` + ${f.K}`; else if (f.K < 0) rhs += ` - ${Math.abs(f.K)}`;
                 } else if (f.type === 'custom') {
-                    let innerX = f.H !== 0 ? `(x ${f.H > 0 ? '-' : '+'} ${Math.abs(f.H)})` : `x`;
-                    // 대소문자 교정 후 렌더링
-                    let cleanExpr = f.expr.replace(/X/g, 'x').replace(/x/g, innerX);
-                    rhs = cleanExpr;
-                    if (f.K > 0) rhs += ` + ${f.K}`; else if (f.K < 0) rhs += ` - ${Math.abs(f.K)}`;
+                    let cleanExpr = f.expr.replace(/\*/g, '\\cdot ');
+                    if (cleanExpr.includes('=')) {
+                        rhs = cleanExpr; 
+                    } else if (cleanExpr.toLowerCase().includes('y')) {
+                        rhs = cleanExpr + ' = 0';
+                    } else {
+                        rhs = `y = ${cleanExpr}`;
+                    }
                 } else if (f.type === 'exp') {
                     let a = Math.max(f.base, 0.001); if (a === 1) a = 1.0001;
                     let exponent = f.H !== 0 ? `(x ${f.H > 0 ? '-' : '+'} ${Math.abs(f.H)})` : `x`;
@@ -377,7 +378,7 @@
                     if (f.K > 0) rhs += ` + ${f.K}`; else if (f.K < 0) rhs += ` - ${Math.abs(f.K)}`;
                 }
                 
-                let eqStr = `y = ${rhs}`;
+                let eqStr = (f.type === 'custom') ? rhs : `y = ${rhs}`;
                 if (f.id === selectedFuncId) tex += `\\color{${f.color}}{\\boxed{${eqStr}}} \\\\ `;
                 else tex += `\\color{${f.color}}{${eqStr}} \\\\ `;
 
@@ -392,36 +393,52 @@
         if (typeof MathJax !== 'undefined' && MathJax.typesetPromise) MathJax.typesetPromise([display]).catch(e => {});
     }
 
+    // 감마 함수 알고리즘 (실수 및 정수 팩토리얼 계산 처리)
     function gamma(n) {
         let g = 7, p = [0.99999999999980993, 676.5203681218851, -1259.1392167224028, 771.32342877765313, -176.12853995850013, 12.507343278693905, -0.13857109526572012, 9.9843695780195716e-6, 1.5056327351493116e-7];
         if (n < 0.5) return Math.PI / (Math.sin(Math.PI * n) * gamma(1 - n));
-        n--;
-        let x = p[0];
+        n--; let x = p[0];
         for (let i = 1; i < g + 2; i++) x += p[i] / (n + i);
         let t = n + g + 0.5;
         return Math.sqrt(2 * Math.PI) * Math.pow(t, n + 0.5) * Math.exp(-t) * x;
     }
+    function factorial(n) { if (n < 0) return NaN; return gamma(n + 1); }
 
-    function factorial(n) {
-        if (n < 0) return NaN;
-        return gamma(n + 1);
-    }
-
-    function evaluateCustomExpr(expr, rawX) {
+    function evaluateCustomExpr(expr, rawX, rawY) {
         try {
             let x = rawX; 
+            let y = rawY !== undefined ? rawY : 0;
+            // 수식 정규식 파싱 및 자동 Math 매핑
             let cleanExpr = expr
-                .replace(/X/g, 'x') // 대문자 X 자동 치환
+                .replace(/X/g, 'x').replace(/Y/g, 'y') 
                 .replace(/([0-9.]+)\s*!/g, 'factorial($1)')
-                .replace(/x\s*!/g, 'factorial(x)')
+                .replace(/([xy])\s*!/g, 'factorial($1)')
                 .replace(/\^/g, '**')
-                .replace(/(\d)([a-zA-Z(])/g, '$1*$2');
+                .replace(/\b(sin|cos|tan|asin|acos|atan|sinh|cosh|tanh|log|ln|exp|sqrt|abs)\b/g, function(match) {
+                    if (match === 'ln') return 'Math.log'; return 'Math.' + match;
+                })
+                .replace(/\b(pi|PI)\b/g, 'Math.PI')
+                .replace(/\b(e|E)\b/g, 'Math.E')
+                .replace(/(\d)([a-zA-Z(])/g, '$1*$2'); 
 
-            let fn = new Function('x', 'Math', 'factorial', 'return ' + cleanExpr);
-            let val = fn(x, Math, factorial);
+            let fn = new Function('x', 'y', 'Math', 'factorial', 'return ' + cleanExpr);
+            let val = fn(x, y, Math, factorial);
             return typeof val === 'number' ? val : NaN;
         } catch (e) {
             return NaN;
+        }
+    }
+
+    function evaluateImplicit(f, x, y) {
+        let shiftedX = x - (f.H || 0);
+        let shiftedY = y - (f.K || 0);
+        let parts = f.expr.split('=');
+        if (parts.length === 2) {
+            let L = evaluateCustomExpr(parts[0], shiftedX, shiftedY);
+            let R = evaluateCustomExpr(parts[1], shiftedX, shiftedY);
+            return L - R;
+        } else {
+            return evaluateCustomExpr(f.expr, shiftedX, shiftedY); 
         }
     }
 
@@ -442,8 +459,7 @@
             return val + (f.K || 0);
         } else if (f.type === 'custom') {
             let shiftedX = x - (f.H || 0);
-            let val = evaluateCustomExpr(f.expr, shiftedX);
-            return val + (f.K || 0);
+            return evaluateCustomExpr(f.expr, shiftedX, 0) + (f.K || 0);
         } else if (f.type === 'exp') {
             let a = Math.max(f.base, 0.001); if (a === 1) a = 1.0001; return f.C * Math.pow(a, x - (f.H || 0)) + (f.K || 0);
         } else if (f.type === 'log') {
@@ -460,6 +476,15 @@
         if (isNaN(y1)) { y1 = evaluateFunction(f, x); y2 = evaluateFunction(f, x + h); return (y2 - y1) / h; }
         if (isNaN(y2)) { y1 = evaluateFunction(f, x - h); y2 = evaluateFunction(f, x); return (y2 - y1) / h; }
         return (y2 - y1) / (2 * h);
+    }
+    
+    // 음함수 기울기 계산기 (-Fx / Fy)
+    function evaluateImplicitDerivative(f, x, y) {
+        const h = 1e-5;
+        let Fx = (evaluateImplicit(f, x + h, y) - evaluateImplicit(f, x - h, y)) / (2 * h);
+        let Fy = (evaluateImplicit(f, x, y + h) - evaluateImplicit(f, x, y - h)) / (2 * h);
+        if (Math.abs(Fy) < 1e-8) return NaN; 
+        return -Fx / Fy;
     }
 
     function updateIntersectionPanel(panelData) {
@@ -480,7 +505,7 @@
         xDiv.innerHTML = xHTML; yDiv.innerHTML = yHTML; fDiv.innerHTML = fHTML;
     }
 
-    function generateTraces(rangeX, skipHeavy) {
+    function generateTraces(rangeX, rangeY, skipHeavy) {
         const spanX = rangeX[1] - rangeX[0];
         const minX = rangeX[0] - spanX; const maxX = rangeX[1] + spanX;
         const step = Math.max((maxX - minX) / 2000, 0.001);
@@ -497,6 +522,45 @@
         let hasInverse = false;
 
         visibleFunctions.forEach((f) => {
+            let sameTypeFuncs = functionsList.filter(x => x.type === f.type);
+            let typeIndex = sameTypeFuncs.indexOf(f) + 1;
+            let typeName = f.type === 'poly' ? '다항함수' : (f.type === 'power' ? '멱함수' : (f.type === 'exp' ? '지수함수' : (f.type === 'log' ? '로그함수' : '자유입력')));
+            let fName = `${typeName} ${typeIndex}`;
+            let isSelected = (f.id === selectedFuncId);
+
+            // 음함수(등고선) 처리 분기
+            let isImplicit = f.type === 'custom' && (f.expr.includes('=') || f.expr.toLowerCase().includes('y'));
+            if (isImplicit) {
+                let steps = skipHeavy ? 50 : 150; 
+                let gMinX = rangeX[0] - spanX, gMaxX = rangeX[1] + spanX;
+                let gMinY = rangeY[0] - (rangeY[1]-rangeY[0]), gMaxY = rangeY[1] + (rangeY[1]-rangeY[0]);
+                let dx = (gMaxX - gMinX) / steps;
+                let dy = (gMaxY - gMinY) / steps;
+                
+                let xGrid = [], yGrid = [];
+                for(let i=0; i<=steps; i++) xGrid.push(gMinX + i*dx);
+                for(let i=0; i<=steps; i++) yGrid.push(gMinY + i*dy);
+                
+                let zGrid = [];
+                for(let j=0; j<=steps; j++) {
+                    let row = [];
+                    for(let i=0; i<=steps; i++) row.push(evaluateImplicit(f, xGrid[i], yGrid[j]));
+                    zGrid.push(row);
+                }
+                
+                traces.push({
+                    x: xGrid, y: yGrid, z: zGrid,
+                    type: 'contour', contours: {start: 0, end: 0, size: 1, coloring: 'none'},
+                    line: {color: f.color, width: isSelected ? 7 : 3},
+                    showscale: false, name: fName, hoverinfo: 'none', customdata: Array(zGrid.length).fill(f.id)
+                });
+                
+                // 음함수는 Y배열이 없으므로 교점 계산 생략을 위한 더미 데이터 푸시
+                yDataCollection.push(Array(xVal.length).fill(NaN));
+                return; 
+            }
+
+            // 양함수(기본) 연산 처리
             const yVal = [];
             for (let i = 0; i < xVal.length; i++) {
                 let y = evaluateFunction(f, xVal[i]);
@@ -504,11 +568,6 @@
                 yVal.push(y);
             }
             yDataCollection.push(yVal);
-
-            let sameTypeFuncs = functionsList.filter(x => x.type === f.type);
-            let typeIndex = sameTypeFuncs.indexOf(f) + 1;
-            let typeName = f.type === 'poly' ? '다항함수' : (f.type === 'power' ? '멱함수' : (f.type === 'exp' ? '지수함수' : (f.type === 'log' ? '로그함수' : '자유입력')));
-            let fName = `${typeName} ${typeIndex}`;
 
             if (!skipHeavy) {
                 let y_at_0 = evaluateFunction(f, 0);
@@ -534,7 +593,6 @@
                 }
             }
 
-            let isSelected = (f.id === selectedFuncId);
             traces.push({ 
                 x: xVal, y: yVal, mode: 'lines', name: fName, 
                 line: { color: f.color, width: isSelected ? 7 : 3 },
@@ -618,7 +676,8 @@
         if (!graphDiv || !graphDiv.layout) return;
 
         const currentXRange = graphDiv.layout.xaxis.range;
-        const newTraces = generateTraces(currentXRange, skipHeavy);
+        const currentYRange = graphDiv.layout.yaxis.range;
+        const newTraces = generateTraces(currentXRange, currentYRange, skipHeavy);
         
         if (typeof Plotly !== 'undefined') {
             Plotly.react('graphPlot', newTraces, graphDiv.layout);
@@ -660,7 +719,11 @@
 
     function drawTangentFromObj(f, px, py, isInverse) {
         let m = 0;
-        if (isInverse) {
+        let isImplicit = f.type === 'custom' && (f.expr.includes('=') || f.expr.toLowerCase().includes('y'));
+        
+        if (isImplicit) {
+            m = evaluateImplicitDerivative(f, px, py);
+        } else if (isInverse) {
             const origM = evaluateDerivative(f, py);
             if (Math.abs(origM) < 1e-8 || isNaN(origM)) return;
             m = 1 / origM;
@@ -681,6 +744,7 @@
         Plotly.relayout('graphPlot', { shapes: [shape], annotations: [annotation] });
     }
 
+    // 자체 수학 기반 호버/클릭 감지 (음함수 등고선 포함)
     function findClosestFunction(px, py) {
         let closest = null;
         let minDist = Infinity;
@@ -692,6 +756,25 @@
 
         functionsList.forEach(f => {
             if (!f.visible) return;
+
+            let isImplicit = f.type === 'custom' && (f.expr.includes('=') || f.expr.toLowerCase().includes('y'));
+            if (isImplicit) {
+                let eps = threshold * 0.5; // 주변 교차 부호 확인용 반경
+                let v00 = evaluateImplicit(f, px - eps, py - eps);
+                let v01 = evaluateImplicit(f, px - eps, py + eps);
+                let v10 = evaluateImplicit(f, px + eps, py - eps);
+                let v11 = evaluateImplicit(f, px + eps, py + eps);
+                let minV = Math.min(v00, v01, v10, v11);
+                let maxV = Math.max(v00, v01, v10, v11);
+                
+                // 해당 좌표의 아주 가까운 범위 내에서 부호가 바뀌면 곡선 위로 판정
+                if (minV <= 0 && maxV >= 0) {
+                    let dist = Math.abs((minV + maxV)/2);
+                    if (dist < minDist) { minDist = dist; closest = { f: f, isInverse: false, px: px, py: py }; }
+                }
+                return;
+            }
+
             let y = evaluateFunction(f, px);
             if (!isNaN(y)) {
                 let dist = Math.abs(y - py);
@@ -729,36 +812,22 @@
 
         graphDiv.on('plotly_afterplot', floatXAxis);
 
-        graphDiv.on('plotly_hover', function(data) {
-            if (!isTangentMode || selectedFuncId) return; 
-            if (isTouchInteraction) return; 
-            
-            const pt = data.points[0];
-            const funcId = pt.customdata;
-            if (!funcId) return;
+        // 데스크탑 전용 접선 호버 처리
+        graphDiv.addEventListener('mousemove', function(e) {
+            if (isTouchInteraction || isDraggingTrace || !isTangentMode || selectedFuncId) return;
+            const bgRect = graphDiv.querySelector('.gridlayer').getBoundingClientRect();
+            if (e.clientX < bgRect.left || e.clientX > bgRect.right || e.clientY < bgRect.top || e.clientY > bgRect.bottom) return;
 
-            let isInverse = false;
-            let origId = funcId;
-            if (typeof funcId === 'string' && funcId.startsWith('inv_')) { origId = funcId.replace('inv_', ''); isInverse = true; }
-            
-            const f = functionsList.find(x => x.id === origId);
-            if (!f) return;
-            drawTangentFromObj(f, pt.x, pt.y, isInverse);
+            let px = graphDiv._fullLayout.xaxis.p2d(e.clientX - bgRect.left);
+            let py = graphDiv._fullLayout.yaxis.p2d(e.clientY - bgRect.top);
+            let closest = findClosestFunction(px, py);
+
+            if (closest) drawTangentFromObj(closest.f, closest.px, closest.py, closest.isInverse);
+            else clearTangentShape();
         });
 
-        graphDiv.on('plotly_unhover', function(data) {
-            if (isTouchInteraction) return;
-            if (isTangentMode) clearTangentShape();
-        });
-
-        graphDiv.on('plotly_click', function(data) {
-            if (isTouchInteraction) return; 
-            
-            if (data.points && data.points.length > 0 && data.points[0].customdata) {
-                let id = data.points[0].customdata;
-                if (typeof id === 'string' && id.startsWith('inv_')) id = id.replace('inv_', '');
-                selectGraph(id);
-            }
+        graphDiv.addEventListener('mouseleave', function() {
+            if (isTangentMode && !selectedFuncId) clearTangentShape();
         });
 
         let touchTimer = null;
@@ -822,7 +891,7 @@
                 return;
             }
 
-            if (isTangentMode && !selectedFuncId) {
+            if (isTangentMode && !selectedFuncId && isTouchInteraction) {
                 const bgRect = graphDiv.querySelector('.gridlayer').getBoundingClientRect();
                 let px = graphDiv._fullLayout.xaxis.p2d(coords.clientX - bgRect.left);
                 let py = graphDiv._fullLayout.yaxis.p2d(coords.clientY - bgRect.top);
@@ -848,6 +917,9 @@
             }
         });
 
+        // 공용 드래그(평행이동) 및 PC용 자체 클릭 감지 시스템 통합
+        let mouseStartClientX = 0, mouseStartClientY = 0;
+        
         function handleDragStart(clientX, clientY) {
             if (!selectedFuncId) return;
             clearTangentShape(); 
@@ -878,9 +950,26 @@
             if (isDraggingTrace) { isDraggingTrace = false; updateAll(false); }
         }
 
-        graphDiv.addEventListener('mousedown', function(e) { handleDragStart(e.clientX, e.clientY); });
+        graphDiv.addEventListener('mousedown', function(e) { 
+            mouseStartClientX = e.clientX; mouseStartClientY = e.clientY;
+            handleDragStart(e.clientX, e.clientY); 
+        });
         window.addEventListener('mousemove', function(e) { handleDragMove(e.clientX, e.clientY); });
-        window.addEventListener('mouseup', handleDragEnd);
+        
+        window.addEventListener('mouseup', function(e) {
+            let dx = e.clientX - mouseStartClientX; let dy = e.clientY - mouseStartClientY;
+            // 드래그 거리가 5px 미만이면 '클릭'으로 판정하여 선택 동작 수행 (데스크탑)
+            if (Math.sqrt(dx*dx + dy*dy) < 5 && !isTouchInteraction && !selectedFuncId) {
+                const bgRect = graphDiv.querySelector('.gridlayer').getBoundingClientRect();
+                if (e.clientX >= bgRect.left && e.clientX <= bgRect.right && e.clientY >= bgRect.top && e.clientY <= bgRect.bottom) {
+                    let px = graphDiv._fullLayout.xaxis.p2d(e.clientX - bgRect.left);
+                    let py = graphDiv._fullLayout.yaxis.p2d(e.clientY - bgRect.top);
+                    let closest = findClosestFunction(px, py);
+                    if (closest) selectGraph(closest.f.id);
+                }
+            }
+            handleDragEnd(); 
+        });
 
         let relayoutDebounceTimer = null;
         graphDiv.on('plotly_relayout', function(eventData) {
