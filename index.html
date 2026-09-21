@@ -51,11 +51,19 @@
 
         #math-display { background: #f8f9fa; padding: 15px; border-radius: 8px; border: 1px solid #dee2e6; margin-bottom: 15px; font-size: 1.1rem; overflow-x: auto; text-align: center; min-height: 45px; }
         
+        /* 상단 교점 정보 패널 스타일 */
         .top-info-panel { background: #fff; border: 1px solid #dee2e6; border-radius: 8px; padding: 15px; margin-bottom: 20px; box-shadow: 0 2px 6px rgba(0,0,0,0.03); display: flex; gap: 20px; flex-wrap: wrap; justify-content: space-around; }
         .top-info-group { flex: 1; min-width: 250px; }
         .top-info-group h4 { margin: 0 0 8px 0; font-size: 0.95rem; color: #495057; display: flex; align-items: center; gap: 6px; border-bottom: 1px solid #f1f3f5; padding-bottom: 5px; }
         .coord-item { font-family: 'Courier New', Courier, monospace; font-size: 0.9rem; background: #f8f9fa; padding: 6px 10px; border-radius: 6px; margin-bottom: 5px; border-left: 4px solid #0d6efd; font-weight: bold; color: #212529; }
         .empty-msg { font-size: 0.85rem; color: #adb5bd; font-style: italic; }
+
+        /* [핵심] 모바일(화면 폭 768px 이하) 환경에서는 상단 교점 패널 완전 숨김 */
+        @media (max-width: 768px) {
+            .top-info-panel {
+                display: none !important;
+            }
+        }
 
         .workspace { display: block; }
         .graph-wrapper { position: relative; width: 100%; }
@@ -104,6 +112,7 @@
     <div id="functionsGrid" class="functions-grid"></div>
     <div id="math-display">수식을 불러오는 중입니다...</div>
     
+    <!-- 모바일에서는 자동으로 숨겨지는 교점 정보 패널 -->
     <div class="top-info-panel">
         <div class="top-info-group">
             <h4><span style="color:#212529;">●</span> 함수 간의 교점</h4>
@@ -133,7 +142,7 @@
     </div>
 </div>
 
-<!-- 텍스트 없이 화살표만 남긴 플로팅 원점 복귀 버튼 -->
+<!-- 플로팅 원점 복귀 버튼 -->
 <button class="floating-origin-btn" onclick="resetAndScrollUp()" title="함수 추가로 복귀 및 원점 정렬">⬆</button>
 
 <script>
