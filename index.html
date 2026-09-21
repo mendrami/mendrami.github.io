@@ -92,7 +92,7 @@
             <option value="power">멱함수 (실수 지수)</option>
             <option value="exp">지수함수</option>
             <option value="log">로그함수</option>
-            <option value="custom">자유 입력 (방정식 가능)</option>
+            <option value="custom">자유 입력 (방정식/삼각함수)</option>
         </select>
         <button onclick="addFunction()">+ 함수 추가</button>
         <div style="border-left: 2px solid #dee2e6; height: 25px;"></div>
@@ -262,13 +262,6 @@
                 let el = document.getElementById(`input_${func.id}_c${i}`);
                 if (el) el.value = func.coeffs[i];
             }
-        } else if (func.type === 'custom') {
-            let elExpr = document.getElementById(`input_${func.id}_expr`);
-            if (elExpr) elExpr.value = func.expr;
-            let elH = document.getElementById(`input_${func.id}_H`);
-            let elK = document.getElementById(`input_${func.id}_K`);
-            if (elH) elH.value = func.H;
-            if (elK) elK.value = func.K;
         } else {
             let elH = document.getElementById(`input_${func.id}_H`); 
             let elK = document.getElementById(`input_${func.id}_K`);
@@ -322,7 +315,8 @@
                 innerHTML += `<div class="custom-expr-row">
                                 <label><strong>함수/음함수 식 입력:</strong></label>
                                 <input type="text" id="input_${func.id}_expr" value="${func.expr}" oninput="updateState('${func.id}', 'expr', this.value)" placeholder="예: x^2 + y^2 = 1 또는 sin(x)">
-                                <span style="font-size:0.75rem; color:#6c757d;">* 대소문자 혼용 가능. 삼각함수(sin, cos), 팩토리얼(!) 지원</span>
+                                <span style="font-size:0.75rem; color:#0d6efd; font-weight:bold;">* 삼각함수(sin, cos, tan)의 x축 단위는 라디안(rad)입니다. (예: 180° = π = pi)</span>
+                                <span style="font-size:0.75rem; color:#6c757d;">* 대소문자 혼용 가능. 팩토리얼(!) 연산 지원</span>
                               </div>
                               <div class="input-row"><label>X 이동 (H):</label><input type="number" step="0.5" id="input_${func.id}_H" value="${func.H}" oninput="updateState('${func.id}', 'H', this.value)"></div>
                               <div class="input-row"><label>Y 이동 (K):</label><input type="number" step="0.5" id="input_${func.id}_K" value="${func.K}" oninput="updateState('${func.id}', 'K', this.value)"></div>`;
@@ -393,7 +387,6 @@
         if (typeof MathJax !== 'undefined' && MathJax.typesetPromise) MathJax.typesetPromise([display]).catch(e => {});
     }
 
-    // 감마 함수 알고리즘 (실수 및 정수 팩토리얼 계산 처리)
     function gamma(n) {
         let g = 7, p = [0.99999999999980993, 676.5203681218851, -1259.1392167224028, 771.32342877765313, -176.12853995850013, 12.507343278693905, -0.13857109526572012, 9.9843695780195716e-6, 1.5056327351493116e-7];
         if (n < 0.5) return Math.PI / (Math.sin(Math.PI * n) * gamma(1 - n));
@@ -408,7 +401,6 @@
         try {
             let x = rawX; 
             let y = rawY !== undefined ? rawY : 0;
-            // 수식 정규식 파싱 및 자동 Math 매핑
             let cleanExpr = expr
                 .replace(/X/g, 'x').replace(/Y/g, 'y') 
                 .replace(/([0-9.]+)\s*!/g, 'factorial($1)')
@@ -478,7 +470,6 @@
         return (y2 - y1) / (2 * h);
     }
     
-    // 음함수 기울기 계산기 (-Fx / Fy)
     function evaluateImplicitDerivative(f, x, y) {
         const h = 1e-5;
         let Fx = (evaluateImplicit(f, x + h, y) - evaluateImplicit(f, x - h, y)) / (2 * h);
@@ -528,7 +519,6 @@
             let fName = `${typeName} ${typeIndex}`;
             let isSelected = (f.id === selectedFuncId);
 
-            // 음함수(등고선) 처리 분기
             let isImplicit = f.type === 'custom' && (f.expr.includes('=') || f.expr.toLowerCase().includes('y'));
             if (isImplicit) {
                 let steps = skipHeavy ? 50 : 150; 
@@ -555,12 +545,10 @@
                     showscale: false, name: fName, hoverinfo: 'none', customdata: Array(zGrid.length).fill(f.id)
                 });
                 
-                // 음함수는 Y배열이 없으므로 교점 계산 생략을 위한 더미 데이터 푸시
                 yDataCollection.push(Array(xVal.length).fill(NaN));
                 return; 
             }
 
-            // 양함수(기본) 연산 처리
             const yVal = [];
             for (let i = 0; i < xVal.length; i++) {
                 let y = evaluateFunction(f, xVal[i]);
@@ -744,7 +732,6 @@
         Plotly.relayout('graphPlot', { shapes: [shape], annotations: [annotation] });
     }
 
-    // 자체 수학 기반 호버/클릭 감지 (음함수 등고선 포함)
     function findClosestFunction(px, py) {
         let closest = null;
         let minDist = Infinity;
@@ -759,7 +746,7 @@
 
             let isImplicit = f.type === 'custom' && (f.expr.includes('=') || f.expr.toLowerCase().includes('y'));
             if (isImplicit) {
-                let eps = threshold * 0.5; // 주변 교차 부호 확인용 반경
+                let eps = threshold * 0.5;
                 let v00 = evaluateImplicit(f, px - eps, py - eps);
                 let v01 = evaluateImplicit(f, px - eps, py + eps);
                 let v10 = evaluateImplicit(f, px + eps, py - eps);
@@ -767,7 +754,6 @@
                 let minV = Math.min(v00, v01, v10, v11);
                 let maxV = Math.max(v00, v01, v10, v11);
                 
-                // 해당 좌표의 아주 가까운 범위 내에서 부호가 바뀌면 곡선 위로 판정
                 if (minV <= 0 && maxV >= 0) {
                     let dist = Math.abs((minV + maxV)/2);
                     if (dist < minDist) { minDist = dist; closest = { f: f, isInverse: false, px: px, py: py }; }
@@ -812,7 +798,6 @@
 
         graphDiv.on('plotly_afterplot', floatXAxis);
 
-        // 데스크탑 전용 접선 호버 처리
         graphDiv.addEventListener('mousemove', function(e) {
             if (isTouchInteraction || isDraggingTrace || !isTangentMode || selectedFuncId) return;
             const bgRect = graphDiv.querySelector('.gridlayer').getBoundingClientRect();
@@ -917,7 +902,6 @@
             }
         });
 
-        // 공용 드래그(평행이동) 및 PC용 자체 클릭 감지 시스템 통합
         let mouseStartClientX = 0, mouseStartClientY = 0;
         
         function handleDragStart(clientX, clientY) {
@@ -958,7 +942,6 @@
         
         window.addEventListener('mouseup', function(e) {
             let dx = e.clientX - mouseStartClientX; let dy = e.clientY - mouseStartClientY;
-            // 드래그 거리가 5px 미만이면 '클릭'으로 판정하여 선택 동작 수행 (데스크탑)
             if (Math.sqrt(dx*dx + dy*dy) < 5 && !isTouchInteraction && !selectedFuncId) {
                 const bgRect = graphDiv.querySelector('.gridlayer').getBoundingClientRect();
                 if (e.clientX >= bgRect.left && e.clientX <= bgRect.right && e.clientY >= bgRect.top && e.clientY <= bgRect.bottom) {
