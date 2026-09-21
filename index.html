@@ -19,8 +19,8 @@
         .add-controls button { padding: 8px 16px; font-size: 1rem; cursor: pointer; border: none; border-radius: 5px; background-color: #0d6efd; color: white; font-weight: bold; transition: background 0.2s; }
         .add-controls button:hover { background-color: #0b5ed7; }
         
-        .tangent-btn { display: flex; align-items: center; gap: 6px; font-weight: bold; padding: 8px 16px; border-radius: 5px; cursor: pointer; transition: all 0.2s; border: 2px solid #0d6efd; background: white; color: #0d6efd; font-size: 1rem; }
-        .tangent-btn.active { background: #0d6efd; color: white; }
+        .toggle-btn { display: flex; align-items: center; gap: 6px; font-weight: bold; padding: 8px 16px; border-radius: 5px; cursor: pointer; transition: all 0.2s; border: 2px solid #0d6efd; background: white; color: #0d6efd; font-size: 1rem; }
+        .toggle-btn.active { background: #0d6efd; color: white; }
 
         .functions-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 15px; margin-bottom: 20px; }
         
@@ -51,13 +51,13 @@
 
         #math-display { background: #f8f9fa; padding: 15px; border-radius: 8px; border: 1px solid #dee2e6; margin-bottom: 15px; font-size: 1.1rem; overflow-x: auto; text-align: center; min-height: 45px; }
         
-        .top-info-panel { background: #fff; border: 1px solid #dee2e6; border-radius: 8px; padding: 15px; margin-bottom: 20px; box-shadow: 0 2px 6px rgba(0,0,0,0.03); display: flex; gap: 20px; flex-wrap: wrap; justify-content: space-around; }
+        /* 토글 패널: 기본은 숨김 상태 */
+        .top-info-panel { display: none; background: #fff; border: 1px solid #dee2e6; border-radius: 8px; padding: 15px; margin-bottom: 20px; box-shadow: 0 2px 6px rgba(0,0,0,0.03); gap: 20px; flex-wrap: wrap; justify-content: space-around; }
+        .top-info-panel.visible { display: flex; }
         .top-info-group { flex: 1; min-width: 250px; }
         .top-info-group h4 { margin: 0 0 8px 0; font-size: 0.95rem; color: #495057; display: flex; align-items: center; gap: 6px; border-bottom: 1px solid #f1f3f5; padding-bottom: 5px; }
         .coord-item { font-family: 'Courier New', Courier, monospace; font-size: 0.9rem; background: #f8f9fa; padding: 6px 10px; border-radius: 6px; margin-bottom: 5px; border-left: 4px solid #0d6efd; font-weight: bold; color: #212529; }
         .empty-msg { font-size: 0.85rem; color: #adb5bd; font-style: italic; }
-
-        @media (max-width: 768px) { .top-info-panel { display: none !important; } }
 
         .workspace { display: block; }
         .graph-wrapper { position: relative; width: 100%; }
@@ -97,7 +97,12 @@
         <button onclick="addFunction()">+ 함수 추가</button>
         <div style="border-left: 2px solid #dee2e6; height: 25px;"></div>
         
-        <button id="tangentModeBtn" class="tangent-btn" onclick="toggleTangentMode()">
+        <!-- 교점 좌표 토글 버튼 추가 -->
+        <button id="intersectToggleBtn" class="toggle-btn" onclick="toggleIntersectionPanel()">
+            <span>📍</span> 교점 좌표
+        </button>
+        
+        <button id="tangentModeBtn" class="toggle-btn" onclick="toggleTangentMode()">
             <span style="font-size:1.1rem;">⤡</span> 실시간 접선 모드: OFF
         </button>
     </div>
@@ -105,17 +110,18 @@
     <div id="functionsGrid" class="functions-grid"></div>
     <div id="math-display">수식을 불러오는 중입니다...</div>
     
-    <div class="top-info-panel">
+    <!-- 버튼 클릭 시에만 토글되어 표시되는 교점 좌표 패널 (X절편, Y절편 병기) -->
+    <div id="topInfoPanel" class="top-info-panel">
         <div class="top-info-group">
             <h4><span style="color:#212529;">●</span> 함수 간의 교점</h4>
             <div id="panel-intersections"><div class="empty-msg">계산 중...</div></div>
         </div>
         <div class="top-info-group">
-            <h4><span style="color:#fd7e14;">◆</span> X축 교점 (y=0)</h4>
+            <h4><span style="color:#fd7e14;">◆</span> X축 교점 (X절편, y=0)</h4>
             <div id="panel-x-axis"><div class="empty-msg">계산 중...</div></div>
         </div>
         <div class="top-info-group">
-            <h4><span style="color:#fd7e14;">◆</span> Y축 교점 (x=0)</h4>
+            <h4><span style="color:#fd7e14;">◆</span> Y축 교점 (Y절편, x=0)</h4>
             <div id="panel-y-axis"><div class="empty-msg">계산 중...</div></div>
         </div>
     </div>
@@ -149,6 +155,21 @@
     let isTangentMode = false;
     let isTouchInteraction = false;
     let touchIgnoreTimeout = null;
+    let isIntersectionVisible = false;
+
+    // 교점 패널 토글 함수
+    function toggleIntersectionPanel() {
+        isIntersectionVisible = !isIntersectionVisible;
+        const panel = document.getElementById('topInfoPanel');
+        const btn = document.getElementById('intersectToggleBtn');
+        if (isIntersectionVisible) {
+            panel.classList.add('visible');
+            btn.classList.add('active');
+        } else {
+            panel.classList.remove('visible');
+            btn.classList.remove('active');
+        }
+    }
 
     function resetAndScrollUp() {
         const addSection = document.getElementById('addControlsSection');
@@ -170,11 +191,11 @@
         isTangentMode = !isTangentMode;
         const btn = document.getElementById('tangentModeBtn');
         if (isTangentMode) {
-            btn.className = 'tangent-btn active';
+            btn.className = 'toggle-btn active';
             btn.innerHTML = `<span style="font-size:1.1rem;">⤡</span> 실시간 접선 모드: ON`;
             Plotly.relayout('graphPlot', { hovermode: 'closest' });
         } else {
-            btn.className = 'tangent-btn';
+            btn.className = 'toggle-btn';
             btn.innerHTML = `<span style="font-size:1.1rem;">⤡</span> 실시간 접선 모드: OFF`;
             Plotly.relayout('graphPlot', { shapes: [], annotations: [], hovermode: 'closest' }); 
         }
@@ -214,7 +235,6 @@
         return newCoeffs.map(formatNumber);
     }
 
-    // [핵심] 중첩 괄호 발생을 원천 차단하는 단일 괄호 항 합성 엔진
     function buildShiftedExpression(baseExpr, totalH, totalK) {
         let clean = (baseExpr || '').trim();
         let hVal = formatNumber(totalH);
@@ -254,7 +274,7 @@
         if (type === 'poly') { newFunc.degree = 2; newFunc.coeffs = [0, 0, 1]; } 
         else if (type === 'power') { newFunc.C = 1; newFunc.p = 0.5; }
         else if (type === 'custom') { 
-            newFunc.baseExpr = 'x^2 + y^2 = 4'; // 기준 뼈대 수식 영구 보존
+            newFunc.baseExpr = 'x^2 + y^2 = 4';
             newFunc.expr = 'x^2 + y^2 = 4'; 
         } 
         else { newFunc.C = 1; newFunc.base = 2; }
@@ -286,7 +306,6 @@
         else if (field === 'coeffs') func.coeffs[index] = parseFloat(value) || 0;
         else if (field === 'expr') {
             func.expr = value;
-            // 사용자가 직접 입력창을 수정하면 이를 새로운 기준 수식으로 재설정하고 H, K를 0으로 리셋
             func.baseExpr = value;
             func.H = 0;
             func.K = 0;
@@ -358,7 +377,7 @@
                 innerHTML += `<div class="custom-expr-row">
                                 <label><strong>함수/음함수 식 입력:</strong></label>
                                 <input type="text" id="input_${func.id}_expr" value="${func.expr}" onchange="updateState('${func.id}', 'expr', this.value)" placeholder="예: x^2 + y^2 = 4 또는 sin(x)">
-                                <span style="font-size:0.75rem; color:#0d6efd; font-weight:bold;">* 삼각함수(sin, cos, tan)의 x축 단위는 라디안(rad)입니다. (예: 180° = π = pi)</span>
+                                <span style="font-size:0.75rem; color:#0d6efd; font-weight:bold;">* 삼각함수(sin, cos, tan)의 x축 단위는 라디안(rad). ex: 180° = π라디안(rad). 단 라디안(rad) 표시는 생략.</span>
                                 <span style="font-size:0.75rem; color:#6c757d;">* 대소문자 혼용 가능. 팩토리얼(!) 지원. 드래그 이동 시 식이 항상 간결하게 자동 갱신됩니다.</span>
                               </div>`;
             } else {
@@ -1047,7 +1066,6 @@
             startFuncState = JSON.parse(JSON.stringify(functionsList.find(f => f.id === selectedFuncId)));
         }
 
-        // [핵심] 기준 뼈대 수식(baseExpr) 기반 단일 괄호 치환 이동 처리
         function handleDragMove(clientX, clientY) {
             if (!isDraggingTrace || !selectedFuncId) return;
             const bgRect = graphDiv.querySelector('.gridlayer').getBoundingClientRect();
@@ -1063,7 +1081,6 @@
             } else if (targetFunc.type === 'custom') {
                 targetFunc.H = (startFuncState.H || 0) + dx;
                 targetFunc.K = (startFuncState.K || 0) + dy;
-                // 기준 뼈대 수식에서 누적 H, K를 반영하여 항상 (x - a)^2 + (y - b)^2 = c 형태로 단일 생성
                 targetFunc.expr = buildShiftedExpression(targetFunc.baseExpr || startFuncState.expr, targetFunc.H, targetFunc.K);
             } else { 
                 targetFunc.H = formatNumber((startFuncState.H || 0) + dx); 
