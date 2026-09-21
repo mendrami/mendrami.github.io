@@ -214,21 +214,20 @@
         return newCoeffs.map(formatNumber);
     }
 
-    // [핵심] 수식 문자열 자체를 dx, dy만큼 평행이동 변환하는 수학적 치환 알고리즘
-    function shiftCustomExpression(expr, dx, dy) {
-        let clean = expr.trim();
-        let signX = dx >= 0 ? `- ${formatNumber(dx)}` : `+ ${formatNumber(Math.abs(dx))}`;
-        let signY = dy >= 0 ? `- ${formatNumber(dy)}` : `+ ${formatNumber(Math.abs(dy))}`;
-        
-        let subX = Math.abs(dx) > 1e-4 ? `(x ${signX})` : `x`;
-        let subY = Math.abs(dy) > 1e-4 ? `(y ${signY})` : `y`;
+    // [핵심] 중첩 괄호 발생을 원천 차단하는 단일 괄호 항 합성 엔진
+    function buildShiftedExpression(baseExpr, totalH, totalK) {
+        let clean = (baseExpr || '').trim();
+        let hVal = formatNumber(totalH);
+        let kVal = formatNumber(totalK);
+
+        let subX = Math.abs(hVal) > 1e-4 ? (hVal > 0 ? `(x - ${hVal})` : `(x + ${Math.abs(hVal)})`) : `x`;
+        let subY = Math.abs(kVal) > 1e-4 ? (kVal > 0 ? `(y - ${kVal})` : `(y + ${Math.abs(kVal)})`) : `y`;
 
         if (clean.includes('=')) {
             let parts = clean.split('=');
             let L = parts[0].replace(/X/g, 'x').replace(/Y/g, 'y');
             let R = parts[1].replace(/X/g, 'x').replace(/Y/g, 'y');
             
-            // x, y 단어 단위 치환
             let newL = L.replace(/\bx\b/g, subX).replace(/\by\b/g, subY);
             let newR = R.replace(/\bx\b/g, subX).replace(/\by\b/g, subY);
             return `${newL.trim()} = ${newR.trim()}`;
@@ -236,11 +235,10 @@
             let L = clean.replace(/X/g, 'x').replace(/Y/g, 'y');
             return L.replace(/\bx\b/g, subX).replace(/\by\b/g, subY);
         } else {
-            // y = f(x) 형태: f(x - dx) + dy 로 식 자체를 갱신
             let L = clean.replace(/X/g, 'x');
             let newExpr = L.replace(/\bx\b/g, subX);
-            if (Math.abs(dy) > 1e-4) {
-                let signVal = dy > 0 ? `+ ${formatNumber(dy)}` : `- ${formatNumber(Math.abs(dy))}`;
+            if (Math.abs(kVal) > 1e-4) {
+                let signVal = kVal > 0 ? `+ ${kVal}` : `- ${Math.abs(kVal)}`;
                 return `${newExpr} ${signVal}`;
             }
             return newExpr;
@@ -255,7 +253,10 @@
         };
         if (type === 'poly') { newFunc.degree = 2; newFunc.coeffs = [0, 0, 1]; } 
         else if (type === 'power') { newFunc.C = 1; newFunc.p = 0.5; }
-        else if (type === 'custom') { newFunc.expr = 'x^2 + y^2 = 4'; } 
+        else if (type === 'custom') { 
+            newFunc.baseExpr = 'x^2 + y^2 = 4'; // 기준 뼈대 수식 영구 보존
+            newFunc.expr = 'x^2 + y^2 = 4'; 
+        } 
         else { newFunc.C = 1; newFunc.base = 2; }
 
         functionsList.push(newFunc); colorIndex++;
@@ -283,13 +284,18 @@
             renderUI();
         } 
         else if (field === 'coeffs') func.coeffs[index] = parseFloat(value) || 0;
-        else if (field === 'expr') func.expr = value;
+        else if (field === 'expr') {
+            func.expr = value;
+            // 사용자가 직접 입력창을 수정하면 이를 새로운 기준 수식으로 재설정하고 H, K를 0으로 리셋
+            func.baseExpr = value;
+            func.H = 0;
+            func.K = 0;
+        }
         else func[field] = parseFloat(value) || 0;
 
         if (field !== 'degree') updateAll();
     }
 
-    // 입력창 실시간 값 동기화 함수
     function syncInputValues(func) {
         if (func.type === 'poly') {
             for (let i = 0; i <= func.degree; i++) {
@@ -298,7 +304,7 @@
             }
         } else if (func.type === 'custom') {
             let elExpr = document.getElementById(`input_${func.id}_expr`);
-            if (elExpr) elExpr.value = func.expr; // 수식 입력창 텍스트 직접 갱신
+            if (elExpr) elExpr.value = func.expr;
         } else {
             let elH = document.getElementById(`input_${func.id}_H`); 
             let elK = document.getElementById(`input_${func.id}_K`);
@@ -351,9 +357,9 @@
             } else if (func.type === 'custom') {
                 innerHTML += `<div class="custom-expr-row">
                                 <label><strong>함수/음함수 식 입력:</strong></label>
-                                <input type="text" id="input_${func.id}_expr" value="${func.expr}" oninput="updateState('${func.id}', 'expr', this.value)" placeholder="예: x^2 + y^2 = 4 또는 sin(x)">
+                                <input type="text" id="input_${func.id}_expr" value="${func.expr}" onchange="updateState('${func.id}', 'expr', this.value)" placeholder="예: x^2 + y^2 = 4 또는 sin(x)">
                                 <span style="font-size:0.75rem; color:#0d6efd; font-weight:bold;">* 삼각함수(sin, cos, tan)의 x축 단위는 라디안(rad)입니다. (예: 180° = π = pi)</span>
-                                <span style="font-size:0.75rem; color:#6c757d;">* 대소문자 혼용 가능. 팩토리얼(!) 지원. 드래그 이동 시 식이 자동 갱신됩니다.</span>
+                                <span style="font-size:0.75rem; color:#6c757d;">* 대소문자 혼용 가능. 팩토리얼(!) 지원. 드래그 이동 시 식이 항상 간결하게 자동 갱신됩니다.</span>
                               </div>`;
             } else {
                 innerHTML += `<div class="input-row"><label>계수 (C):</label><input type="number" step="0.5" value="${func.C}" oninput="updateState('${func.id}', 'C', this.value)"></div>
@@ -1041,7 +1047,7 @@
             startFuncState = JSON.parse(JSON.stringify(functionsList.find(f => f.id === selectedFuncId)));
         }
 
-        // [핵심] 자유 입력 함수 이동 시 수식 문자열(계수)을 직접 변경하는 드래그 처리
+        // [핵심] 기준 뼈대 수식(baseExpr) 기반 단일 괄호 치환 이동 처리
         function handleDragMove(clientX, clientY) {
             if (!isDraggingTrace || !selectedFuncId) return;
             const bgRect = graphDiv.querySelector('.gridlayer').getBoundingClientRect();
@@ -1055,8 +1061,10 @@
             if (targetFunc.type === 'poly') { 
                 targetFunc.coeffs = shiftPolynomial(startFuncState.coeffs, dx, dy); 
             } else if (targetFunc.type === 'custom') {
-                // 수식 자체의 계수를 실시간 수학적 변환
-                targetFunc.expr = shiftCustomExpression(startFuncState.expr, dx, dy);
+                targetFunc.H = (startFuncState.H || 0) + dx;
+                targetFunc.K = (startFuncState.K || 0) + dy;
+                // 기준 뼈대 수식에서 누적 H, K를 반영하여 항상 (x - a)^2 + (y - b)^2 = c 형태로 단일 생성
+                targetFunc.expr = buildShiftedExpression(targetFunc.baseExpr || startFuncState.expr, targetFunc.H, targetFunc.K);
             } else { 
                 targetFunc.H = formatNumber((startFuncState.H || 0) + dx); 
                 targetFunc.K = formatNumber((startFuncState.K || 0) + dy); 
