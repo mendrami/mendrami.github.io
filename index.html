@@ -222,7 +222,7 @@
         };
         if (type === 'poly') { newFunc.degree = 2; newFunc.coeffs = [0, 0, 1]; } 
         else if (type === 'power') { newFunc.C = 1; newFunc.p = 0.5; }
-        else if (type === 'custom') { newFunc.expr = 'x^2 + y^2 = 1'; } 
+        else if (type === 'custom') { newFunc.expr = 'x^2 + y^2 = 4'; } 
         else { newFunc.C = 1; newFunc.base = 2; }
 
         functionsList.push(newFunc); colorIndex++;
@@ -314,7 +314,7 @@
             } else if (func.type === 'custom') {
                 innerHTML += `<div class="custom-expr-row">
                                 <label><strong>함수/음함수 식 입력:</strong></label>
-                                <input type="text" id="input_${func.id}_expr" value="${func.expr}" oninput="updateState('${func.id}', 'expr', this.value)" placeholder="예: x^2 + y^2 = 1 또는 sin(x)">
+                                <input type="text" id="input_${func.id}_expr" value="${func.expr}" oninput="updateState('${func.id}', 'expr', this.value)" placeholder="예: x^2 + y^2 = 4 또는 sin(x)">
                                 <span style="font-size:0.75rem; color:#0d6efd; font-weight:bold;">* 삼각함수(sin, cos, tan)의 x축 단위는 라디안(rad)입니다. (예: 180° = π = pi)</span>
                                 <span style="font-size:0.75rem; color:#6c757d;">* 대소문자 혼용 가능. 팩토리얼(!) 연산 지원</span>
                               </div>
@@ -421,6 +421,10 @@
         }
     }
 
+    function isImplicitFunc(f) {
+        return f.type === 'custom' && (f.expr.includes('=') || f.expr.toLowerCase().includes('y'));
+    }
+
     function evaluateImplicit(f, x, y) {
         let shiftedX = x - (f.H || 0);
         let shiftedY = y - (f.K || 0);
@@ -432,10 +436,6 @@
         } else {
             return evaluateCustomExpr(f.expr, shiftedX, shiftedY); 
         }
-    }
-
-    function isImplicitFunc(f) {
-        return f.type === 'custom' && (f.expr.includes('=') || f.expr.toLowerCase().includes('y'));
     }
 
     function evaluateFunction(f, x) {
@@ -482,6 +482,24 @@
         return -Fx / Fy;
     }
 
+    // [핵심] 1차원 이분법(Bisection) 근 찾기 수치해석 함수
+    function bisectionRoot(fn, a, b, maxIter = 15) {
+        let fa = fn(a), fb = fn(b);
+        if (isNaN(fa) || isNaN(fb) || fa * fb > 0) return NaN;
+        let mid = (a + b) / 2;
+        for (let i = 0; i < maxIter; i++) {
+            mid = (a + b) / 2;
+            let fmid = fn(mid);
+            if (Math.abs(fmid) < 1e-7 || Math.abs(b - a) < 1e-6) break;
+            if (fa * fmid <= 0) {
+                b = mid; fb = fmid;
+            } else {
+                a = mid; fa = fmid;
+            }
+        }
+        return mid;
+    }
+
     function updateIntersectionPanel(panelData) {
         const xDiv = document.getElementById('panel-x-axis');
         const yDiv = document.getElementById('panel-y-axis');
@@ -500,37 +518,12 @@
         xDiv.innerHTML = xHTML; yDiv.innerHTML = yHTML; fDiv.innerHTML = fHTML;
     }
 
-    // --- 수치해석 기반 근사 이분법(Bisection) 함수 ---
-    function findRoot1D(evalFn, a, b, tol = 1e-5, maxIter = 25) {
-        let fa = evalFn(a), fb = evalFn(b);
-        if (isNaN(fa) || isNaN(fb)) return null;
-        if (fa === 0) return a;
-        if (fb === 0) return b;
-        if (fa * fb > 0) return null;
-
-        let left = a, right = b;
-        for (let iter = 0; iter < maxIter; iter++) {
-            let mid = (left + right) / 2;
-            let fmid = evalFn(mid);
-            if (isNaN(fmid)) return null;
-            if (Math.abs(fmid) < tol || (right - left) / 2 < tol) return mid;
-            if (fa * fmid <= 0) {
-                right = mid;
-                fb = fmid;
-            } else {
-                left = mid;
-                fa = fmid;
-            }
-        }
-        return (left + right) / 2;
-    }
-
     function generateTraces(rangeX, rangeY, skipHeavy) {
         const spanX = rangeX[1] - rangeX[0];
         const spanY = rangeY[1] - rangeY[0];
         const minX = rangeX[0] - spanX; const maxX = rangeX[1] + spanX;
         const minY = rangeY[0] - spanY; const maxY = rangeY[1] + spanY;
-        const step = Math.max((maxX - minX) / 2000, 0.001);
+        const step = Math.max((maxX - minX) / 1500, 0.005);
         
         const traces = [];
         const visibleFunctions = functionsList.filter(f => f.visible);
@@ -538,7 +531,6 @@
         for (let x = minX; x <= maxX; x += step) xVal.push(x);
         
         const yDataCollection = [];
-        const funcMeta = [];
         const axisIntX = [], axisIntY = [], axisIntText = [];
         const panelData = { yInt: [], xInt: [], funcInt: [] };
         
@@ -550,20 +542,16 @@
             let typeName = f.type === 'poly' ? '다항함수' : (f.type === 'power' ? '멱함수' : (f.type === 'exp' ? '지수함수' : (f.type === 'log' ? '로그함수' : '자유입력')));
             let fName = `${typeName} ${typeIndex}`;
             let isSelected = (f.id === selectedFuncId);
-            let isImplicit = isImplicitFunc(f);
 
-            funcMeta.push({ func: f, name: fName, isImplicit: isImplicit, color: f.color });
-
-            if (isImplicit) {
-                let steps = skipHeavy ? 50 : 150; 
-                let gMinX = rangeX[0] - spanX, gMaxX = rangeX[1] + spanX;
-                let gMinY = rangeY[0] - spanY, gMaxY = rangeY[1] + spanY;
-                let dx = (gMaxX - gMinX) / steps;
-                let dy = (gMaxY - gMinY) / steps;
+            if (isImplicitFunc(f)) {
+                // 음함수 등고선 렌더링
+                let steps = skipHeavy ? 60 : 160; 
+                let dx = (maxX - minX) / steps;
+                let dy = (maxY - minY) / steps;
                 
                 let xGrid = [], yGrid = [];
-                for(let i=0; i<=steps; i++) xGrid.push(gMinX + i*dx);
-                for(let i=0; i<=steps; i++) yGrid.push(gMinY + i*dy);
+                for(let i=0; i<=steps; i++) xGrid.push(minX + i*dx);
+                for(let i=0; i<=steps; i++) yGrid.push(minY + i*dy);
                 
                 let zGrid = [];
                 for(let j=0; j<=steps; j++) {
@@ -579,41 +567,29 @@
                     showscale: false, name: fName, hoverinfo: 'none', customdata: Array(zGrid.length).fill(f.id)
                 });
                 
-                yDataCollection.push(null);
+                yDataCollection.push(null); // 음함수는 1D yVal 없음
 
-                // --- [음함수 축 교점 수치해석 연산] ---
+                // [음함수 전용 축 교점 계산]
                 if (!skipHeavy) {
-                    // 1. 음함수의 X축 교점: F(x, 0) = 0
-                    for (let k = 0; k < xVal.length - 1; k += 2) {
-                        let x1 = xVal[k], x2 = xVal[k+1];
-                        let f1 = evaluateImplicit(f, x1, 0);
-                        let f2 = evaluateImplicit(f, x2, 0);
-                        if (isNaN(f1) || isNaN(f2)) continue;
-                        if (f1 * f2 <= 0 && (f1 !== 0 || f2 !== 0)) {
-                            let rootX = findRoot1D(x => evaluateImplicit(f, x, 0), x1, x2);
-                            if (rootX !== null && !panelData.xInt.some(p => p.name === fName && Math.abs(p.x - rootX) < 1e-3)) {
-                                panelData.xInt.push({ name: fName, color: f.color, x: rootX, y: 0 });
-                                if (!axisIntX.some(x => Math.abs(x - rootX) < 1e-3 && Math.abs(axisIntY[axisIntX.indexOf(x)] - 0) < 1e-3)) {
-                                    axisIntX.push(rootX); axisIntY.push(0); axisIntText.push(`(${rootX.toFixed(2)}, 0.00)`);
-                                }
+                    // X축 교점: F(x, 0) = 0
+                    for (let k = 0; k < xVal.length - 1; k++) {
+                        let root = bisectionRoot(x => evaluateImplicit(f, x, 0), xVal[k], xVal[k+1]);
+                        if (!isNaN(root)) {
+                            if (!panelData.xInt.some(p => p.name === fName && Math.abs(p.x - root) < 0.05)) {
+                                panelData.xInt.push({ name: fName, color: f.color, x: root, y: 0 });
+                                axisIntX.push(root); axisIntY.push(0); axisIntText.push(`(${root.toFixed(2)}, 0.00)`);
                             }
                         }
                     }
-
-                    // 2. 음함수의 Y축 교점: F(0, y) = 0
-                    let ySteps = (maxY - minY) / 1000;
-                    for (let y = minY; y <= maxY; y += ySteps) {
-                        let y1 = y, y2 = y + ySteps;
-                        let f1 = evaluateImplicit(f, 0, y1);
-                        let f2 = evaluateImplicit(f, 0, y2);
-                        if (isNaN(f1) || isNaN(f2)) continue;
-                        if (f1 * f2 <= 0 && (f1 !== 0 || f2 !== 0)) {
-                            let rootY = findRoot1D(curY => evaluateImplicit(f, 0, curY), y1, y2);
-                            if (rootY !== null && !panelData.yInt.some(p => p.name === fName && Math.abs(p.y - rootY) < 1e-3)) {
+                    // Y축 교점: F(0, y) = 0
+                    let ySteps = [];
+                    for (let y = minY; y <= maxY; y += step) ySteps.push(y);
+                    for (let k = 0; k < ySteps.length - 1; k++) {
+                        let rootY = bisectionRoot(y => evaluateImplicit(f, 0, y), ySteps[k], ySteps[k+1]);
+                        if (!isNaN(rootY)) {
+                            if (!panelData.yInt.some(p => p.name === fName && Math.abs(p.y - rootY) < 0.05)) {
                                 panelData.yInt.push({ name: fName, color: f.color, x: 0, y: rootY });
-                                if (!axisIntX.some(x => Math.abs(x - 0) < 1e-3 && Math.abs(axisIntY[axisIntX.indexOf(x)] - rootY) < 1e-3)) {
-                                    axisIntX.push(0); axisIntY.push(rootY); axisIntText.push(`(0.00, ${rootY.toFixed(2)})`);
-                                }
+                                axisIntX.push(0); axisIntY.push(rootY); axisIntText.push(`(0.00, ${rootY.toFixed(2)})`);
                             }
                         }
                     }
@@ -621,7 +597,7 @@
                 return; 
             }
 
-            // 양함수(기본) 배열 처리
+            // 일반 양함수 연산 처리
             const yVal = [];
             for (let i = 0; i < xVal.length; i++) {
                 let y = evaluateFunction(f, xVal[i]);
@@ -644,10 +620,10 @@
                     let y1 = yVal[k], y2 = yVal[k+1];
                     if (isNaN(y1) || isNaN(y2)) continue;
                     if (y1 * y2 <= 0 && (y1 !== 0 || y2 !== 0)) {
-                        let t = y1 / (y1 - y2);
-                        let ix = xVal[k] + t * (xVal[k+1] - xVal[k]);
-                        if (!panelData.xInt.some(p => p.name === fName && Math.abs(p.x - ix) < 1e-4)) panelData.xInt.push({ name: fName, color: f.color, x: ix, y: 0 });
-                        if (!axisIntX.some(x => Math.abs(x - ix) < 1e-4 && Math.abs(axisIntY[axisIntX.indexOf(x)] - 0) < 1e-4)) {
+                        let root = bisectionRoot(x => evaluateFunction(f, x), xVal[k], xVal[k+1]);
+                        let ix = !isNaN(root) ? root : (xVal[k] + (y1 / (y1 - y2)) * (xVal[k+1] - xVal[k]));
+                        if (!panelData.xInt.some(p => p.name === fName && Math.abs(p.x - ix) < 0.05)) {
+                            panelData.xInt.push({ name: fName, color: f.color, x: ix, y: 0 });
                             axisIntX.push(ix); axisIntY.push(0); axisIntText.push(`(${ix.toFixed(2)}, 0.00)`);
                         }
                     }
@@ -681,60 +657,76 @@
             });
         }
 
-        // --- [모든 함수 간의 교점 연산 통합: 양함수 vs 양함수, 양함수 vs 음함수] ---
+        // [핵심 해결] 양함수 간, 음함수와 양함수 간, 음함수 간 통합 교점 수치해석 엔진
         if (!skipHeavy) {
             const intersectX = [], intersectY = [], intersectText = [];
+            
+            for (let i = 0; i < visibleFunctions.length; i++) {
+                for (let j = i + 1; j < visibleFunctions.length; j++) {
+                    const f1 = visibleFunctions[i], f2 = visibleFunctions[j];
+                    const isImp1 = isImplicitFunc(f1), isImp2 = isImplicitFunc(f2);
 
-            for (let i = 0; i < funcMeta.length; i++) {
-                for (let j = i + 1; j < funcMeta.length; j++) {
-                    let m1 = funcMeta[i], m2 = funcMeta[j];
-
-                    // 경우 1: 양함수 vs 양함수
-                    if (!m1.isImplicit && !m2.isImplicit) {
+                    // 케이스 1: 양함수 vs 양함수 (기존 로직 정밀화)
+                    if (!isImp1 && !isImp2) {
                         const y1 = yDataCollection[i], y2 = yDataCollection[j];
                         for (let k = 0; k < xVal.length - 1; k++) {
                             if (isNaN(y1[k]) || isNaN(y2[k]) || isNaN(y1[k+1]) || isNaN(y2[k+1])) continue;
-                            const d1 = y1[k] - y2[k], d2 = y1[k+1] - y2[k+1];
-                            if (d1 * d2 <= 0 && (d1 !== 0 || d2 !== 0)) {
-                                const t = d1 / (d1 - d2);
-                                const ix = xVal[k] + t * (xVal[k+1] - xVal[k]), iy = y1[k] + t * (y1[k+1] - y1[k]);
-                                if (!intersectX.some(x => Math.abs(x - ix) < (step * 5))) {
+                            let diff1 = y1[k] - y2[k], diff2 = y1[k+1] - y2[k+1];
+                            if (diff1 * diff2 <= 0 && (diff1 !== 0 || diff2 !== 0)) {
+                                let rootX = bisectionRoot(x => evaluateFunction(f1, x) - evaluateFunction(f2, x), xVal[k], xVal[k+1]);
+                                let ix = !isNaN(rootX) ? rootX : (xVal[k] + (diff1 / (diff1 - diff2)) * (xVal[k+1] - xVal[k]));
+                                let iy = evaluateFunction(f1, ix);
+                                if (!intersectX.some(x => Math.abs(x - ix) < 0.08 && Math.abs(intersectY[intersectX.indexOf(x)] - iy) < 0.08)) {
                                     intersectX.push(ix); intersectY.push(iy); intersectText.push(`(${ix.toFixed(2)}, ${iy.toFixed(2)})`);
-                                    panelData.funcInt.push({ c1: m1.color, c2: m2.color, x: ix, y: iy });
+                                    panelData.funcInt.push({ c1: f1.color, c2: f2.color, x: ix, y: iy });
                                 }
                             }
                         }
-                    } 
-                    // 경우 2: 양함수 vs 음함수 교점
-                    else if ((!m1.isImplicit && m2.isImplicit) || (m1.isImplicit && !m2.isImplicit)) {
-                        let explicitMeta = m1.isImplicit ? m2 : m1;
-                        let implicitMeta = m1.isImplicit ? m1 : m2;
-                        let expF = explicitMeta.func;
-                        let impF = implicitMeta.func;
-
-                        // H(x) = F_imp(x, f_exp(x)) = 0 의 실근 탐색
-                        for (let k = 0; k < xVal.length - 1; k += 2) {
+                    }
+                    // 케이스 2: 음함수 vs 양함수 (F(x, g(x)) = 0 수치해석)
+                    else if (isImp1 !== isImp2) {
+                        const impF = isImp1 ? f1 : f2;
+                        const expF = isImp1 ? f2 : f1;
+                        
+                        for (let k = 0; k < xVal.length - 1; k++) {
                             let xA = xVal[k], xB = xVal[k+1];
-                            let yA = evaluateFunction(expF, xA);
-                            let yB = evaluateFunction(expF, xB);
+                            let yA = evaluateFunction(expF, xA), yB = evaluateFunction(expF, xB);
                             if (isNaN(yA) || isNaN(yB)) continue;
 
-                            let valA = evaluateImplicit(impF, xA, yA);
-                            let valB = evaluateImplicit(impF, xB, yB);
-                            if (isNaN(valA) || isNaN(valB)) continue;
+                            let vA = evaluateImplicit(impF, xA, yA);
+                            let vB = evaluateImplicit(impF, xB, yB);
+                            if (isNaN(vA) || isNaN(vB)) continue;
 
-                            if (valA * valB <= 0 && (valA !== 0 || valB !== 0)) {
-                                let rootX = findRoot1D(curX => {
-                                    let curY = evaluateFunction(expF, curX);
-                                    return isNaN(curY) ? NaN : evaluateImplicit(impF, curX, curY);
+                            if (vA * vB <= 0 && (vA !== 0 || vB !== 0)) {
+                                let rootX = bisectionRoot(x => {
+                                    let y = evaluateFunction(expF, x);
+                                    return isNaN(y) ? NaN : evaluateImplicit(impF, x, y);
                                 }, xA, xB);
 
-                                if (rootX !== null) {
+                                if (!isNaN(rootX)) {
                                     let rootY = evaluateFunction(expF, rootX);
-                                    if (!isNaN(rootY) && !intersectX.some(x => Math.abs(x - rootX) < (step * 5))) {
-                                        intersectX.push(rootX); intersectY.push(rootY);
-                                        intersectText.push(`(${rootX.toFixed(2)}, ${rootY.toFixed(2)})`);
-                                        panelData.funcInt.push({ c1: m1.color, c2: m2.color, x: rootX, y: rootY });
+                                    if (!intersectX.some(x => Math.abs(x - rootX) < 0.08 && Math.abs(intersectY[intersectX.indexOf(x)] - rootY) < 0.08)) {
+                                        intersectX.push(rootX); intersectY.push(rootY); intersectText.push(`(${rootX.toFixed(2)}, ${rootY.toFixed(2)})`);
+                                        panelData.funcInt.push({ c1: f1.color, c2: f2.color, x: rootX, y: rootY });
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    // 케이스 3: 음함수 vs 음함수 (2D Grid 등고선 교차점 스캔)
+                    else {
+                        let steps = 70;
+                        let dx = (maxX - minX) / steps;
+                        let dy = (maxY - minY) / steps;
+                        for (let xi = minX; xi < maxX; xi += dx) {
+                            for (let yj = minY; yj < maxY; yj += dy) {
+                                let fA1 = evaluateImplicit(f1, xi, yj), fB1 = evaluateImplicit(f1, xi+dx, yj+dy);
+                                let fA2 = evaluateImplicit(f2, xi, yj), fB2 = evaluateImplicit(f2, xi+dx, yj+dy);
+                                if (Math.abs(fA1) < 0.25 && Math.abs(fA2) < 0.25) {
+                                    let mx = xi + dx/2, my = yj + dy/2;
+                                    if (!intersectX.some(x => Math.abs(x - mx) < (dx * 1.5) && Math.abs(intersectY[intersectX.indexOf(x)] - my) < (dy * 1.5))) {
+                                        intersectX.push(mx); intersectY.push(my); intersectText.push(`(${mx.toFixed(2)}, ${my.toFixed(2)})`);
+                                        panelData.funcInt.push({ c1: f1.color, c2: f2.color, x: mx, y: my });
                                     }
                                 }
                             }
@@ -859,8 +851,7 @@
         functionsList.forEach(f => {
             if (!f.visible) return;
 
-            let isImplicit = isImplicitFunc(f);
-            if (isImplicit) {
+            if (isImplicitFunc(f)) {
                 let eps = threshold * 0.5;
                 let v00 = evaluateImplicit(f, px - eps, py - eps);
                 let v01 = evaluateImplicit(f, px - eps, py + eps);
