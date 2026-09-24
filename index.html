@@ -271,7 +271,6 @@
                     <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-4 gap-4">
                         <div><h2 class="text-xl font-bold text-blue-200">주행 시뮬레이터 (무한 궤도)</h2></div>
                         <div class="flex gap-3 w-full md:w-auto">
-                            <!-- Toggle Buttons for Gas/Brake -->
                             <button id="t1-btn-gas" class="flex-1 md:flex-none px-8 py-4 bg-green-600 hover:bg-green-500 text-white rounded-xl font-bold shadow-lg shadow-green-900/50 text-lg transition-all">가속 (토글)</button>
                             <button id="t1-btn-brake" class="flex-1 md:flex-none px-8 py-4 bg-red-600 hover:bg-red-500 text-white rounded-xl font-bold shadow-lg shadow-red-900/50 text-lg transition-all">감속 (토글)</button>
                         </div>
@@ -410,7 +409,6 @@
 
                         <div class="lg:col-span-3 flex flex-col gap-3">
                             <div class="flex justify-end gap-3 mb-1">
-                                <!-- Toggle Buttons -->
                                 <button id="t2-btn-gas" class="px-6 py-2 bg-green-600 hover:bg-green-500 text-white rounded font-bold shadow opacity-50 cursor-not-allowed transition-all" disabled>가속 (토글)</button>
                                 <button id="t2-btn-brake" class="px-6 py-2 bg-red-600 hover:bg-red-500 text-white rounded font-bold shadow opacity-50 cursor-not-allowed transition-all" disabled>감속 (토글)</button>
                             </div>
@@ -453,7 +451,10 @@
                                     </div>
                                     <div id="body-mom2" class="w-full bg-slate-900 relative graph-body" style="height: 300px;">
                                         <canvas id="chart-mom2"></canvas>
-                                        <div class="absolute bottom-2 left-2 text-[10px] text-slate-400 pointer-events-none">클릭시 미분, 드래그시 스크롤(이동)</div>
+                                        <div class="absolute bottom-2 left-2 text-[10px] md:text-[11px] text-slate-300 pointer-events-none bg-slate-800/80 px-2 py-1 rounded border border-slate-600">
+                                            <span class="text-purple-400 font-bold">※ 왜 우하향할까요?</span> 충돌 후 정지할 때까지의 감속 구간만 기록하기 때문입니다.<br>
+                                            <span class="text-slate-400 text-[9px] md:text-[10px]">(클릭시 미분, 드래그시 이동)</span>
+                                        </div>
                                     </div>
                                 </div>
 
@@ -476,7 +477,10 @@
                                     <div id="body-force2" class="w-full bg-slate-900 relative graph-body flex flex-col" style="height: 300px;">
                                         <div class="relative flex-grow h-0">
                                             <canvas id="chart-force2" class="absolute inset-0 w-full h-full"></canvas>
-                                            <div class="absolute bottom-2 left-2 text-[10px] text-slate-400 pointer-events-none">클릭시 접선, 드래그시 스크롤(이동)</div>
+                                            <div class="absolute bottom-2 left-2 text-[10px] md:text-[11px] text-slate-300 pointer-events-none bg-slate-800/80 px-2 py-1 rounded border border-slate-600">
+                                                <span class="text-red-400 font-bold">※ 충돌력 기록:</span> 장벽에 부딪히는 찰나의 힘 변화를 나타냅니다.<br>
+                                                <span class="text-slate-400 text-[9px] md:text-[10px]">(클릭시 접선, 드래그시 이동)</span>
+                                            </div>
                                         </div>
                                         <div class="bg-slate-800/80 border-t border-slate-700 py-2 flex justify-center items-center h-10 shadow-inner z-10">
                                             <span class="text-yellow-400 font-bold text-sm md:text-base flex items-center">
@@ -1137,7 +1141,6 @@
     let phys_globalMass = 1000;
     let phys_animationFrameId = null;
 
-    // [핵심] speed(속력) 데이터를 저장하기 위해 history 구조 보강
     const phys_kState = { t: 0, x: 0, v: 0, a: 0, inputAcc: 0, history: [] };
     const phys_dState = { phase: 'ready', t: 0, x: 0, v: 0, a: 0, p: 0, F: 0, J: 0, inputAcc: 0, v0: 20, matKey: 'concrete', crashTime: 0, p_impact: 0, chartData: [] };
 
@@ -1148,7 +1151,6 @@
         'sponge':   { name: '스펀지', T: 1.0, color: '#3b82f6', renderColor: '#fcd34d', width: 10 }
     };
 
-    // [핵심] spd1 (속력) 차트 객체 추가
     const phys_charts = {
         pos1: { id: 'chart-pos1', wrapId: 'wrapper-pos1', zoom: 1, collapsed: false, selT: -1, yKey: 'x', color: '#60a5fa', ylabel: 'x (m)', winH: 256, offsetX: 0, offsetY: 0 },
         vel1: { id: 'chart-vel1', wrapId: 'wrapper-vel1', zoom: 1, collapsed: false, selT: -1, yKey: 'v', color: '#4ade80', ylabel: 'v (m/s)', winH: 256, offsetX: 0, offsetY: 0 },
@@ -1242,8 +1244,6 @@
     const phys_drawEnv = (ctx, w, h, camPosM) => {
         const roadY = h - 40; ctx.fillStyle = '#22c55e'; ctx.fillRect(0, roadY - 10, w, h - roadY + 10);
         const tSpace = 30 * phys_PIXELS_PER_METER; const camOff = camPosM * phys_PIXELS_PER_METER; 
-        
-        // [핵심] 음수 렌더링을 위해 Modulo 연산 교정
         const startX = -(((camOff % tSpace) + tSpace) % tSpace); 
         for(let i = startX - tSpace; i < w + tSpace; i += tSpace) {
             const idx = Math.floor((camOff + i) / tSpace); const s = 1 + (Math.abs(idx) % 3) * 0.2; phys_drawTree(ctx, i, roadY - 10, s);
@@ -1323,7 +1323,6 @@
         const hData = phys_kState.history; if (hData.length === 0) return;
         const baseTMin = hData[0].t; const baseTMax = Math.max(baseTMin + 1, hData[hData.length-1].t); 
 
-        // [핵심] spd1(속력) 추가 렌더링
         ['pos1', 'vel1', 'spd1', 'acc1'].forEach(key => {
             const chart = phys_charts[key]; if(chart.collapsed) return;
             const canvas = document.getElementById(chart.id); if(!canvas || canvas.width <= 1) return;
@@ -1333,7 +1332,7 @@
             let yMin = -1, yMax = 1;
             if(key === 'pos1') { yMin = hData[0].x - 1; yMax = Math.max(10, hData[hData.length-1].x + 5); }
             if(key === 'vel1') { yMin = -5; yMax = 40; }
-            if(key === 'spd1') { yMin = -5; yMax = 40; } // V자 곡선 표시용으로 하단 여백 부여
+            if(key === 'spd1') { yMin = -5; yMax = 40; } 
             if(key === 'acc1') { yMin = -15; yMax = 15; }
 
             const yCenter = (yMax + yMin) / 2; const baseRange = (yMax - yMin);
@@ -1349,7 +1348,6 @@
             const mapX = (t) => pad.L + (w - pad.L - pad.R) * (t - tMin) / (tMax - tMin || 1);
             const mapY = (v) => pad.T + (h - pad.T - pad.B) - (h - pad.T - pad.B) * (v - yMin) / (yMax - yMin || 1);
 
-            // [핵심] 속도, 속력은 Area Fill (0을 기준으로)
             if (key === 'vel1' || key === 'spd1') {
                 ctx.fillStyle = chart.color.replace(')', ', 0.2)').replace('rgb', 'rgba'); ctx.beginPath(); 
                 const y0 = Math.min(Math.max(mapY(0), pad.T), pad.T + (h - pad.T - pad.B));
@@ -1565,12 +1563,9 @@
                 const drag = -0.05 * phys_kState.v; phys_kState.a = phys_kState.inputAcc + drag;
                 if (Math.abs(phys_kState.v) < 0.1 && phys_kState.inputAcc === 0) { phys_kState.a = 0; phys_kState.v = 0; }
                 phys_kState.v += phys_kState.a * phys_dt;
-                
-                // [핵심] Clamping 제거: 위치 및 속도의 마이너스 후진 허용
                 phys_kState.x += phys_kState.v * phys_dt;
                 phys_kState.t += phys_dt;
 
-                // 속력은 속도의 절댓값
                 phys_kState.history.push({t: phys_kState.t, x: phys_kState.x, v: phys_kState.v, speed: Math.abs(phys_kState.v), a: phys_kState.a});
                 if (phys_kState.history.length > 400) phys_kState.history.shift(); 
                 
