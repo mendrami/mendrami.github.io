@@ -5,12 +5,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>수학 & 물리 학습 도구</title>
     
-    <!-- Plotly & Tailwind & Fonts -->
+    <!-- Plotly, Tailwind, MathJax, Fonts -->
     <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
-    
-    <!-- MathJax -->
     <script>
         MathJax = {
             tex: { inlineMath: [['$', '$'], ['\\(', '\\)']] },
@@ -20,68 +18,19 @@
     <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
 
     <style>
-        /* 글로벌 최상단 네비게이션 스타일 */
-        .global-nav {
-            position: sticky;
-            top: 0;
-            left: 0;
-            right: 0;
-            z-index: 10000;
-            background: rgba(15, 23, 42, 0.95);
-            backdrop-filter: blur(12px);
-            border-bottom: 2px solid #3b82f6;
-            padding: 10px 15px;
-            display: flex;
-            justify-content: center;
-            gap: 12px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
-        }
-        .nav-app-btn {
-            padding: 8px 20px;
-            font-size: 1rem;
-            font-weight: 800;
-            border-radius: 9999px;
-            transition: all 0.2s ease;
-            cursor: pointer;
-            border: 2px solid #3b82f6;
-            color: #94a3b8;
-            background: #1e293b;
-            display: flex;
-            align-items: center;
-            gap: 6px;
-        }
-        .nav-app-btn:hover {
-            color: white;
-            background: #334155;
-            transform: translateY(-1px);
-        }
-        .nav-app-btn.active {
-            background: #3b82f6;
-            color: white;
-            box-shadow: 0 0 15px rgba(59, 130, 246, 0.6);
-        }
-
-        /* 뷰포트 컨테이너 */
-        .app-view { display: none; width: 100%; min-height: calc(100vh - 65px); }
-        .app-view.active { display: block; }
-
-        /* --- [함수 비교 앱 전용 스타일] --- */
-        #view-func-compare {
-            background-color: #f0f2f5;
-            color: #212529;
-            padding: 15px;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-        }
-        #view-func-compare .container {
-            max-width: 1450px; margin: 0 auto; background: white; padding: 15px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.08);
-        }
-        #view-func-compare h1 { color: #212529; text-align: center; font-size: 1.6rem; margin-bottom: 5px; font-weight: 800; }
+        /* === 공통 전역 스타일 === */
+        body { margin: 0; background-color: #0f172a; -webkit-tap-highlight-color: transparent; }
+        
+        /* === [함수 비교] 전용 스타일 === */
+        #app-func { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        .func-container { max-width: 1450px; margin: 0 auto; background: white; padding: 15px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.08); }
+        .func-container h1 { color: #212529; text-align: center; font-size: 1.6rem; margin-bottom: 5px; font-weight: 800; }
         
         .status-board { text-align: center; background: #e9ecef; padding: 12px; border-radius: 6px; color: #495057; margin-bottom: 20px; transition: all 0.3s; display: flex; flex-direction: column; justify-content: center; align-items: center; font-size: 1rem; line-height: 1.5; }
         .status-board.active { background: #fff3cd; color: #856404; border: 2px dashed #ffe8a1; flex-direction: row; font-weight: bold; }
         
         .add-controls { display: flex; justify-content: center; align-items: center; gap: 10px; margin-bottom: 20px; background: #fff; padding: 12px; border-radius: 8px; border: 1px solid #dee2e6; flex-wrap: wrap; }
-        .add-controls select { padding: 8px 12px; font-size: 1rem; border-radius: 5px; border: 1px solid #ced4da; }
+        .add-controls select, .func-card input[type="text"], .func-card input[type="number"] { padding: 6px 10px; font-size: 1rem; border-radius: 5px; border: 1px solid #ced4da; background-color: white; color: #212529; }
         .add-controls button { padding: 8px 16px; font-size: 1rem; cursor: pointer; border: none; border-radius: 5px; background-color: #0d6efd; color: white; font-weight: bold; transition: background 0.2s; }
         .add-controls button:hover { background-color: #0b5ed7; }
         
@@ -92,19 +41,19 @@
         .func-card { background: #fff; border: 2px solid #dee2e6; border-radius: 8px; padding: 12px; box-shadow: 0 2px 5px rgba(0,0,0,0.04); position: relative; transition: all 0.2s; border-left-width: 6px; }
         .func-card.selected { border-color: #212529; box-shadow: 0 0 12px rgba(0,0,0,0.2); transform: scale(1.02); }
         .func-card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; border-bottom: 1px solid #f1f3f5; padding-bottom: 8px; }
-        .func-card-title { font-weight: bold; font-size: 1.05rem; display: flex; align-items: center; gap: 8px; }
+        .func-card-title { font-weight: bold; font-size: 1.05rem; display: flex; align-items: center; gap: 8px; color: #212529; }
         
-        input[type="color"] { border: none; width: 28px; height: 28px; border-radius: 4px; cursor: pointer; padding: 0; background: none; }
+        .func-card input[type="color"] { border: none; width: 28px; height: 28px; border-radius: 4px; cursor: pointer; padding: 0; background: none; }
         .btn-delete { background: #dc3545; color: white; border: none; border-radius: 4px; padding: 4px 8px; cursor: pointer; font-size: 0.8rem; margin-left: 4px;}
         .btn-delete:hover { background: #c82333; }
         
-        .input-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; font-size: 0.9rem; white-space: nowrap; gap: 5px; }
-        .input-row input[type="number"] { width: 70px; padding: 4px; border: 1px solid #ced4da; border-radius: 4px; text-align: right; }
+        .input-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; font-size: 0.9rem; white-space: nowrap; gap: 5px; color: #212529; }
+        .input-row input[type="number"] { width: 70px; text-align: right; }
         .poly-coeffs { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-top: 5px; padding: 8px; background: #f8f9fa; border-radius: 6px; }
         .poly-coeffs .input-row input[type="number"] { width: 50px; }
         
-        .custom-expr-row { display: flex; flex-direction: column; align-items: flex-start; gap: 5px; width: 100%; margin-bottom: 8px; }
-        .custom-expr-row input[type="text"] { width: 100%; padding: 6px; border: 1px solid #ced4da; border-radius: 4px; font-family: monospace; box-sizing: border-box; }
+        .custom-expr-row { display: flex; flex-direction: column; align-items: flex-start; gap: 5px; width: 100%; margin-bottom: 8px; color: #212529; }
+        .custom-expr-row input[type="text"] { width: 100%; font-family: monospace; box-sizing: border-box; }
         
         .switch { position: relative; display: inline-block; width: 34px; height: 18px; }
         .switch input { opacity: 0; width: 0; height: 0; }
@@ -113,10 +62,10 @@
         input:checked + .slider { background-color: #0d6efd; }
         input:checked + .slider:before { transform: translateX(16px); }
 
-        #math-display { background: #f8f9fa; padding: 15px; border-radius: 8px; border: 1px solid #dee2e6; margin-bottom: 15px; font-size: 1.1rem; overflow-x: auto; text-align: center; min-height: 45px; }
+        #math-display { background: #f8f9fa; padding: 15px; border-radius: 8px; border: 1px solid #dee2e6; margin-bottom: 15px; font-size: 1.1rem; overflow-x: auto; text-align: center; min-height: 45px; color: #212529; }
         
+        /* 버튼을 눌러야 나타나는 교점 정보 패널 */
         .top-info-panel { display: none; background: #fff; border: 1px solid #dee2e6; border-radius: 8px; padding: 15px; margin-bottom: 20px; box-shadow: 0 2px 6px rgba(0,0,0,0.03); gap: 20px; flex-wrap: wrap; justify-content: space-around; }
-        .top-info-panel.visible { display: flex; }
         .top-info-group { flex: 1; min-width: 250px; }
         .top-info-group h4 { margin: 0 0 8px 0; font-size: 0.95rem; color: #495057; display: flex; align-items: center; gap: 6px; border-bottom: 1px solid #f1f3f5; padding-bottom: 5px; }
         .coord-item { font-family: 'Courier New', Courier, monospace; font-size: 0.9rem; background: #f8f9fa; padding: 6px 10px; border-radius: 6px; margin-bottom: 5px; border-left: 4px solid #0d6efd; font-weight: bold; color: #212529; }
@@ -136,44 +85,41 @@
 
         .floating-origin-btn { position: fixed; bottom: 25px; right: 25px; width: 48px; height: 48px; border-radius: 50%; border: 1px solid rgba(255,255,255,0.4); background: rgba(13, 110, 253, 0.65); color: #ffffff; font-size: 1.4rem; font-weight: bold; cursor: pointer; z-index: 9999; backdrop-filter: blur(6px); transition: all 0.2s; display: flex; justify-content: center; align-items: center; box-shadow: 0 4px 15px rgba(0,0,0,0.25); }
         .floating-origin-btn:hover { background: rgba(13, 110, 253, 0.95); transform: scale(1.08); }
+
         .scroll-notice { text-align: center; color: #6c757d; font-size: 0.85rem; margin-top: 10px; font-weight: bold; padding-bottom: 60px; }
 
-        /* --- [수학 물리 시뮬레이터 전용 스타일] --- */
-        #view-physics-sim {
-            background-color: #0f172a;
-            color: #f8fafc;
-            font-family: 'Inter', sans-serif;
-            -webkit-tap-highlight-color: transparent;
-            user-select: none;
-        }
-        #view-physics-sim canvas { display: block; width: 100%; height: 100%; touch-action: none; cursor: crosshair; }
+        /* === [수학 물리 시뮬레이터] 전용 스타일 === */
+        #app-phys { font-family: 'Inter', sans-serif; color: #f8fafc; }
+        #app-phys canvas { display: block; width: 100%; height: 100%; touch-action: none; cursor: crosshair; }
         .tab-btn { transition: all 0.2s ease; }
         .tab-btn.active { background-color: #3b82f6; color: white; border-color: #3b82f6; }
         .glass-panel { background: rgba(30, 41, 59, 0.7); backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.1); }
         .hud-font { font-family: 'JetBrains Mono', monospace; text-shadow: 1px 1px 2px black; }
+        #app-phys input[type=range] { accent-color: #3b82f6; }
         .hide { display: none !important; }
         #glossary-wrapper { transition: max-height 0.3s ease-out, opacity 0.3s ease-out; overflow: hidden; }
         .glossary-collapsed { max-height: 0; opacity: 0; padding-top: 0 !important; padding-bottom: 0 !important; margin: 0 !important; border: none !important; }
         .glossary-expanded { max-height: 1200px; opacity: 1; }
         .graph-body { transition: height 0.3s ease, opacity 0.3s ease; overflow: hidden; }
-        .graph-wrapper { transition: all 0.3s ease; }
     </style>
 </head>
 <body class="bg-slate-900">
 
-    <!-- 최상단 통합 네비게이션 메뉴 (항상 노출) -->
-    <header class="global-nav">
-        <button id="nav-btn-func" class="nav-app-btn active" onclick="switchGlobalApp('func')">
-            <span>📈</span> 함수 비교
+    <!-- 글로벌 메뉴 내비게이션 바 -->
+    <header class="fixed top-0 left-0 w-full z-[99999] flex justify-center gap-2 p-3 bg-slate-900/95 backdrop-blur border-b border-slate-700 shadow-lg">
+        <button id="nav-btn-func" class="px-5 py-2 rounded-full font-bold text-sm md:text-base border-2 border-blue-500 bg-blue-500 text-white shadow-[0_0_15px_rgba(59,130,246,0.6)] transition-all" onclick="switchApp('func')">
+            📈 함수 비교
         </button>
-        <button id="nav-btn-physics" class="nav-app-btn" onclick="switchGlobalApp('physics')">
-            <span>🚗</span> 수학 물리 시뮬레이터
+        <button id="nav-btn-phys" class="px-5 py-2 rounded-full font-bold text-sm md:text-base border-2 border-blue-500 bg-slate-800 text-slate-400 hover:bg-slate-700 hover:text-white transition-all" onclick="switchApp('phys')">
+            🚗 수학 물리 시뮬레이터
         </button>
     </header>
 
-    <!-- ==================== 1. [함수 비교 앱 뷰] ==================== -->
-    <div id="view-func-compare" class="app-view active">
-        <div class="container">
+    <!-- =========================================================
+         1. 함수 비교 (Function Grapher) 영역
+         ========================================================= -->
+    <div id="app-func" class="block pt-20 bg-[#f0f2f5] min-h-screen">
+        <div class="func-container">
             <h1>함수 비교</h1>
             <div id="statusBoard" class="status-board">
                 <div style="font-weight: bold; color:#212529;">- 그래프 이동 선택 -</div>
@@ -235,8 +181,10 @@
         <button class="floating-origin-btn" onclick="resetAndScrollUp()" title="함수 추가로 복귀 및 원점 정렬">⬆</button>
     </div>
 
-    <!-- ==================== 2. [수학 물리 시뮬레이터 뷰] ==================== -->
-    <div id="view-physics-sim" class="app-view flex flex-col items-center p-2 md:p-6 lg:p-8">
+    <!-- =========================================================
+         2. 수학 물리 시뮬레이터 (Physics Simulator) 영역
+         ========================================================= -->
+    <div id="app-phys" class="hidden pt-20 bg-[#0f172a] min-h-screen text-slate-100 flex flex-col items-center p-2 md:p-6 lg:p-8">
         <header class="w-full max-w-7xl mb-4 mt-2">
             <div class="text-center mb-4">
                 <h1 class="text-3xl md:text-5xl font-bold mb-2 text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-indigo-400">
@@ -340,7 +288,6 @@
                             <h3 class="text-md font-bold text-blue-400 whitespace-nowrap">위치 $x(t)$</h3>
                             <div class="flex flex-wrap gap-2 items-center">
                                 <div class="flex items-center gap-1 bg-slate-900 px-2 py-1 rounded border border-slate-600">
-                                    <span class="text-[10px] text-slate-400 hidden lg:inline">데이터</span>
                                     <button onclick="zoomChart('pos1', -0.2)" class="px-2 py-0.5 bg-slate-700 hover:bg-slate-500 text-white text-xs rounded font-bold">-</button>
                                     <button onclick="zoomChart('pos1', 0.2)" class="px-2 py-0.5 bg-slate-700 hover:bg-slate-500 text-white text-xs rounded font-bold">+</button>
                                 </div>
@@ -362,7 +309,6 @@
                             <h3 class="text-md font-bold text-green-400 whitespace-nowrap">속도 $v(t)$</h3>
                             <div class="flex flex-wrap gap-2 items-center">
                                 <div class="flex items-center gap-1 bg-slate-900 px-2 py-1 rounded border border-slate-600">
-                                    <span class="text-[10px] text-slate-400 hidden lg:inline">데이터</span>
                                     <button onclick="zoomChart('vel1', -0.2)" class="px-2 py-0.5 bg-slate-700 hover:bg-slate-500 text-white text-xs rounded font-bold">-</button>
                                     <button onclick="zoomChart('vel1', 0.2)" class="px-2 py-0.5 bg-slate-700 hover:bg-slate-500 text-white text-xs rounded font-bold">+</button>
                                 </div>
@@ -384,7 +330,6 @@
                             <h3 class="text-md font-bold text-orange-400 whitespace-nowrap">가속도 $a(t)$</h3>
                             <div class="flex flex-wrap gap-2 items-center">
                                 <div class="flex items-center gap-1 bg-slate-900 px-2 py-1 rounded border border-slate-600">
-                                    <span class="text-[10px] text-slate-400 hidden lg:inline">데이터</span>
                                     <button onclick="zoomChart('acc1', -0.2)" class="px-2 py-0.5 bg-slate-700 hover:bg-slate-500 text-white text-xs rounded font-bold">-</button>
                                     <button onclick="zoomChart('acc1', 0.2)" class="px-2 py-0.5 bg-slate-700 hover:bg-slate-500 text-white text-xs rounded font-bold">+</button>
                                 </div>
@@ -520,37 +465,38 @@
 
 <script>
     /* =========================================================================
-       0. 최상단 네비게이션 앱 스위처 로직
+       0. 통합 앱 전환 로직 (App Switcher)
        ========================================================================= */
     let currentGlobalApp = 'func';
 
-    function switchGlobalApp(targetApp) {
-        currentGlobalApp = targetApp;
+    function switchApp(appName) {
+        currentGlobalApp = appName;
         const btnFunc = document.getElementById('nav-btn-func');
-        const btnPhysics = document.getElementById('nav-btn-physics');
-        const viewFunc = document.getElementById('view-func-compare');
-        const viewPhysics = document.getElementById('view-physics-sim');
+        const btnPhys = document.getElementById('nav-btn-phys');
+        const appFunc = document.getElementById('app-func');
+        const appPhys = document.getElementById('app-phys');
 
-        if (targetApp === 'func') {
-            btnFunc.classList.add('active');
-            btnPhysics.classList.remove('active');
-            viewFunc.classList.add('active');
-            viewPhysics.classList.remove('active');
+        if (appName === 'func') {
+            btnFunc.className = "px-5 py-2 rounded-full font-bold text-sm md:text-base border-2 border-blue-500 bg-blue-500 text-white shadow-[0_0_15px_rgba(59,130,246,0.6)] transition-all";
+            btnPhys.className = "px-5 py-2 rounded-full font-bold text-sm md:text-base border-2 border-blue-500 bg-slate-800 text-slate-400 hover:bg-slate-700 hover:text-white transition-all";
+            appFunc.classList.remove('hidden');
+            appFunc.classList.add('block');
+            appPhys.classList.add('hidden');
             
-            // Plotly 리사이즈 보정
             const graphDiv = document.getElementById('graphPlot');
-            if (graphDiv && typeof Plotly !== 'undefined') {
+            if (graphDiv && graphDiv.layout && typeof Plotly !== 'undefined') {
                 Plotly.Plots.resize(graphDiv);
             }
         } else {
-            btnPhysics.classList.add('active');
-            btnFunc.classList.remove('active');
-            viewPhysics.classList.add('active');
-            viewFunc.classList.remove('active');
+            btnPhys.className = "px-5 py-2 rounded-full font-bold text-sm md:text-base border-2 border-blue-500 bg-blue-500 text-white shadow-[0_0_15px_rgba(59,130,246,0.6)] transition-all";
+            btnFunc.className = "px-5 py-2 rounded-full font-bold text-sm md:text-base border-2 border-blue-500 bg-slate-800 text-slate-400 hover:bg-slate-700 hover:text-white transition-all";
+            appPhys.classList.remove('hidden');
+            appPhys.classList.add('flex');
+            appFunc.classList.add('hidden');
+            appFunc.classList.remove('block');
 
-            // 물리 시뮬레이터 MathJax 수식 재렌더링 트리거
             if (typeof MathJax !== 'undefined' && MathJax.typesetPromise) {
-                MathJax.typesetPromise([viewPhysics]).catch(e => {});
+                MathJax.typesetPromise([appPhys]).catch(e => {});
             }
         }
     }
@@ -558,20 +504,6 @@
     /* =========================================================================
        1. 함수 비교 (Function Grapher) 엔진
        ========================================================================= */
-    let functionsList = [];
-    const colorPalette = ['#0d6efd', '#dc3545', '#198754', '#fd7e14', '#6610f2', '#20c997', '#e83e8c', '#0dcaf0'];
-    let colorIndex = 0;
-
-    let selectedFuncId = null;
-    let isDraggingTrace = false;
-    let startDataX = 0, startDataY = 0;
-    let startFuncState = null;
-
-    let isTangentMode = false;
-    let isTouchInteraction = false;
-    let touchIgnoreTimeout = null;
-    let isIntersectionVisible = false;
-
     function toggleIntersectionPanel() {
         isIntersectionVisible = !isIntersectionVisible;
         const panel = document.getElementById('topInfoPanel');
@@ -588,7 +520,6 @@
     function resetAndScrollUp() {
         const addSection = document.getElementById('addControlsSection');
         if (addSection) addSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
-        
         const graphDiv = document.getElementById('graphPlot');
         if (graphDiv && graphDiv.layout) {
             graphDiv.style.height = '650px';
@@ -615,17 +546,13 @@
     function zoomGraph(direction) {
         const graphDiv = document.getElementById('graphPlot');
         if (!graphDiv || !graphDiv.layout) return;
-
         const xRange = graphDiv.layout.xaxis.range;
         const yRange = graphDiv.layout.yaxis.range;
-
         const xSpan = xRange[1] - xRange[0];
         const ySpan = yRange[1] - yRange[0];
         const xCenter = (xRange[1] + xRange[0]) / 2;
         const yCenter = (yRange[1] + yRange[0]) / 2;
-
         const factor = direction === 'in' ? 0.75 : 1.333333; 
-
         Plotly.relayout(graphDiv, {
             'xaxis.range': [xCenter - (xSpan * factor / 2), xCenter + (xSpan * factor / 2)],
             'yaxis.range': [yCenter - (ySpan * factor / 2), yCenter + (ySpan * factor / 2)]
@@ -636,8 +563,7 @@
     function binomial(n, k) { let c = 1; for(let i=n-k+1; i<=n; i++) c*=i; for(let i=1; i<=k; i++) c/=i; return c; }
 
     function shiftPolynomial(coeffs, dx, dy) {
-        let n = coeffs.length - 1;
-        let newCoeffs = new Array(n + 1).fill(0);
+        let n = coeffs.length - 1; let newCoeffs = new Array(n + 1).fill(0);
         for (let j = 0; j <= n; j++) {
             if (coeffs[j] === 0) continue;
             for (let k = 0; k <= j; k++) newCoeffs[k] += coeffs[j] * binomial(j, k) * Math.pow(-dx, j - k);
@@ -648,9 +574,7 @@
 
     function buildShiftedExpression(baseExpr, totalH, totalK) {
         let clean = (baseExpr || '').trim();
-        let hVal = formatNumber(totalH);
-        let kVal = formatNumber(totalK);
-
+        let hVal = formatNumber(totalH); let kVal = formatNumber(totalK);
         let subX = Math.abs(hVal) > 1e-4 ? (hVal > 0 ? `(x - ${hVal})` : `(x + ${Math.abs(hVal)})`) : `x`;
         let subY = Math.abs(kVal) > 1e-4 ? (kVal > 0 ? `(y - ${kVal})` : `(y + ${Math.abs(kVal)})`) : `y`;
 
@@ -684,11 +608,9 @@
         if (type === 'poly') { newFunc.degree = 2; newFunc.coeffs = [0, 0, 1]; } 
         else if (type === 'power') { newFunc.C = 1; newFunc.p = 0.5; }
         else if (type === 'custom') { 
-            newFunc.baseExpr = 'x^2 + y^2 = 4';
-            newFunc.expr = 'x^2 + y^2 = 4'; 
+            newFunc.baseExpr = 'x^2 + y^2 = 4'; newFunc.expr = 'x^2 + y^2 = 4'; 
         } 
         else { newFunc.C = 1; newFunc.base = 2; }
-
         functionsList.push(newFunc); colorIndex++;
         renderUI(); updateAll();
     }
@@ -715,10 +637,7 @@
         } 
         else if (field === 'coeffs') func.coeffs[index] = parseFloat(value) || 0;
         else if (field === 'expr') {
-            func.expr = value;
-            func.baseExpr = value;
-            func.H = 0;
-            func.K = 0;
+            func.expr = value; func.baseExpr = value; func.H = 0; func.K = 0;
         }
         else func[field] = parseFloat(value) || 0;
 
@@ -735,10 +654,8 @@
             let elExpr = document.getElementById(`input_${func.id}_expr`);
             if (elExpr) elExpr.value = func.expr;
         } else {
-            let elH = document.getElementById(`input_${func.id}_H`); 
-            let elK = document.getElementById(`input_${func.id}_K`);
-            if (elH) elH.value = func.H; 
-            if (elK) elK.value = func.K;
+            let elH = document.getElementById(`input_${func.id}_H`); let elK = document.getElementById(`input_${func.id}_K`);
+            if (elH) elH.value = func.H; if (elK) elK.value = func.K;
         }
     }
 
@@ -749,11 +666,9 @@
         functionsList.forEach((func) => {
             let sameTypeFuncs = functionsList.filter(x => x.type === func.type);
             let typeIndex = sameTypeFuncs.indexOf(func) + 1;
-            
             const card = document.createElement('div');
             card.className = 'func-card' + (selectedFuncId === func.id ? ' selected' : '');
             card.id = `card_${func.id}`; card.style.borderLeftColor = func.color;
-            
             let typeName = func.type === 'poly' ? '다항함수' : (func.type === 'power' ? '멱함수' : (func.type === 'exp' ? '지수함수' : (func.type === 'log' ? '로그함수' : '자유입력')));
             typeName = `${typeName} ${typeIndex}`;
 
@@ -787,7 +702,7 @@
                 innerHTML += `<div class="custom-expr-row">
                                 <label><strong>함수/음함수 식 입력:</strong></label>
                                 <input type="text" id="input_${func.id}_expr" value="${func.expr}" onchange="updateState('${func.id}', 'expr', this.value)" placeholder="예: x^2 + y^2 = 4 또는 sec(x)">
-                                <span style="font-size:0.75rem; color:#0d6efd; font-weight:bold;">* 삼각함수(sin, cos, tan, csc, sec, cot)의 x축 단위는 라디안(rad). ex: 180° = π라디안(rad). 단 라디안(rad) 표시는 생략.</span>
+                                <span style="font-size:0.75rem; color:#0d6efd; font-weight:bold;">* 삼각함수(sin, cos, tan)의 x축 단위는 라디안(rad). ex: 180° = π라디안(rad). 단 라디안(rad) 표시는 생략.</span>
                                 <span style="font-size:0.75rem; color:#6c757d;">* 대소문자 혼용 가능. 팩토리얼(!) 지원. 드래그 이동 시 식이 항상 간결하게 자동 갱신됩니다.</span>
                               </div>`;
             } else {
@@ -823,13 +738,9 @@
                     if (f.K > 0) rhs += ` + ${f.K}`; else if (f.K < 0) rhs += ` - ${Math.abs(f.K)}`;
                 } else if (f.type === 'custom') {
                     let cleanExpr = f.expr.replace(/\*/g, '\\cdot ');
-                    if (cleanExpr.includes('=')) {
-                        rhs = cleanExpr; 
-                    } else if (cleanExpr.toLowerCase().includes('y')) {
-                        rhs = cleanExpr + ' = 0';
-                    } else {
-                        rhs = `y = ${cleanExpr}`;
-                    }
+                    if (cleanExpr.includes('=')) { rhs = cleanExpr; } 
+                    else if (cleanExpr.toLowerCase().includes('y')) { rhs = cleanExpr + ' = 0'; } 
+                    else { rhs = `y = ${cleanExpr}`; }
                 } else if (f.type === 'exp') {
                     let a = Math.max(f.base, 0.001); if (a === 1) a = 1.0001;
                     let exponent = f.H !== 0 ? `(x ${f.H > 0 ? '-' : '+'} ${Math.abs(f.H)})` : `x`;
@@ -875,8 +786,7 @@
 
     function evaluateCustomExpr(expr, rawX, rawY) {
         try {
-            let x = rawX; 
-            let y = rawY !== undefined ? rawY : 0;
+            let x = rawX; let y = rawY !== undefined ? rawY : 0;
             let cleanExpr = expr
                 .replace(/X/g, 'x').replace(/Y/g, 'y') 
                 .replace(/([0-9.]+)\s*!/g, 'factorial($1)')
@@ -905,9 +815,7 @@
     function evaluateImplicit(f, x, y) {
         let parts = f.expr.split('=');
         if (parts.length === 2) {
-            let L = evaluateCustomExpr(parts[0], x, y);
-            let R = evaluateCustomExpr(parts[1], x, y);
-            return L - R;
+            return evaluateCustomExpr(parts[0], x, y) - evaluateCustomExpr(parts[1], x, y);
         } else {
             return evaluateCustomExpr(f.expr, x, y); 
         }
@@ -917,16 +825,9 @@
         if (f.type === 'poly') {
             let y = 0; for (let j = 0; j < f.coeffs.length; j++) y += f.coeffs[j] * Math.pow(x, j); return y + (f.K || 0);
         } else if (f.type === 'power') {
-            let base = x - (f.H || 0); let p = f.p;
-            let val = 0;
-            if (Number.isInteger(p)) {
-                if (base === 0 && p < 0) return NaN;
-                val = f.C * Math.pow(base, p);
-            } else {
-                if (base < 0) return NaN;
-                if (base === 0 && p < 0) return NaN;
-                val = f.C * Math.pow(base, p);
-            }
+            let base = x - (f.H || 0); let p = f.p; let val = 0;
+            if (Number.isInteger(p)) { if (base === 0 && p < 0) return NaN; val = f.C * Math.pow(base, p); } 
+            else { if (base < 0 || (base === 0 && p < 0)) return NaN; val = f.C * Math.pow(base, p); }
             return val + (f.K || 0);
         } else if (f.type === 'custom') {
             return evaluateCustomExpr(f.expr, x, 0);
@@ -941,8 +842,7 @@
 
     function evaluateDerivative(f, x) {
         const h = 1e-5;
-        let y1 = evaluateFunction(f, x - h);
-        let y2 = evaluateFunction(f, x + h);
+        let y1 = evaluateFunction(f, x - h), y2 = evaluateFunction(f, x + h);
         if (isNaN(y1)) { y1 = evaluateFunction(f, x); y2 = evaluateFunction(f, x + h); return (y2 - y1) / h; }
         if (isNaN(y2)) { y1 = evaluateFunction(f, x - h); y2 = evaluateFunction(f, x); return (y2 - y1) / h; }
         return (y2 - y1) / (2 * h);
@@ -961,8 +861,7 @@
         if (isNaN(fa) || isNaN(fb) || fa * fb > 0) return NaN;
         let mid = (a + b) / 2;
         for (let i = 0; i < maxIter; i++) {
-            mid = (a + b) / 2;
-            let fmid = fn(mid);
+            mid = (a + b) / 2; let fmid = fn(mid);
             if (Math.abs(fmid) < 1e-7 || Math.abs(b - a) < 1e-6) break;
             if (fa * fmid <= 0) { b = mid; fb = fmid; } else { a = mid; fa = fmid; }
         }
@@ -988,21 +887,16 @@
     }
 
     function generateTraces(rangeX, rangeY, skipHeavy) {
-        const spanX = rangeX[1] - rangeX[0];
-        const spanY = rangeY[1] - rangeY[0];
-        const minX = rangeX[0] - spanX; const maxX = rangeX[1] + spanX;
-        const minY = rangeY[0] - spanY; const maxY = rangeY[1] + spanY;
+        const spanX = rangeX[1] - rangeX[0], spanY = rangeY[1] - rangeY[0];
+        const minX = rangeX[0] - spanX, maxX = rangeX[1] + spanX;
+        const minY = rangeY[0] - spanY, maxY = rangeY[1] + spanY;
         const step = Math.max((maxX - minX) / 1500, 0.005);
         
-        const traces = [];
-        const visibleFunctions = functionsList.filter(f => f.visible);
-        const xVal = [];
-        for (let x = minX; x <= maxX; x += step) xVal.push(x);
+        const traces = []; const visibleFunctions = functionsList.filter(f => f.visible);
+        const xVal = []; for (let x = minX; x <= maxX; x += step) xVal.push(x);
         
-        const yDataCollection = [];
-        const axisIntX = [], axisIntY = [], axisIntText = [];
+        const yDataCollection = []; const axisIntX = [], axisIntY = [], axisIntText = [];
         const panelData = { yInt: [], xInt: [], funcInt: [] };
-        
         let hasInverse = false;
 
         visibleFunctions.forEach((f) => {
@@ -1014,27 +908,21 @@
 
             if (isImplicitFunc(f)) {
                 let steps = skipHeavy ? 60 : 160; 
-                let dx = (maxX - minX) / steps;
-                let dy = (maxY - minY) / steps;
-                
+                let dx = (maxX - minX) / steps, dy = (maxY - minY) / steps;
                 let xGrid = [], yGrid = [];
                 for(let i=0; i<=steps; i++) xGrid.push(minX + i*dx);
                 for(let i=0; i<=steps; i++) yGrid.push(minY + i*dy);
                 
                 let zGrid = [];
                 for(let j=0; j<=steps; j++) {
-                    let row = [];
-                    for(let i=0; i<=steps; i++) row.push(evaluateImplicit(f, xGrid[i], yGrid[j]));
+                    let row = []; for(let i=0; i<=steps; i++) row.push(evaluateImplicit(f, xGrid[i], yGrid[j]));
                     zGrid.push(row);
                 }
                 
                 traces.push({
-                    x: xGrid, y: yGrid, z: zGrid,
-                    type: 'contour', contours: {start: 0, end: 0, size: 1, coloring: 'none'},
-                    line: {color: f.color, width: isSelected ? 7 : 3},
-                    showscale: false, name: fName, hoverinfo: 'none', customdata: Array(zGrid.length).fill(f.id)
+                    x: xGrid, y: yGrid, z: zGrid, type: 'contour', contours: {start: 0, end: 0, size: 1, coloring: 'none'},
+                    line: {color: f.color, width: isSelected ? 7 : 3}, showscale: false, name: fName, hoverinfo: 'none', customdata: Array(zGrid.length).fill(f.id)
                 });
-                
                 yDataCollection.push(null);
 
                 if (!skipHeavy) {
@@ -1047,8 +935,7 @@
                             }
                         }
                     }
-                    let ySteps = [];
-                    for (let y = minY; y <= maxY; y += step) ySteps.push(y);
+                    let ySteps = []; for (let y = minY; y <= maxY; y += step) ySteps.push(y);
                     for (let k = 0; k < ySteps.length - 1; k++) {
                         let rootY = bisectionRoot(y => evaluateImplicit(f, 0, y), ySteps[k], ySteps[k+1]);
                         if (!isNaN(rootY)) {
@@ -1097,35 +984,23 @@
             }
 
             traces.push({ 
-                x: xVal, y: yVal, mode: 'lines', name: fName, 
-                line: { color: f.color, width: isSelected ? 7 : 3 },
-                customdata: Array(xVal.length).fill(f.id), 
-                hovertemplate: '(%{x:.2f}, %{y:.2f})<extra></extra>' 
+                x: xVal, y: yVal, mode: 'lines', name: fName, line: { color: f.color, width: isSelected ? 7 : 3 },
+                customdata: Array(xVal.length).fill(f.id), hovertemplate: '(%{x:.2f}, %{y:.2f})<extra></extra>' 
             });
 
             if (f.showInverse && f.type !== 'custom') {
                 hasInverse = true;
                 traces.push({ 
-                    x: yVal, y: xVal, mode: 'lines', name: `${fName} 역함수`, 
-                    line: { color: f.color, width: 2, dash: 'dot' },
-                    customdata: Array(xVal.length).fill('inv_' + f.id), 
-                    hovertemplate: '(%{x:.2f}, %{y:.2f})<extra></extra>' 
+                    x: yVal, y: xVal, mode: 'lines', name: `${fName} 역함수`, line: { color: f.color, width: 2, dash: 'dot' },
+                    customdata: Array(xVal.length).fill('inv_' + f.id), hovertemplate: '(%{x:.2f}, %{y:.2f})<extra></extra>' 
                 });
             }
         });
 
-        if (hasInverse) {
-            traces.push({
-                x: [-10000, 10000], y: [-10000, 10000],
-                mode: 'lines', name: 'y = x 대칭축',
-                line: { color: '#adb5bd', width: 2, dash: 'dash' },
-                hoverinfo: 'none'
-            });
-        }
+        if (hasInverse) traces.push({ x: [-10000, 10000], y: [-10000, 10000], mode: 'lines', name: 'y = x 대칭축', line: { color: '#adb5bd', width: 2, dash: 'dash' }, hoverinfo: 'none' });
 
         if (!skipHeavy) {
             const intersectX = [], intersectY = [], intersectText = [];
-            
             for (let i = 0; i < visibleFunctions.length; i++) {
                 for (let j = i + 1; j < visibleFunctions.length; j++) {
                     const f1 = visibleFunctions[i], f2 = visibleFunctions[j];
@@ -1149,24 +1024,17 @@
                             }
                         }
                     } else if (isImp1 !== isImp2) {
-                        const impF = isImp1 ? f1 : f2;
-                        const expF = isImp1 ? f2 : f1;
-                        
+                        const impF = isImp1 ? f1 : f2, expF = isImp1 ? f2 : f1;
                         for (let k = 0; k < xVal.length - 1; k++) {
                             let xA = xVal[k], xB = xVal[k+1];
                             let yA = evaluateFunction(expF, xA), yB = evaluateFunction(expF, xB);
                             if (isNaN(yA) || isNaN(yB)) continue;
 
-                            let vA = evaluateImplicit(impF, xA, yA);
-                            let vB = evaluateImplicit(impF, xB, yB);
+                            let vA = evaluateImplicit(impF, xA, yA), vB = evaluateImplicit(impF, xB, yB);
                             if (isNaN(vA) || isNaN(vB)) continue;
 
                             if (vA * vB <= 0 && (vA !== 0 || vB !== 0)) {
-                                let rootX = bisectionRoot(x => {
-                                    let y = evaluateFunction(expF, x);
-                                    return isNaN(y) ? NaN : evaluateImplicit(impF, x, y);
-                                }, xA, xB);
-
+                                let rootX = bisectionRoot(x => { let y = evaluateFunction(expF, x); return isNaN(y) ? NaN : evaluateImplicit(impF, x, y); }, xA, xB);
                                 if (!isNaN(rootX)) {
                                     let rootY = evaluateFunction(expF, rootX);
                                     if (!intersectX.some(x => Math.abs(x - rootX) < 0.08 && Math.abs(intersectY[intersectX.indexOf(x)] - rootY) < 0.08)) {
@@ -1177,13 +1045,10 @@
                             }
                         }
                     } else {
-                        let steps = 70;
-                        let dx = (maxX - minX) / steps;
-                        let dy = (maxY - minY) / steps;
+                        let steps = 70; let dx = (maxX - minX) / steps, dy = (maxY - minY) / steps;
                         for (let xi = minX; xi < maxX; xi += dx) {
                             for (let yj = minY; yj < maxY; yj += dy) {
-                                let fA1 = evaluateImplicit(f1, xi, yj), fB1 = evaluateImplicit(f1, xi+dx, yj+dy);
-                                let fA2 = evaluateImplicit(f2, xi, yj), fB2 = evaluateImplicit(f2, xi+dx, yj+dy);
+                                let fA1 = evaluateImplicit(f1, xi, yj), fA2 = evaluateImplicit(f2, xi, yj);
                                 if (Math.abs(fA1) < 0.25 && Math.abs(fA2) < 0.25) {
                                     let mx = xi + dx/2, my = yj + dy/2;
                                     if (!intersectX.some(x => Math.abs(x - mx) < (dx * 1.5) && Math.abs(intersectY[intersectX.indexOf(x)] - my) < (dy * 1.5))) {
@@ -1196,67 +1061,47 @@
                     }
                 }
             }
-
             if (axisIntX.length > 0) traces.push({ x: axisIntX, y: axisIntY, mode: 'markers+text', name: '축 교점', marker: { size: 10, color: '#fd7e14', symbol: 'diamond' }, text: axisIntText, textposition: 'bottom right', textfont: { size: 13, weight: 'bold', color: '#fd7e14' }, hoverinfo: 'text' });
             if (intersectX.length > 0) traces.push({ x: intersectX, y: intersectY, mode: 'markers+text', name: '함수 교점', marker: { size: 10, color: '#212529', symbol: 'circle' }, text: intersectText, textposition: 'top left', textfont: { size: 13, weight: 'bold', color: '#212529' }, hoverinfo: 'text' });
             updateIntersectionPanel(panelData);
         }
-
         if (traces.length === 0) traces.push({ x: [], y: [], name: '활성화 없음' });
         return traces;
     }
 
-    function getDynamicTick(range) {
-        if (!range || range.length < 2) return 0.5;
-        return Math.abs(range[1] - range[0]) <= 20 ? 0.5 : undefined; 
-    }
-
+    function getDynamicTick(range) { return (!range || range.length < 2) ? 0.5 : (Math.abs(range[1] - range[0]) <= 20 ? 0.5 : undefined); }
     function clearTangentShape() { Plotly.relayout('graphPlot', { shapes: [], annotations: [] }); }
-
     function floatXAxis() {
         const graphDiv = document.getElementById('graphPlot');
         if (!graphDiv) return;
         const xAxisLayers = graphDiv.querySelectorAll('.xaxislayer-above');
         const rect = graphDiv.getBoundingClientRect();
         const bottomHidden = rect.bottom - window.innerHeight;
-        xAxisLayers.forEach(layer => {
-            layer.style.transform = bottomHidden > 0 ? `translateY(-${bottomHidden}px)` : `translateY(0px)`;
-        });
+        xAxisLayers.forEach(layer => { layer.style.transform = bottomHidden > 0 ? `translateY(-${bottomHidden}px)` : `translateY(0px)`; });
     }
 
     function updateAll(skipHeavy = false) {
         if (!skipHeavy) renderLatex();
         const graphDiv = document.getElementById('graphPlot');
         if (!graphDiv || !graphDiv.layout) return;
-
-        const currentXRange = graphDiv.layout.xaxis.range;
-        const currentYRange = graphDiv.layout.yaxis.range;
+        const currentXRange = graphDiv.layout.xaxis.range, currentYRange = graphDiv.layout.yaxis.range;
         const newTraces = generateTraces(currentXRange, currentYRange, skipHeavy);
         
         if (typeof Plotly !== 'undefined') {
             Plotly.react('graphPlot', newTraces, graphDiv.layout);
-            Plotly.relayout('graphPlot', {
-                'xaxis.dtick': getDynamicTick(currentXRange),
-                'yaxis.dtick': getDynamicTick(graphDiv.layout.yaxis.range),
-                'yaxis.scaleanchor': 'x', 'yaxis.scaleratio': 1
-            });
+            Plotly.relayout('graphPlot', { 'xaxis.dtick': getDynamicTick(currentXRange), 'yaxis.dtick': getDynamicTick(graphDiv.layout.yaxis.range), 'yaxis.scaleanchor': 'x', 'yaxis.scaleratio': 1 });
         }
     }
 
     function selectGraph(funcId) {
         selectedFuncId = funcId; renderUI(); updateAll();
-        const sb = document.getElementById('statusBoard');
-        const f = functionsList.find(x => x.id === funcId);
+        const sb = document.getElementById('statusBoard'); const f = functionsList.find(x => x.id === funcId);
         if (!f) return;
         let sameTypeFuncs = functionsList.filter(x => x.type === f.type);
-        let typeIndex = sameTypeFuncs.indexOf(f) + 1;
         let typeName = f.type === 'poly' ? '다항함수' : (f.type === 'power' ? '멱함수' : (f.type === 'exp' ? '지수함수' : (f.type === 'log' ? '로그함수' : '자유입력')));
-        let fName = `${typeName} ${typeIndex}`;
-
         sb.className = 'status-board active';
-        sb.innerHTML = `✅ <span style="color:${f.color}">선택됨 (${fName})</span> - 화면을 <strong>드래그</strong>하면 평행이동합니다.`;
-        document.getElementById('deselectBtn').style.display = 'flex';
-        Plotly.relayout('graphPlot', {dragmode: false});
+        sb.innerHTML = `✅ <span style="color:${f.color}">선택됨 (${typeName} ${sameTypeFuncs.indexOf(f)+1})</span> - 화면을 <strong>드래그</strong>하면 평행이동합니다.`;
+        document.getElementById('deselectBtn').style.display = 'flex'; Plotly.relayout('graphPlot', {dragmode: false});
     }
 
     function deselectGraph() {
@@ -1265,79 +1110,41 @@
         sb.className = 'status-board';
         sb.innerHTML = `<div style="font-weight: bold; color:#212529;">- 그래프 이동 선택 -</div>
                         <div style="margin-top: 5px;">[모바일] 1초 이상 터치 &nbsp;&nbsp;|&nbsp;&nbsp; [데스크탑] 마우스 좌측 버튼 클릭</div>`;
-        document.getElementById('deselectBtn').style.display = 'none';
-        Plotly.relayout('graphPlot', {dragmode: 'pan'});
+        document.getElementById('deselectBtn').style.display = 'none'; Plotly.relayout('graphPlot', {dragmode: 'pan'});
     }
 
     function drawTangentFromObj(f, px, py, isInverse) {
-        let m = 0;
-        let isImplicit = isImplicitFunc(f);
-        if (isImplicit) {
-            m = evaluateImplicitDerivative(f, px, py);
-        } else if (isInverse) {
-            const origM = evaluateDerivative(f, py);
-            if (Math.abs(origM) < 1e-8 || isNaN(origM)) return;
-            m = 1 / origM;
-        } else {
-            m = evaluateDerivative(f, px);
-        }
+        let m = 0; let isImplicit = isImplicitFunc(f);
+        if (isImplicit) { m = evaluateImplicitDerivative(f, px, py); } 
+        else if (isInverse) { const origM = evaluateDerivative(f, py); if (Math.abs(origM) < 1e-8 || isNaN(origM)) return; m = 1 / origM; } 
+        else { m = evaluateDerivative(f, px); }
         if (isNaN(m)) return;
-
-        const tx0 = px - 10, tx1 = px + 10;
-        const ty0 = py - m * 10, ty1 = py + m * 10;
-
-        const shape = { type: 'line', x0: tx0, y0: ty0, x1: tx1, y1: ty1, line: { color: f.color, width: 2, dash: 'dot' } };
-        const annotation = {
-            x: px, y: py, text: `<b>기울기(m) = ${m.toFixed(3)}</b>`,
-            showarrow: true, arrowhead: 2, ax: 0, ay: -40,
-            font: { size: 14, color: '#fff' }, bgcolor: '#212529', bordercolor: f.color, borderpad: 4, borderwidth: 2
-        };
+        const shape = { type: 'line', x0: px - 10, y0: py - m * 10, x1: px + 10, y1: py + m * 10, line: { color: f.color, width: 2, dash: 'dot' } };
+        const annotation = { x: px, y: py, text: `<b>기울기(m) = ${m.toFixed(3)}</b>`, showarrow: true, arrowhead: 2, ax: 0, ay: -40, font: { size: 14, color: '#fff' }, bgcolor: '#212529', bordercolor: f.color, borderpad: 4, borderwidth: 2 };
         Plotly.relayout('graphPlot', { shapes: [shape], annotations: [annotation] });
     }
 
     function findClosestFunction(px, py) {
-        let closest = null;
-        let minDist = Infinity;
+        let closest = null; let minDist = Infinity;
         let graphDiv = document.getElementById('graphPlot');
         if (!graphDiv || !graphDiv.layout) return null;
-
-        let yRange = graphDiv.layout.yaxis.range;
-        let threshold = Math.abs(yRange[1] - yRange[0]) * 0.08; 
+        let threshold = Math.abs(graphDiv.layout.yaxis.range[1] - graphDiv.layout.yaxis.range[0]) * 0.08; 
 
         functionsList.forEach(f => {
             if (!f.visible) return;
-
             if (isImplicitFunc(f)) {
                 let eps = threshold * 0.5;
-                let v00 = evaluateImplicit(f, px - eps, py - eps);
-                let v01 = evaluateImplicit(f, px - eps, py + eps);
-                let v10 = evaluateImplicit(f, px + eps, py - eps);
-                let v11 = evaluateImplicit(f, px + eps, py + eps);
-                let minV = Math.min(v00, v01, v10, v11);
-                let maxV = Math.max(v00, v01, v10, v11);
-                
-                if (minV <= 0 && maxV >= 0) {
-                    let dist = Math.abs((minV + maxV)/2);
-                    if (dist < minDist) { minDist = dist; closest = { f: f, isInverse: false, px: px, py: py }; }
-                }
+                let v00 = evaluateImplicit(f, px - eps, py - eps), v01 = evaluateImplicit(f, px - eps, py + eps);
+                let v10 = evaluateImplicit(f, px + eps, py - eps), v11 = evaluateImplicit(f, px + eps, py + eps);
+                let minV = Math.min(v00, v01, v10, v11), maxV = Math.max(v00, v01, v10, v11);
+                if (minV <= 0 && maxV >= 0) { let dist = Math.abs((minV + maxV)/2); if (dist < minDist) { minDist = dist; closest = { f: f, isInverse: false, px: px, py: py }; } }
                 return;
             }
-
             let y = evaluateFunction(f, px);
-            if (!isNaN(y)) {
-                let dist = Math.abs(y - py);
-                if (dist < minDist && dist < threshold) {
-                    minDist = dist; closest = { f: f, isInverse: false, px: px, py: y };
-                }
-            }
+            if (!isNaN(y)) { let dist = Math.abs(y - py); if (dist < minDist && dist < threshold) { minDist = dist; closest = { f: f, isInverse: false, px: px, py: y }; } }
             if (f.showInverse && f.type !== 'custom') {
                 let invX = evaluateFunction(f, py);
-                if (!isNaN(invX)) {
-                    let dist = Math.abs(invX - px);
-                    if (dist < minDist && dist < threshold) {
-                        minDist = dist; closest = { f: f, isInverse: true, px: invX, py: py };
-                    }
-                }
+                if (!isNaN(invX)) { let dist = Math.abs(invX - px); if (dist < minDist && dist < threshold) { minDist = dist; closest = { f: f, isInverse: true, px: invX, py: py }; } }
             }
         });
         return closest;
@@ -1346,15 +1153,7 @@
     function initFuncGraph() {
         if (typeof Plotly === 'undefined') { setTimeout(initFuncGraph, 100); return; }
 
-        const layout = {
-            dragmode: 'pan',
-            hovermode: 'closest', 
-            xaxis: { range: [-5, 5], dtick: 0.5, zeroline: true, zerolinecolor: '#343a40', zerolinewidth: 2, gridcolor: '#e9ecef', showticklabels: true, tickfont: { size: 14, color: '#212529', weight: 'bold' } },
-            yaxis: { range: [-5, 5], dtick: 0.5, zeroline: true, zerolinecolor: '#343a40', zerolinewidth: 2, gridcolor: '#e9ecef', scaleanchor: 'x', scaleratio: 1, showticklabels: true, tickfont: { size: 14, color: '#212529', weight: 'bold' } },
-            margin: { l: 60, r: 40, t: 50, b: 60 },
-            legend: { orientation: 'h', yanchor: 'bottom', y: 1.02, xanchor: 'left', x: 0 }
-        };
-
+        const layout = { dragmode: 'pan', hovermode: 'closest', xaxis: { range: [-5, 5], dtick: 0.5, zeroline: true, zerolinecolor: '#343a40', zerolinewidth: 2, gridcolor: '#e9ecef', showticklabels: true, tickfont: { size: 14, color: '#212529', weight: 'bold' } }, yaxis: { range: [-5, 5], dtick: 0.5, zeroline: true, zerolinecolor: '#343a40', zerolinewidth: 2, gridcolor: '#e9ecef', scaleanchor: 'x', scaleratio: 1, showticklabels: true, tickfont: { size: 14, color: '#212529', weight: 'bold' } }, margin: { l: 60, r: 40, t: 50, b: 60 }, legend: { orientation: 'h', yanchor: 'bottom', y: 1.02, xanchor: 'left', x: 0 } };
         Plotly.newPlot('graphPlot', [], layout, { responsive: true, scrollZoom: true, displayModeBar: false, doubleClick: false });
         const graphDiv = document.getElementById('graphPlot');
 
@@ -1364,168 +1163,96 @@
             if (isTouchInteraction || isDraggingTrace || !isTangentMode || selectedFuncId) return;
             const bgRect = graphDiv.querySelector('.gridlayer').getBoundingClientRect();
             if (e.clientX < bgRect.left || e.clientX > bgRect.right || e.clientY < bgRect.top || e.clientY > bgRect.bottom) return;
-
-            let px = graphDiv._fullLayout.xaxis.p2d(e.clientX - bgRect.left);
-            let py = graphDiv._fullLayout.yaxis.p2d(e.clientY - bgRect.top);
+            let px = graphDiv._fullLayout.xaxis.p2d(e.clientX - bgRect.left); let py = graphDiv._fullLayout.yaxis.p2d(e.clientY - bgRect.top);
             let closest = findClosestFunction(px, py);
-
-            if (closest) drawTangentFromObj(closest.f, closest.px, closest.py, closest.isInverse);
-            else clearTangentShape();
+            if (closest) drawTangentFromObj(closest.f, closest.px, closest.py, closest.isInverse); else clearTangentShape();
         });
 
-        graphDiv.addEventListener('mouseleave', function() {
-            if (isTangentMode && !selectedFuncId) clearTangentShape();
-        });
+        graphDiv.addEventListener('mouseleave', function() { if (isTangentMode && !selectedFuncId) clearTangentShape(); });
 
-        let touchTimer = null;
-        let touchStartClientX = 0, touchStartClientY = 0;
-        let touchTargetObj = null;
-
+        let touchTimer = null; let touchStartClientX = 0, touchStartClientY = 0; let touchTargetObj = null;
         function getClientCoords(e) { return (e.touches && e.touches.length > 0) ? { clientX: e.touches[0].clientX, clientY: e.touches[0].clientY } : { clientX: e.clientX, clientY: e.clientY }; }
 
         graphDiv.addEventListener('touchstart', function(e) {
-            if (e.touches.length > 1) {
-                if (touchTimer) { clearTimeout(touchTimer); touchTimer = null; }
-                return;
-            }
-
-            isTouchInteraction = true; 
-            if (touchIgnoreTimeout) clearTimeout(touchIgnoreTimeout);
-
-            const coords = getClientCoords(e);
-            touchStartClientX = coords.clientX; touchStartClientY = coords.clientY;
-
+            if (e.touches.length > 1) { if (touchTimer) { clearTimeout(touchTimer); touchTimer = null; } return; }
+            isTouchInteraction = true; if (touchIgnoreTimeout) clearTimeout(touchIgnoreTimeout);
+            const coords = getClientCoords(e); touchStartClientX = coords.clientX; touchStartClientY = coords.clientY;
             const bgRect = graphDiv.querySelector('.gridlayer').getBoundingClientRect();
             if (coords.clientX < bgRect.left || coords.clientX > bgRect.right || coords.clientY < bgRect.top || coords.clientY > bgRect.bottom) return;
-
-            let px = graphDiv._fullLayout.xaxis.p2d(coords.clientX - bgRect.left);
-            let py = graphDiv._fullLayout.yaxis.p2d(coords.clientY - bgRect.top);
-
+            let px = graphDiv._fullLayout.xaxis.p2d(coords.clientX - bgRect.left), py = graphDiv._fullLayout.yaxis.p2d(coords.clientY - bgRect.top);
             touchTargetObj = findClosestFunction(px, py);
-
             if (touchTimer) clearTimeout(touchTimer);
             if (touchTargetObj && !selectedFuncId) {
-                touchTimer = setTimeout(() => {
-                    selectGraph(touchTargetObj.f.id);
-                    touchTargetObj = null;
-                    if(navigator.vibrate) navigator.vibrate(50); 
-                }, 1000); 
+                touchTimer = setTimeout(() => { selectGraph(touchTargetObj.f.id); touchTargetObj = null; if(navigator.vibrate) navigator.vibrate(50); }, 1000); 
             }
-
             if (selectedFuncId) handleDragStart(coords.clientX, coords.clientY);
-
-            if (isTangentMode && touchTargetObj && !selectedFuncId) {
-                drawTangentFromObj(touchTargetObj.f, touchTargetObj.px, touchTargetObj.py, touchTargetObj.isInverse);
-            }
+            if (isTangentMode && touchTargetObj && !selectedFuncId) drawTangentFromObj(touchTargetObj.f, touchTargetObj.px, touchTargetObj.py, touchTargetObj.isInverse);
         }, { passive: false });
 
         graphDiv.addEventListener('touchmove', function(e) {
-            if (e.touches.length > 1) {
-                if (touchTimer) { clearTimeout(touchTimer); touchTimer = null; }
-                return;
-            }
-            
+            if (e.touches.length > 1) { if (touchTimer) { clearTimeout(touchTimer); touchTimer = null; } return; }
             const coords = getClientCoords(e);
-
             if (touchTimer) {
-                let dx = coords.clientX - touchStartClientX; let dy = coords.clientY - touchStartClientY;
+                let dx = coords.clientX - touchStartClientX, dy = coords.clientY - touchStartClientY;
                 if (Math.sqrt(dx*dx + dy*dy) > 10) { clearTimeout(touchTimer); touchTimer = null; }
             }
-
-            if (isDraggingTrace && selectedFuncId) {
-                handleDragMove(coords.clientX, coords.clientY);
-                if(e.cancelable) e.preventDefault(); 
-                return;
-            }
-
+            if (isDraggingTrace && selectedFuncId) { handleDragMove(coords.clientX, coords.clientY); if(e.cancelable) e.preventDefault(); return; }
             if (isTangentMode && !selectedFuncId && isTouchInteraction) {
                 const bgRect = graphDiv.querySelector('.gridlayer').getBoundingClientRect();
-                let px = graphDiv._fullLayout.xaxis.p2d(coords.clientX - bgRect.left);
-                let py = graphDiv._fullLayout.yaxis.p2d(coords.clientY - bgRect.top);
-
+                let px = graphDiv._fullLayout.xaxis.p2d(coords.clientX - bgRect.left), py = graphDiv._fullLayout.yaxis.p2d(coords.clientY - bgRect.top);
                 touchTargetObj = findClosestFunction(px, py);
-                if (touchTargetObj) {
-                    drawTangentFromObj(touchTargetObj.f, touchTargetObj.px, touchTargetObj.py, touchTargetObj.isInverse);
-                    if(e.cancelable) e.preventDefault(); 
-                } else {
-                    clearTangentShape();
-                }
+                if (touchTargetObj) { drawTangentFromObj(touchTargetObj.f, touchTargetObj.px, touchTargetObj.py, touchTargetObj.isInverse); if(e.cancelable) e.preventDefault(); } 
+                else clearTangentShape();
             }
         }, { passive: false });
 
         window.addEventListener('touchend', function() {
             if (touchTimer) { clearTimeout(touchTimer); touchTimer = null; }
             if (isDraggingTrace) handleDragEnd();
-            
             touchIgnoreTimeout = setTimeout(() => { isTouchInteraction = false; }, 1000);
-
-            if (isTangentMode && !selectedFuncId) {
-                setTimeout(() => { if (!isDraggingTrace) clearTangentShape(); }, 1000);
-            }
+            if (isTangentMode && !selectedFuncId) setTimeout(() => { if (!isDraggingTrace) clearTangentShape(); }, 1000);
         });
 
         let mouseStartClientX = 0, mouseStartClientY = 0;
         
         function handleDragStart(clientX, clientY) {
             if (!selectedFuncId) return;
-            clearTangentShape(); 
-            const bgRect = graphDiv.querySelector('.gridlayer').getBoundingClientRect();
+            clearTangentShape(); const bgRect = graphDiv.querySelector('.gridlayer').getBoundingClientRect();
             if (clientX < bgRect.left || clientX > bgRect.right || clientY < bgRect.top || clientY > bgRect.bottom) return;
-            isDraggingTrace = true;
-            startDataX = graphDiv._fullLayout.xaxis.p2d(clientX - bgRect.left);
-            startDataY = graphDiv._fullLayout.yaxis.p2d(clientY - bgRect.top);
+            isDraggingTrace = true; startDataX = graphDiv._fullLayout.xaxis.p2d(clientX - bgRect.left); startDataY = graphDiv._fullLayout.yaxis.p2d(clientY - bgRect.top);
             startFuncState = JSON.parse(JSON.stringify(functionsList.find(f => f.id === selectedFuncId)));
         }
 
         function handleDragMove(clientX, clientY) {
             if (!isDraggingTrace || !selectedFuncId) return;
             const bgRect = graphDiv.querySelector('.gridlayer').getBoundingClientRect();
-            let currDataX = graphDiv._fullLayout.xaxis.p2d(clientX - bgRect.left);
-            let currDataY = graphDiv._fullLayout.yaxis.p2d(clientY - bgRect.top);
-
-            let dx = currDataX - startDataX; 
-            let dy = currDataY - startDataY;
+            let currDataX = graphDiv._fullLayout.xaxis.p2d(clientX - bgRect.left), currDataY = graphDiv._fullLayout.yaxis.p2d(clientY - bgRect.top);
+            let dx = currDataX - startDataX, dy = currDataY - startDataY;
             let targetFunc = functionsList.find(f => f.id === selectedFuncId);
             
-            if (targetFunc.type === 'poly') { 
-                targetFunc.coeffs = shiftPolynomial(startFuncState.coeffs, dx, dy); 
-            } else if (targetFunc.type === 'custom') {
-                targetFunc.H = (startFuncState.H || 0) + dx;
-                targetFunc.K = (startFuncState.K || 0) + dy;
+            if (targetFunc.type === 'poly') { targetFunc.coeffs = shiftPolynomial(startFuncState.coeffs, dx, dy); } 
+            else if (targetFunc.type === 'custom') {
+                targetFunc.H = (startFuncState.H || 0) + dx; targetFunc.K = (startFuncState.K || 0) + dy;
                 targetFunc.expr = buildShiftedExpression(targetFunc.baseExpr || startFuncState.expr, targetFunc.H, targetFunc.K);
             } else { 
-                targetFunc.H = formatNumber((startFuncState.H || 0) + dx); 
-                targetFunc.K = formatNumber((startFuncState.K || 0) + dy); 
+                targetFunc.H = formatNumber((startFuncState.H || 0) + dx); targetFunc.K = formatNumber((startFuncState.K || 0) + dy); 
             }
-
-            syncInputValues(targetFunc); 
-            updateAll(true); 
+            syncInputValues(targetFunc); updateAll(true); 
         }
 
         function handleDragEnd() {
-            if (isDraggingTrace) { 
-                isDraggingTrace = false; 
-                let targetFunc = functionsList.find(f => f.id === selectedFuncId);
-                if (targetFunc) syncInputValues(targetFunc);
-                updateAll(false); 
-            }
+            if (isDraggingTrace) { isDraggingTrace = false; let targetFunc = functionsList.find(f => f.id === selectedFuncId); if (targetFunc) syncInputValues(targetFunc); updateAll(false); }
         }
 
-        graphDiv.addEventListener('mousedown', function(e) { 
-            mouseStartClientX = e.clientX; mouseStartClientY = e.clientY;
-            handleDragStart(e.clientX, e.clientY); 
-        });
+        graphDiv.addEventListener('mousedown', function(e) { mouseStartClientX = e.clientX; mouseStartClientY = e.clientY; handleDragStart(e.clientX, e.clientY); });
         window.addEventListener('mousemove', function(e) { handleDragMove(e.clientX, e.clientY); });
-        
         window.addEventListener('mouseup', function(e) {
             let dx = e.clientX - mouseStartClientX; let dy = e.clientY - mouseStartClientY;
             if (Math.sqrt(dx*dx + dy*dy) < 5 && !isTouchInteraction && !selectedFuncId) {
                 const bgRect = graphDiv.querySelector('.gridlayer').getBoundingClientRect();
                 if (e.clientX >= bgRect.left && e.clientX <= bgRect.right && e.clientY >= bgRect.top && e.clientY <= bgRect.bottom) {
-                    let px = graphDiv._fullLayout.xaxis.p2d(e.clientX - bgRect.left);
-                    let py = graphDiv._fullLayout.yaxis.p2d(e.clientY - bgRect.top);
-                    let closest = findClosestFunction(px, py);
-                    if (closest) selectGraph(closest.f.id);
+                    let px = graphDiv._fullLayout.xaxis.p2d(e.clientX - bgRect.left), py = graphDiv._fullLayout.yaxis.p2d(e.clientY - bgRect.top);
+                    let closest = findClosestFunction(px, py); if (closest) selectGraph(closest.f.id);
                 }
             }
             handleDragEnd(); 
@@ -1535,16 +1262,15 @@
         graphDiv.on('plotly_relayout', function(eventData) {
             if (eventData['shapes'] !== undefined || eventData['annotations'] !== undefined || eventData['hovermode'] !== undefined) return;
             if (eventData['xaxis.dtick'] !== undefined || eventData['yaxis.dtick'] !== undefined || eventData['yaxis.scaleanchor'] !== undefined) return;
-            
             if (relayoutDebounceTimer) clearTimeout(relayoutDebounceTimer);
-            relayoutDebounceTimer = setTimeout(() => {
-                updateAll(false);
-            }, 250); 
+            relayoutDebounceTimer = setTimeout(() => { updateAll(false); }, 250); 
         });
 
         addFunction(); 
     }
+</script>
 
+<script>
     /* =========================================================================
        2. 수학 물리 시뮬레이터 (Physics Simulation) 엔진
        ========================================================================= */
@@ -1618,96 +1344,100 @@
         noise.start(now); noise.stop(now + duration * 3);
     }
 
-    const btnToggleGlossary = document.getElementById('btn-toggle-glossary');
-    const glossaryWrapper = document.getElementById('glossary-wrapper');
-    const glossaryContent = document.getElementById('glossary-content');
-    let glFontSize = 16;
-    btnToggleGlossary.addEventListener('click', () => {
-        if (glossaryWrapper.classList.contains('glossary-collapsed')) {
-            glossaryWrapper.classList.remove('glossary-collapsed'); glossaryWrapper.classList.add('glossary-expanded');
-            btnToggleGlossary.innerText = '▲ 물리 기호 및 용어 해설 닫기';
-        } else {
-            glossaryWrapper.classList.remove('glossary-expanded'); glossaryWrapper.classList.add('glossary-collapsed');
-            btnToggleGlossary.innerText = '▼ 물리 기호 및 용어 해설 열기';
-        }
-    });
-    document.getElementById('btn-gl-in').addEventListener('click', () => { glFontSize = Math.min(32, glFontSize + 2); glossaryContent.style.fontSize = glFontSize + 'px'; });
-    document.getElementById('btn-gl-out').addEventListener('click', () => { glFontSize = Math.max(10, glFontSize - 2); glossaryContent.style.fontSize = glFontSize + 'px'; });
+    function initPhysicsSim() {
+        const btnToggleGlossary = document.getElementById('btn-toggle-glossary');
+        const glossaryWrapper = document.getElementById('glossary-wrapper');
+        const glossaryContent = document.getElementById('glossary-content');
+        let glFontSize = 16;
+        btnToggleGlossary.addEventListener('click', () => {
+            if (glossaryWrapper.classList.contains('glossary-collapsed')) {
+                glossaryWrapper.classList.remove('glossary-collapsed'); glossaryWrapper.classList.add('glossary-expanded');
+                btnToggleGlossary.innerText = '▲ 물리 기호 및 용어 해설 닫기';
+            } else {
+                glossaryWrapper.classList.remove('glossary-expanded'); glossaryWrapper.classList.add('glossary-collapsed');
+                btnToggleGlossary.innerText = '▼ 물리 기호 및 용어 해설 열기';
+            }
+        });
+        document.getElementById('btn-gl-in').addEventListener('click', () => { glFontSize = Math.min(32, glFontSize + 2); glossaryContent.style.fontSize = glFontSize + 'px'; });
+        document.getElementById('btn-gl-out').addEventListener('click', () => { glFontSize = Math.max(10, glFontSize - 2); glossaryContent.style.fontSize = glFontSize + 'px'; });
 
-    const tabs = ['tab1', 'tab2']; let activePhysicsTab = 'tab1';
-    tabs.forEach(tab => {
-        document.getElementById(`${tab}-btn`).addEventListener('click', () => {
-            activePhysicsTab = tab;
-            tabs.forEach(t => {
-                document.getElementById(`${t}-btn`).classList.toggle('active', t === tab);
-                document.getElementById(`${t}-content`).classList.toggle('hide', t !== tab);
+        const tabs = ['tab1', 'tab2'];
+        tabs.forEach(tab => {
+            document.getElementById(`${tab}-btn`).addEventListener('click', () => {
+                activePhysicsTab = tab;
+                tabs.forEach(t => {
+                    document.getElementById(`${t}-btn`).classList.toggle('active', t === tab);
+                    document.getElementById(`${t}-content`).classList.toggle('hide', t !== tab);
+                });
             });
         });
-    });
 
-    window.zoomChart = function(key, amt) { charts[key].zoom = Math.max(0.2, Math.min(10, charts[key].zoom + amt)); };
-    window.resizeChartWindow = function(key, dir) {
-        const chart = charts[key];
-        if (chart.collapsed) return; 
-        chart.winH = Math.max(150, Math.min(800, chart.winH + dir * 100));
-        document.getElementById(`body-${key}`).style.height = chart.winH + 'px';
-        if (key !== 'force2' && key !== 'mom2') {
-            const wrapper = document.getElementById(chart.wrapId);
-            if (chart.winH > 300) { wrapper.classList.remove('lg:col-span-1'); wrapper.classList.add('lg:col-span-3'); }
-            else { wrapper.classList.remove('lg:col-span-3'); wrapper.classList.add('lg:col-span-1'); }
+        window.zoomChart = function(key, amt) { charts[key].zoom = Math.max(0.2, Math.min(10, charts[key].zoom + amt)); };
+        window.resizeChartWindow = function(key, dir) {
+            const chart = charts[key];
+            if (chart.collapsed) return; 
+            chart.winH = Math.max(150, Math.min(800, chart.winH + dir * 100));
+            document.getElementById(`body-${key}`).style.height = chart.winH + 'px';
+            if (key !== 'force2' && key !== 'mom2') {
+                const wrapper = document.getElementById(chart.wrapId);
+                if (chart.winH > 300) { wrapper.classList.remove('lg:col-span-1'); wrapper.classList.add('lg:col-span-3'); }
+                else { wrapper.classList.remove('lg:col-span-3'); wrapper.classList.add('lg:col-span-1'); }
+            }
+        };
+
+        window.toggleChart = function(key) {
+            const chart = charts[key]; chart.collapsed = !chart.collapsed;
+            const body = document.getElementById(`body-${key}`); const btn = document.getElementById(`btn-tg-${key}`);
+            if (chart.collapsed) { body.style.height = '0px'; body.style.opacity = '0'; btn.innerText = '□'; } 
+            else { body.style.height = chart.winH + 'px'; body.style.opacity = '1'; btn.innerText = '_'; }
+        };
+
+        document.getElementById('mass-input').addEventListener('input', (e) => { let val = parseInt(e.target.value); if (!isNaN(val) && val > 0) globalMass = val; });
+        document.getElementById('v0-slider').addEventListener('input', (e) => {
+            dState.v0 = parseFloat(e.target.value);
+            document.getElementById('v0-display').innerText = `${dState.v0} m/s`;
+            if (dState.phase === 'ready' || dState.phase === 'done') resetDynamics();
+        });
+        document.getElementById('material-select').addEventListener('change', (e) => { dState.matKey = e.target.value; });
+
+        function bindBtn(id, onDown, onUp) {
+            const btn = document.getElementById(id);
+            const down = (e) => { e.preventDefault(); if(!btn.disabled) onDown(); };
+            const up = (e) => { e.preventDefault(); if(!btn.disabled) onUp(); };
+            btn.addEventListener('mousedown', down); window.addEventListener('mouseup', up);
+            btn.addEventListener('touchstart', down, { passive: false }); btn.addEventListener('touchend', up, { passive: false });
         }
-    };
 
-    window.toggleChart = function(key) {
-        const chart = charts[key]; chart.collapsed = !chart.collapsed;
-        const body = document.getElementById(`body-${key}`); const btn = document.getElementById(`btn-tg-${key}`);
-        if (chart.collapsed) { body.style.height = '0px'; body.style.opacity = '0'; btn.innerText = '□'; } 
-        else { body.style.height = chart.winH + 'px'; body.style.opacity = '1'; btn.innerText = '_'; }
-    };
+        bindBtn('t1-btn-gas', () => { kState.inputAcc = 6.0; }, () => { if(kState.inputAcc > 0) kState.inputAcc = 0; });
+        bindBtn('t1-btn-brake', () => { kState.inputAcc = -8.0; }, () => { if(kState.inputAcc < 0) kState.inputAcc = 0; });
+        bindBtn('t2-btn-gas', () => { dState.inputAcc = 5.0; }, () => { if(dState.inputAcc > 0) dState.inputAcc = 0; });
+        bindBtn('t2-btn-brake', () => { dState.inputAcc = -10.0; }, () => { if(dState.inputAcc < 0) dState.inputAcc = 0; });
 
-    document.getElementById('mass-input').addEventListener('input', (e) => {
-        let val = parseInt(e.target.value); if (!isNaN(val) && val > 0) globalMass = val;
-    });
-    const v0Slider = document.getElementById('v0-slider');
-    v0Slider.addEventListener('input', (e) => {
-        dState.v0 = parseFloat(e.target.value);
-        document.getElementById('v0-display').innerText = `${dState.v0} m/s`;
-        if (dState.phase === 'ready' || dState.phase === 'done') resetDynamics();
-    });
-    document.getElementById('material-select').addEventListener('change', (e) => { dState.matKey = e.target.value; });
+        document.getElementById('btn-start-test').addEventListener('click', () => {
+            if (dState.phase === 'running' || dState.phase === 'crashing') resetDynamics(); else startDynamicsTest();
+        });
+        document.getElementById('btn-clear-chart').addEventListener('click', () => { dState.chartData = []; charts['force2'].selT = -1; charts['mom2'].selT = -1; });
 
-    function bindBtn(id, onDown, onUp) {
-        const btn = document.getElementById(id);
-        const down = (e) => { e.preventDefault(); if(!btn.disabled) onDown(); };
-        const up = (e) => { e.preventDefault(); if(!btn.disabled) onUp(); };
-        btn.addEventListener('mousedown', down); window.addEventListener('mouseup', up);
-        btn.addEventListener('touchstart', down, { passive: false }); btn.addEventListener('touchend', up, { passive: false });
+        ['pos1', 'vel1', 'acc1', 'force2', 'mom2'].forEach(attachCanvasClick);
     }
 
-    bindBtn('t1-btn-gas', () => { kState.inputAcc = 6.0; }, () => { if(kState.inputAcc > 0) kState.inputAcc = 0; });
-    bindBtn('t1-btn-brake', () => { kState.inputAcc = -8.0; }, () => { if(kState.inputAcc < 0) kState.inputAcc = 0; });
-    const btnGasT2 = document.getElementById('t2-btn-gas'); const btnBrakeT2 = document.getElementById('t2-btn-brake');
-    bindBtn('t2-btn-gas', () => { dState.inputAcc = 5.0; }, () => { if(dState.inputAcc > 0) dState.inputAcc = 0; });
-    bindBtn('t2-btn-brake', () => { dState.inputAcc = -10.0; }, () => { if(dState.inputAcc < 0) dState.inputAcc = 0; });
-
-    const statusMsg = document.getElementById('status-msg');
-    document.getElementById('btn-start-test').addEventListener('click', () => {
-        if (dState.phase === 'running' || dState.phase === 'crashing') resetDynamics(); else startDynamicsTest();
-    });
-    document.getElementById('btn-clear-chart').addEventListener('click', () => { dState.chartData = []; charts['force2'].selT = -1; charts['mom2'].selT = -1; });
+    const btnGasT2 = () => document.getElementById('t2-btn-gas');
+    const btnBrakeT2 = () => document.getElementById('t2-btn-brake');
+    const statusMsg = () => document.getElementById('status-msg');
 
     function resetDynamics() {
         dState.phase = 'ready'; dState.t = 0; dState.x = 0; dState.v = 0; dState.a = 0; dState.p = 0; dState.F = 0; dState.J = 0; dState.inputAcc = 0;
-        statusMsg.innerText = "대기 중 (Ready)"; statusMsg.style.display = 'block'; statusMsg.style.color = '#f8fafc'; statusMsg.style.borderColor = '#64748b';
-        btnGasT2.disabled = true; btnGasT2.classList.add('opacity-50', 'cursor-not-allowed');
-        btnBrakeT2.disabled = true; btnBrakeT2.classList.add('opacity-50', 'cursor-not-allowed');
+        let sm = statusMsg(); if(sm) { sm.innerText = "대기 중 (Ready)"; sm.style.display = 'block'; sm.style.color = '#f8fafc'; sm.style.borderColor = '#64748b'; }
+        let bg = btnGasT2(); if(bg) { bg.disabled = true; bg.classList.add('opacity-50', 'cursor-not-allowed'); }
+        let bb = btnBrakeT2(); if(bb) { bb.disabled = true; bb.classList.add('opacity-50', 'cursor-not-allowed'); }
         charts['force2'].selT = -1; charts['mom2'].selT = -1;
     }
 
     function startDynamicsTest() {
-        resetDynamics(); dState.phase = 'running'; dState.v = dState.v0; statusMsg.style.display = 'none';
-        btnGasT2.disabled = false; btnGasT2.classList.remove('opacity-50', 'cursor-not-allowed');
-        btnBrakeT2.disabled = false; btnBrakeT2.classList.remove('opacity-50', 'cursor-not-allowed');
+        resetDynamics(); dState.phase = 'running'; dState.v = dState.v0; 
+        let sm = statusMsg(); if(sm) sm.style.display = 'none';
+        let bg = btnGasT2(); if(bg) { bg.disabled = false; bg.classList.remove('opacity-50', 'cursor-not-allowed'); }
+        let bb = btnBrakeT2(); if(bb) { bb.disabled = false; bb.classList.remove('opacity-50', 'cursor-not-allowed'); }
         const mat = materials[dState.matKey];
         dState.chartData.push({ name: mat.name, mass: globalMass, color: mat.color, data: [] });
         if(dState.chartData.length > 5) dState.chartData.shift(); 
@@ -1754,9 +1484,7 @@
         const rangeY = (yMax - yMin) === 0 ? 1 : (yMax - yMin); const rangeX = (xMax - xMin) === 0 ? 1 : (xMax - xMin);
         const yZeroPx = T + gh - (0 - yMin) / rangeY * gh;
         
-        ctx.strokeStyle = '#334155'; ctx.lineWidth = 1;
-        ctx.fillStyle = '#94a3b8'; ctx.font = '11px Inter'; ctx.textAlign = 'center'; ctx.textBaseline = 'top';
-        
+        ctx.strokeStyle = '#334155'; ctx.lineWidth = 1; ctx.fillStyle = '#94a3b8'; ctx.font = '11px Inter'; ctx.textAlign = 'center'; ctx.textBaseline = 'top';
         for(let i=0; i<=5; i++) {
             let val = xMin + rangeX * (i / 5); let px = L + (val - xMin) / rangeX * gw;
             ctx.beginPath(); ctx.moveTo(px, T); ctx.lineTo(px, h - B); ctx.stroke(); ctx.fillText(val.toFixed(1), px, h - B + 5);
@@ -1769,27 +1497,18 @@
             ctx.fillText(valStr, L - 8, py);
         }
         ctx.strokeStyle = '#94a3b8'; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(L, T); ctx.lineTo(L, h - B);
-        if(yMin <= 0 && yMax >= 0) { ctx.moveTo(L, yZeroPx); ctx.lineTo(w - R, yZeroPx); } 
-        else { ctx.moveTo(L, h - B); ctx.lineTo(w - R, h - B); } ctx.stroke();
+        if(yMin <= 0 && yMax >= 0) { ctx.moveTo(L, yZeroPx); ctx.lineTo(w - R, yZeroPx); } else { ctx.moveTo(L, h - B); ctx.lineTo(w - R, h - B); } ctx.stroke();
         ctx.fillStyle = '#f8fafc'; ctx.font = 'bold 12px Inter'; ctx.textAlign = 'right'; ctx.textBaseline = 'bottom';
-        ctx.fillText(xLabel, w - R, h - B - 8); ctx.save(); ctx.translate(15, T + 20); ctx.rotate(-Math.PI/2);
-        ctx.textAlign = 'right'; ctx.fillText(yLabel, 0, 0); ctx.restore();
+        ctx.fillText(xLabel, w - R, h - B - 8); ctx.save(); ctx.translate(15, T + 20); ctx.rotate(-Math.PI/2); ctx.textAlign = 'right'; ctx.fillText(yLabel, 0, 0); ctx.restore();
     }
 
     function drawTangent(ctx, mapX, mapY, pt, slope, color, ylabel) {
         const px = mapX(pt.t), py = mapY(pt.y);
         const t1 = pt.t - 0.5, y1 = pt.y - slope * 0.5;
         const t2 = pt.t + 0.5, y2 = pt.y + slope * 0.5;
-        
-        ctx.strokeStyle = '#fcd34d'; ctx.lineWidth = 2; ctx.setLineDash([5, 5]);
-        ctx.beginPath(); ctx.moveTo(mapX(t1), mapY(y1)); ctx.lineTo(mapX(t2), mapY(y2)); ctx.stroke(); ctx.setLineDash([]);
-        
-        ctx.fillStyle = 'white'; ctx.beginPath(); ctx.arc(px, py, 5, 0, Math.PI*2); ctx.fill();
-        ctx.strokeStyle = color; ctx.lineWidth = 2; ctx.stroke();
-
-        ctx.fillStyle = 'rgba(15, 23, 42, 0.9)'; ctx.strokeStyle = '#475569';
-        ctx.beginPath(); ctx.roundRect(px + 10, py - 40, 160, 45, 5); ctx.fill(); ctx.stroke();
-        
+        ctx.strokeStyle = '#fcd34d'; ctx.lineWidth = 2; ctx.setLineDash([5, 5]); ctx.beginPath(); ctx.moveTo(mapX(t1), mapY(y1)); ctx.lineTo(mapX(t2), mapY(y2)); ctx.stroke(); ctx.setLineDash([]);
+        ctx.fillStyle = 'white'; ctx.beginPath(); ctx.arc(px, py, 5, 0, Math.PI*2); ctx.fill(); ctx.strokeStyle = color; ctx.lineWidth = 2; ctx.stroke();
+        ctx.fillStyle = 'rgba(15, 23, 42, 0.9)'; ctx.strokeStyle = '#475569'; ctx.beginPath(); ctx.roundRect(px + 10, py - 40, 160, 45, 5); ctx.fill(); ctx.stroke();
         ctx.fillStyle = '#f8fafc'; ctx.font = '11px JetBrains Mono'; ctx.textAlign = 'left'; ctx.textBaseline = 'top';
         ctx.fillText(`t=${pt.t.toFixed(2)}s, ${ylabel.split(' ')[0]}=${Math.round(pt.y)}`, px + 15, py - 35);
         ctx.fillStyle = '#fcd34d'; ctx.fillText(`기울기(접선)=${Math.round(slope)}`, px + 15, py - 20);
@@ -1799,28 +1518,21 @@
         if (!dataArr || dataArr.length < 2) return 0;
         if (idx < 0 || idx >= dataArr.length) return 0;
         try {
-            if (idx === 0) {
-                return (dataArr[1][yKey] - dataArr[0][yKey]) / (dataArr[1].t - dataArr[0].t);
-            } else if (idx === dataArr.length - 1) {
-                const last = dataArr.length - 1;
-                return (dataArr[last][yKey] - dataArr[last-1][yKey]) / (dataArr[last].t - dataArr[last-1].t);
-            } else {
-                return (dataArr[idx+1][yKey] - dataArr[idx-1][yKey]) / (dataArr[idx+1].t - dataArr[idx-1].t);
-            }
+            if (idx === 0) { return (dataArr[1][yKey] - dataArr[0][yKey]) / (dataArr[1].t - dataArr[0].t); } 
+            else if (idx === dataArr.length - 1) { const last = dataArr.length - 1; return (dataArr[last][yKey] - dataArr[last-1][yKey]) / (dataArr[last].t - dataArr[last-1].t); } 
+            else { return (dataArr[idx+1][yKey] - dataArr[idx-1][yKey]) / (dataArr[idx+1].t - dataArr[idx-1].t); }
         } catch (e) { return 0; }
     }
 
     function renderKinematicsCharts() {
-        if (currentGlobalApp !== 'physics' || activePhysicsTab !== 'tab1') return;
+        if (currentGlobalApp !== 'phys' || activePhysicsTab !== 'tab1') return;
         const hData = kState.history; if (hData.length === 0) return;
         const tMin = hData[0].t; const tMax = Math.max(tMin + 1, hData[hData.length-1].t); 
 
         ['pos1', 'vel1', 'acc1'].forEach(key => {
             if(charts[key].collapsed) return;
-            const canvas = document.getElementById(charts[key].id); if(!canvas) return;
-            const ctx = canvas.getContext('2d'); const rect = canvas.parentElement.getBoundingClientRect();
-            
-            canvas.width = rect.width; canvas.height = rect.height; const w = canvas.width, h = canvas.height;
+            const canvas = document.getElementById(charts[key].id); if(!canvas || canvas.width <= 1) return;
+            const ctx = canvas.getContext('2d'); const w = canvas.width, h = canvas.height;
             const pad = {L: 50, R: 20, T: 20, B: 30};
             
             let yMin = -1, yMax = 1;
@@ -1831,6 +1543,7 @@
             const yCenter = (yMax + yMin) / 2; const yRange = (yMax - yMin) / charts[key].zoom;
             yMin = yCenter - yRange / 2; yMax = yCenter + yRange / 2;
 
+            ctx.clearRect(0,0,w,h);
             drawAxesAndGrid(ctx, w, h, pad, tMin, tMax, yMin, yMax, 't (s)', charts[key].ylabel);
             const mapX = (t) => pad.L + (w - pad.L - pad.R) * (t - tMin) / (tMax - tMin || 1);
             const mapY = (v) => pad.T + (h - pad.T - pad.B) - (h - pad.T - pad.B) * (v - yMin) / (yMax - yMin || 1);
@@ -1858,13 +1571,12 @@
     }
 
     function renderDynamicsCharts() {
-        if (currentGlobalApp !== 'physics' || activePhysicsTab !== 'tab2') return;
+        if (currentGlobalApp !== 'phys' || activePhysicsTab !== 'tab2') return;
 
         ['mom2', 'force2'].forEach(key => {
             if (charts[key].collapsed) return;
-            const canvas = document.getElementById(charts[key].id); if(!canvas) return;
-            const ctx = canvas.getContext('2d'); const rect = canvas.parentElement.getBoundingClientRect();
-            canvas.width = rect.width; canvas.height = rect.height; const w = canvas.width, h = canvas.height;
+            const canvas = document.getElementById(charts[key].id); if(!canvas || canvas.width <= 1) return;
+            const ctx = canvas.getContext('2d'); const w = canvas.width, h = canvas.height;
             const pad = {L: 60, R: 20, T: 20, B: 30};
             
             const tMax = 1.2; 
@@ -1872,19 +1584,18 @@
             let pMaxBase = globalMass * 50 * 1.1; 
             
             const yMax = (key === 'force2' ? fMaxBase : pMaxBase) / charts[key].zoom;
+            ctx.clearRect(0,0,w,h);
             drawAxesAndGrid(ctx, w, h, pad, 0, tMax, 0, yMax, 't (s)', charts[key].ylabel);
             const mapX = (t) => pad.L + (w - pad.L - pad.R) * (t / tMax);
             const mapY = (val) => pad.T + (h - pad.T - pad.B) - (h - pad.T - pad.B) * (val / yMax);
 
             dState.chartData.forEach(series => {
                 if (!series.data || series.data.length === 0) return;
-                
                 if (key === 'force2') {
                     ctx.fillStyle = series.color + '30'; ctx.beginPath(); ctx.moveTo(mapX(0), mapY(0));
                     series.data.forEach(pt => ctx.lineTo(mapX(pt.t), mapY(pt[charts[key].yKey])));
                     ctx.lineTo(mapX(series.data[series.data.length-1].t), mapY(0)); ctx.fill();
                 }
-                
                 ctx.strokeStyle = series.color; ctx.lineWidth = 3; ctx.lineJoin = 'round';
                 ctx.beginPath();
                 series.data.forEach((pt, i) => i === 0 ? ctx.moveTo(mapX(pt.t), mapY(pt[charts[key].yKey])) : ctx.lineTo(mapX(pt.t), mapY(pt[charts[key].yKey])));
@@ -1925,112 +1636,99 @@
         }
         
         const integralValEl = document.getElementById('integral-val');
-        if (integralValEl) {
-            integralValEl.innerText = Math.round(calculatedJ).toLocaleString();
-        }
+        if (integralValEl) { integralValEl.innerText = Math.round(calculatedJ).toLocaleString(); }
     }
-
-    function attachCanvasClick(key) {
-        const canvas = document.getElementById(charts[key].id); if(!canvas) return;
-        canvas.addEventListener('click', (e) => {
-            try {
-                const rect = canvas.getBoundingClientRect(); const x = e.clientX - rect.left;
-                const padL = (key==='force2' || key==='mom2') ? 60 : 50; const padR = 20; const gw = canvas.width - padL - padR;
-                
-                if (x >= padL && x <= canvas.width - padR) {
-                    let tRange = 1.2; let tMin = 0;
-                    if (key !== 'force2' && key !== 'mom2') {
-                        if(kState.history.length === 0) return;
-                        tMin = kState.history[0].t; tRange = Math.max(1, kState.history[kState.history.length-1].t - tMin);
-                    }
-                    charts[key].selT = tMin + ((x - padL) / gw) * tRange;
-                }
-            } catch (err) {}
-        });
-    }
-    ['pos1', 'vel1', 'acc1', 'force2', 'mom2'].forEach(attachCanvasClick);
 
     function updatePhysics() {
+        if (currentGlobalApp === 'func') {
+            if (audioCtx && audioCtx.state === 'running') engineGain.gain.setTargetAtTime(0, audioCtx.currentTime, 0.1);
+            animationFrameId = requestAnimationFrame(updatePhysics);
+            return;
+        }
+
         try {
-            if (currentGlobalApp === 'physics') {
-                if (activePhysicsTab === 'tab1') {
-                    const drag = -0.05 * kState.v; kState.a = kState.inputAcc + drag;
-                    if (Math.abs(kState.v) < 0.1 && kState.inputAcc === 0) { kState.a = 0; kState.v = 0; }
-                    kState.v += kState.a * dt;
-                    if (kState.x < 0 && kState.v < 0) { kState.x = 0; kState.v = 0; kState.a = 0; } 
-                    else { kState.x += kState.v * dt; }
-                    kState.t += dt;
+            if (activePhysicsTab === 'tab1') {
+                const drag = -0.05 * kState.v; kState.a = kState.inputAcc + drag;
+                if (Math.abs(kState.v) < 0.1 && kState.inputAcc === 0) { kState.a = 0; kState.v = 0; }
+                kState.v += kState.a * dt;
+                if (kState.x < 0 && kState.v < 0) { kState.x = 0; kState.v = 0; kState.a = 0; } else { kState.x += kState.v * dt; }
+                kState.t += dt;
 
-                    kState.history.push({t: kState.t, x: kState.x, v: kState.v, a: kState.a});
-                    if (kState.history.length > 400) kState.history.shift(); 
-                    
-                    document.getElementById('h1-pos').innerText = `${kState.x.toFixed(2)} m (meter)`;
-                    document.getElementById('h1-vel').innerText = `${kState.v.toFixed(2)} m/s`;
-                    document.getElementById('h1-acc').innerText = `${kState.a.toFixed(2)} m/s²`;
+                kState.history.push({t: kState.t, x: kState.x, v: kState.v, a: kState.a});
+                if (kState.history.length > 400) kState.history.shift(); 
+                
+                document.getElementById('h1-pos').innerText = `${kState.x.toFixed(2)} m (meter)`;
+                document.getElementById('h1-vel').innerText = `${kState.v.toFixed(2)} m/s`;
+                document.getElementById('h1-acc').innerText = `${kState.a.toFixed(2)} m/s²`;
 
-                    const cvs = document.getElementById('sim-canvas-t1'); const ctx = cvs.getContext('2d');
-                    cvs.width = cvs.parentElement.clientWidth; cvs.height = cvs.parentElement.clientHeight;
+                const cvs = document.getElementById('sim-canvas-t1');
+                let pWidth = cvs.parentElement.clientWidth; let pHeight = cvs.parentElement.clientHeight;
+                if(pWidth > 0 && pHeight > 0) {
+                    cvs.width = pWidth; cvs.height = pHeight;
+                    const ctx = cvs.getContext('2d');
                     ctx.fillStyle = '#87CEEB'; ctx.fillRect(0, 0, cvs.width, cvs.height);
                     drawEnvironment(ctx, cvs.width, cvs.height, kState.x); drawCar(ctx, cvs.width * 0.25, cvs.height - 45, 1.4);
-                    renderKinematicsCharts();
+                }
+                
+                ['pos1', 'vel1', 'acc1'].forEach(key => {
+                    const canvas = document.getElementById(charts[key].id); 
+                    if(canvas && canvas.parentElement.clientWidth > 0) { canvas.width = canvas.parentElement.clientWidth; canvas.height = canvas.parentElement.clientHeight; }
+                });
+                renderKinematicsCharts();
 
-                } else {
-                    if (dState.phase === 'running') {
-                        const drag = -0.05 * dState.v; dState.a = dState.inputAcc + drag; dState.v += dState.a * dt;
-                        if (dState.v < 0) dState.v = 0; dState.x += dState.v * dt; dState.p = dState.v * globalMass;
-                        
-                        if (dState.x >= WALL_POS_M - 2) { 
-                            dState.x = WALL_POS_M - 2;
-                            if (dState.v > 0.5) {
-                                dState.phase = 'crashing'; dState.crashTime = 0; 
-                                dState.p_impact = dState.v * globalMass; 
-                                const mat = materials[dState.matKey];
-                                
-                                const currentSeries = dState.chartData[dState.chartData.length - 1];
-                                if(currentSeries) currentSeries.data.push({ t: 0, F: 0, p: dState.p_impact });
-
-                                btnGasT2.disabled = true; btnGasT2.classList.add('opacity-50', 'cursor-not-allowed');
-                                btnBrakeT2.disabled = true; btnBrakeT2.classList.add('opacity-50', 'cursor-not-allowed');
-                                statusMsg.innerText = "충돌! (Impact)"; statusMsg.style.display = 'block'; 
-                                statusMsg.style.color = '#ef4444'; statusMsg.style.borderColor = '#7f1d1d';
-                                playCrashSound(mat.T);
-                            } else {
-                                dState.phase = 'done'; dState.v = 0; dState.a = 0; dState.F = 0;
-                                statusMsg.innerText = "안전 정지"; statusMsg.style.display = 'block'; 
-                                statusMsg.style.color = '#4ade80'; statusMsg.style.borderColor = '#14532d';
-                            }
-                        }
-                    } else if (dState.phase === 'crashing') {
-                        const mat = materials[dState.matKey];
-                        dState.crashTime += dt;
-                        if (dState.crashTime <= mat.T) {
-                            const F_max = (dState.p_impact * Math.PI) / (2 * mat.T);
-                            dState.F = F_max * Math.sin(Math.PI * (dState.crashTime / mat.T));
-                            dState.J = F_max * (mat.T / Math.PI) * (1 - Math.cos(Math.PI * dState.crashTime / mat.T));
-                            dState.a = -dState.F / globalMass;
-                            dState.v = Math.max(0, (dState.p_impact - dState.J) / globalMass);
-                            dState.p = dState.v * globalMass;
-                            
+            } else {
+                if (dState.phase === 'running') {
+                    const drag = -0.05 * dState.v; dState.a = dState.inputAcc + drag; dState.v += dState.a * dt;
+                    if (dState.v < 0) dState.v = 0; dState.x += dState.v * dt; dState.p = dState.v * globalMass;
+                    
+                    if (dState.x >= WALL_POS_M - 2) { 
+                        dState.x = WALL_POS_M - 2;
+                        if (dState.v > 0.5) {
+                            dState.phase = 'crashing'; dState.crashTime = 0; dState.p_impact = dState.v * globalMass; 
+                            const mat = materials[dState.matKey];
                             const currentSeries = dState.chartData[dState.chartData.length - 1];
-                            if(currentSeries) currentSeries.data.push({ t: dState.crashTime, F: dState.F, p: dState.p });
+                            if(currentSeries) currentSeries.data.push({ t: 0, F: 0, p: dState.p_impact });
+
+                            let bg = btnGasT2(); if(bg) { bg.disabled = true; bg.classList.add('opacity-50', 'cursor-not-allowed'); }
+                            let bb = btnBrakeT2(); if(bb) { bb.disabled = true; bb.classList.add('opacity-50', 'cursor-not-allowed'); }
+                            let sm = statusMsg(); if(sm) { sm.innerText = "충돌! (Impact)"; sm.style.display = 'block'; sm.style.color = '#ef4444'; sm.style.borderColor = '#7f1d1d'; }
+                            playCrashSound(mat.T);
                         } else {
-                            dState.F = 0; dState.a = 0; dState.v = 0; dState.p = 0; dState.J = dState.p_impact; dState.phase = 'done';
-                            const currentSeries = dState.chartData[dState.chartData.length - 1];
-                            if(currentSeries) currentSeries.data.push({ t: mat.T, F: 0, p: 0 });
-                            statusMsg.innerText = "테스트 완료"; statusMsg.style.color = '#f8fafc'; statusMsg.style.borderColor = '#64748b';
+                            dState.phase = 'done'; dState.v = 0; dState.a = 0; dState.F = 0;
+                            let sm = statusMsg(); if(sm) { sm.innerText = "안전 정지"; sm.style.display = 'block'; sm.style.color = '#4ade80'; sm.style.borderColor = '#14532d'; }
                         }
                     }
-                    dState.t += dt;
+                } else if (dState.phase === 'crashing') {
+                    const mat = materials[dState.matKey];
+                    dState.crashTime += dt;
+                    if (dState.crashTime <= mat.T) {
+                        const F_max = (dState.p_impact * Math.PI) / (2 * mat.T);
+                        dState.F = F_max * Math.sin(Math.PI * (dState.crashTime / mat.T));
+                        dState.J = F_max * (mat.T / Math.PI) * (1 - Math.cos(Math.PI * dState.crashTime / mat.T));
+                        dState.a = -dState.F / globalMass; dState.v = Math.max(0, (dState.p_impact - dState.J) / globalMass); dState.p = dState.v * globalMass;
+                        
+                        const currentSeries = dState.chartData[dState.chartData.length - 1];
+                        if(currentSeries) currentSeries.data.push({ t: dState.crashTime, F: dState.F, p: dState.p });
+                    } else {
+                        dState.F = 0; dState.a = 0; dState.v = 0; dState.p = 0; dState.J = dState.p_impact; dState.phase = 'done';
+                        const currentSeries = dState.chartData[dState.chartData.length - 1];
+                        if(currentSeries) currentSeries.data.push({ t: mat.T, F: 0, p: 0 });
+                        let sm = statusMsg(); if(sm) { sm.innerText = "테스트 완료"; sm.style.color = '#f8fafc'; sm.style.borderColor = '#64748b'; }
+                    }
+                }
+                dState.t += dt;
 
-                    document.getElementById('h2-pos').innerText = `${dState.x.toFixed(2)} m (meter)`;
-                    document.getElementById('h2-vel').innerText = `${dState.v.toFixed(2)} m/s`;
-                    document.getElementById('h2-acc').innerText = `${dState.a.toFixed(2)} m/s²`;
-                    document.getElementById('h2-mom').innerText = `${Math.round(dState.p).toLocaleString()} kg·m/s`;
-                    document.getElementById('h2-force').innerText = `${Math.round(dState.F).toLocaleString()} N`;
-                    document.getElementById('h2-impulse').innerText = `${Math.round(dState.J).toLocaleString()} N·s`;
+                document.getElementById('h2-pos').innerText = `${dState.x.toFixed(2)} m (meter)`;
+                document.getElementById('h2-vel').innerText = `${dState.v.toFixed(2)} m/s`;
+                document.getElementById('h2-acc').innerText = `${dState.a.toFixed(2)} m/s²`;
+                document.getElementById('h2-mom').innerText = `${Math.round(dState.p).toLocaleString()} kg·m/s`;
+                document.getElementById('h2-force').innerText = `${Math.round(dState.F).toLocaleString()} N`;
+                document.getElementById('h2-impulse').innerText = `${Math.round(dState.J).toLocaleString()} N·s`;
 
-                    const cvs = document.getElementById('sim-canvas-t2'); const ctx = cvs.getContext('2d');
-                    cvs.width = cvs.parentElement.clientWidth; cvs.height = cvs.parentElement.clientHeight;
+                const cvs = document.getElementById('sim-canvas-t2'); 
+                let pWidth = cvs.parentElement.clientWidth; let pHeight = cvs.parentElement.clientHeight;
+                if(pWidth > 0 && pHeight > 0) {
+                    cvs.width = pWidth; cvs.height = pHeight; const ctx = cvs.getContext('2d');
                     ctx.fillStyle = '#87CEEB'; ctx.fillRect(0, 0, cvs.width, cvs.height);
                     let camPos = dState.x - (cvs.width * 0.2 / PIXELS_PER_METER);
                     if (WALL_POS_M - camPos < (cvs.width * 0.8 / PIXELS_PER_METER)) camPos = WALL_POS_M - (cvs.width * 0.8 / PIXELS_PER_METER);
@@ -2041,66 +1739,40 @@
                     const mat = materials[dState.matKey]; const cWidth = mat.width * PIXELS_PER_METER;
                     
                     ctx.fillStyle = mat.renderColor; ctx.beginPath(); ctx.roundRect(wallScreenX - cWidth, roadY - 70, cWidth, 70, 4); ctx.fill();
-                    ctx.fillStyle = '#334155'; ctx.fillRect(wallScreenX, roadY - 90, 30, 90);
-                    drawCar(ctx, carScreenX, roadY - 15, 1.4);
+                    ctx.fillStyle = '#334155'; ctx.fillRect(wallScreenX, roadY - 90, 30, 90); drawCar(ctx, carScreenX, roadY - 15, 1.4);
                     
                     if (dState.phase === 'crashing' && dState.F > 2000) {
                         ctx.fillStyle = `rgba(239, 68, 68, ${Math.min(1, dState.F / (globalMass * 100))})`;
                         ctx.beginPath(); ctx.arc(wallScreenX - cWidth/2, roadY - 30, dState.F / 8000, 0, Math.PI * 2); ctx.fill();
                     }
-                    renderDynamicsCharts();
                 }
-                
-                if(audioCtx && audioCtx.state === 'running') {
-                    const currentVel = (activePhysicsTab === 'tab1') ? kState.v : dState.v;
-                    const isGas = (activePhysicsTab === 'tab1') ? (kState.inputAcc > 0) : (dState.inputAcc > 0 && dState.phase === 'running');
-                    const tFreq = 60 + Math.abs(currentVel) * 2;
-                    engineOsc.frequency.setTargetAtTime(tFreq, audioCtx.currentTime, 0.1);
-                    engineGain.gain.setTargetAtTime((Math.abs(currentVel)>0.5 || isGas) ? 0.2 : 0, audioCtx.currentTime, 0.1);
-                }
+
+                ['mom2', 'force2'].forEach(key => {
+                    const canvas = document.getElementById(charts[key].id); 
+                    if(canvas && canvas.parentElement.clientWidth > 0) { canvas.width = canvas.parentElement.clientWidth; canvas.height = canvas.parentElement.clientHeight; }
+                });
+                renderDynamicsCharts();
+            }
+            
+            if(audioCtx && audioCtx.state === 'running') {
+                const currentVel = (activePhysicsTab === 'tab1') ? kState.v : dState.v;
+                const isGas = (activePhysicsTab === 'tab1') ? (kState.inputAcc > 0) : (dState.inputAcc > 0 && dState.phase === 'running');
+                const tFreq = 60 + Math.abs(currentVel) * 2;
+                engineOsc.frequency.setTargetAtTime(tFreq, audioCtx.currentTime, 0.1);
+                engineGain.gain.setTargetAtTime((Math.abs(currentVel)>0.5 || isGas) ? 0.2 : 0, audioCtx.currentTime, 0.1);
             }
         } catch (error) {}
         animationFrameId = requestAnimationFrame(updatePhysics);
     }
 
-    // 전체 시스템 부트스트랩
+    // === 전역 부트스트랩 (로드 시작) ===
     window.onload = function() {
         initFuncGraph();
+        initPhysicsSim();
         resetDynamics();
         if (animationFrameId) cancelAnimationFrame(animationFrameId);
         animationFrameId = requestAnimationFrame(updatePhysics);
     };
-
-    let isResizing = false;
-    window.addEventListener('scroll', function() {
-        if (currentGlobalApp !== 'func') return;
-        floatXAxis(); 
-        if ((window.innerHeight + window.scrollY) >= document.body.offsetHeight - 50) {
-            if (isResizing) return;
-            isResizing = true;
-            const graphDiv = document.getElementById('graphPlot');
-            if (!graphDiv || !graphDiv.layout) { isResizing = false; return; }
-
-            let currentHeight = graphDiv.clientHeight;
-            graphDiv.style.height = (currentHeight + 800) + 'px';
-            
-            let currentYMax = graphDiv.layout.yaxis.range[1];
-            let currentXSpan = graphDiv.layout.xaxis.range[1] - graphDiv.layout.xaxis.range[0];
-            
-            Plotly.Plots.resize(graphDiv).then(() => {
-                let plotAreaHeight = graphDiv.clientHeight - graphDiv.layout.margin.t - graphDiv.layout.margin.b;
-                let plotAreaWidth = graphDiv.clientWidth - graphDiv.layout.margin.l - graphDiv.layout.margin.r;
-                let newYSpan = plotAreaHeight * (currentXSpan / plotAreaWidth);
-                Plotly.relayout(graphDiv, { 'yaxis.range': [currentYMax - newYSpan, currentYMax] }).then(() => { 
-                    isResizing = false; 
-                });
-            });
-        }
-    });
-
-    window.addEventListener('resize', () => {
-        if (currentGlobalApp === 'func') floatXAxis();
-    });
 </script>
 </body>
 </html>
