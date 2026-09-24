@@ -219,12 +219,17 @@
                         <div class="bg-slate-800/80 p-3 rounded">
                             <span class="font-bold text-blue-300">위치 (Position)</span>
                             <div class="mt-1 text-slate-200">기호: $x(t)$, 단위: $\text{m}$ (meter)</div>
-                            <div class="mt-1 text-slate-400 text-sm">물체가 존재하는 기준점으로부터의 거리.</div>
+                            <div class="mt-1 text-slate-400 text-sm">물체가 존재하는 기준점으로부터의 거리(벡터량). 뒤로 가면 마이너스(-)가 됩니다.</div>
                         </div>
                         <div class="bg-slate-800/80 p-3 rounded">
                             <span class="font-bold text-green-300">속도 (Velocity)</span>
                             <div class="mt-1 text-slate-200">기호: $v(t)$, 단위: $\text{m/s}$</div>
-                            <div class="mt-1 text-slate-400 text-sm">위치의 시간 변화율. $v(t) = \frac{dx}{dt}$</div>
+                            <div class="mt-1 text-slate-400 text-sm">위치의 시간 변화율. 방향을 가지는 벡터량이므로 후진 시 마이너스(-) 값을 가집니다. $v(t) = \frac{dx}{dt}$</div>
+                        </div>
+                        <div class="bg-slate-800/80 p-3 rounded">
+                            <span class="font-bold text-teal-300">속력 (Speed)</span>
+                            <div class="mt-1 text-slate-200">기호: $|v(t)|$, 단위: $\text{m/s}$</div>
+                            <div class="mt-1 text-slate-400 text-sm">속도의 크기만을 나타내는 스칼라량. 방향이 없으므로 항상 0 이상입니다. 속도의 절댓값과 같습니다.</div>
                         </div>
                         <div class="bg-slate-800/80 p-3 rounded">
                             <span class="font-bold text-orange-300">가속도 (Acceleration)</span>
@@ -234,7 +239,7 @@
                         <div class="bg-slate-800/80 p-3 rounded">
                             <span class="font-bold text-purple-300">선운동량 (Momentum)</span>
                             <div class="mt-1 text-slate-200">기호: $p(t)$, 단위: $\text{kg} \cdot \text{m/s}$</div>
-                            <div class="mt-1 text-slate-400 text-sm">운동 상태를 나타내는 양. $p = m \cdot v$</div>
+                            <div class="mt-1 text-slate-400 text-sm">운동 상태를 나타내는 벡터량. $p = m \cdot v$</div>
                         </div>
                         <div class="bg-slate-800/80 p-3 rounded">
                             <span class="font-bold text-red-400">힘 (Force)</span>
@@ -266,8 +271,9 @@
                     <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-4 gap-4">
                         <div><h2 class="text-xl font-bold text-blue-200">주행 시뮬레이터 (무한 궤도)</h2></div>
                         <div class="flex gap-3 w-full md:w-auto">
-                            <button id="t1-btn-gas" class="flex-1 md:flex-none px-8 py-4 bg-green-600 hover:bg-green-500 active:bg-green-700 text-white rounded-xl font-bold shadow-lg shadow-green-900/50 text-lg transition-all">가속</button>
-                            <button id="t1-btn-brake" class="flex-1 md:flex-none px-8 py-4 bg-red-600 hover:bg-red-500 active:bg-red-700 text-white rounded-xl font-bold shadow-lg shadow-red-900/50 text-lg transition-all">감속</button>
+                            <!-- Toggle Buttons for Gas/Brake -->
+                            <button id="t1-btn-gas" class="flex-1 md:flex-none px-8 py-4 bg-green-600 hover:bg-green-500 text-white rounded-xl font-bold shadow-lg shadow-green-900/50 text-lg transition-all">가속 (토글)</button>
+                            <button id="t1-btn-brake" class="flex-1 md:flex-none px-8 py-4 bg-red-600 hover:bg-red-500 text-white rounded-xl font-bold shadow-lg shadow-red-900/50 text-lg transition-all">감속 (토글)</button>
                         </div>
                     </div>
                     
@@ -276,15 +282,16 @@
                         <div class="absolute top-3 left-3 bg-slate-900/80 backdrop-blur-md p-3 rounded-xl border border-slate-600 shadow-2xl pointer-events-none z-10">
                             <h3 class="text-xs font-bold text-white mb-1 border-b border-slate-500 pb-1">Telemetry</h3>
                             <div class="grid grid-cols-1 gap-1 text-sm hud-font font-bold">
-                                <div class="flex justify-between w-48 text-blue-300"><span>x:</span><span id="h1-pos">0.00 m (meter)</span></div>
-                                <div class="flex justify-between w-48 text-green-300"><span>v:</span><span id="h1-vel">0.00 m/s</span></div>
-                                <div class="flex justify-between w-48 text-orange-300"><span>a:</span><span id="h1-acc">0.00 m/s²</span></div>
+                                <div class="flex justify-between w-48 md:w-56 text-blue-300"><span>위치(x):</span><span id="h1-pos">0.00 m</span></div>
+                                <div class="flex justify-between w-48 md:w-56 text-green-300"><span>속도(v):</span><span id="h1-vel">0.00 m/s</span></div>
+                                <div class="flex justify-between w-48 md:w-56 text-teal-300"><span>속력(|v|):</span><span id="h1-spd">0.00 m/s</span></div>
+                                <div class="flex justify-between w-48 md:w-56 text-orange-300"><span>가속도(a):</span><span id="h1-acc">0.00 m/s²</span></div>
                             </div>
                         </div>
                     </div>
                 </div>
 
-                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
                     <div id="wrapper-pos1" class="graph-wrapper glass-panel rounded-2xl flex flex-col overflow-hidden col-span-1">
                         <div class="bg-slate-800 p-3 flex justify-between items-center border-b border-slate-700 flex-wrap gap-2">
                             <h3 class="text-md font-bold text-blue-400 whitespace-nowrap">위치 $x(t)$</h3>
@@ -308,7 +315,7 @@
 
                     <div id="wrapper-vel1" class="graph-wrapper glass-panel rounded-2xl flex flex-col overflow-hidden col-span-1">
                         <div class="bg-slate-800 p-3 flex justify-between items-center border-b border-slate-700 flex-wrap gap-2">
-                            <h3 class="text-md font-bold text-green-400 whitespace-nowrap">속도 $v(t)$</h3>
+                            <h3 class="text-md font-bold text-green-400 whitespace-nowrap">속도 $v(t)$ (벡터)</h3>
                             <div class="flex flex-wrap gap-2 items-center">
                                 <div class="flex items-center gap-1 bg-slate-900 px-2 py-1 rounded border border-slate-600">
                                     <button onclick="window.phys_zoomChart('vel1', -0.2)" class="px-2 py-0.5 bg-slate-700 hover:bg-slate-500 text-white text-xs rounded font-bold">-</button>
@@ -323,7 +330,28 @@
                         </div>
                         <div id="body-vel1" class="w-full bg-slate-900 relative graph-body" style="height: 256px;">
                             <canvas id="chart-vel1"></canvas>
-                            <div class="absolute bottom-2 left-2 text-[10px] text-slate-400 pointer-events-none">클릭시 접선, 드래그시 스크롤(이동)</div>
+                            <div class="absolute bottom-2 left-2 text-[10px] text-slate-400 pointer-events-none">마이너스 허용. 클릭시 접선, 드래그시 이동</div>
+                        </div>
+                    </div>
+
+                    <div id="wrapper-spd1" class="graph-wrapper glass-panel rounded-2xl flex flex-col overflow-hidden col-span-1">
+                        <div class="bg-slate-800 p-3 flex justify-between items-center border-b border-slate-700 flex-wrap gap-2">
+                            <h3 class="text-md font-bold text-teal-400 whitespace-nowrap">속력 $|v(t)|$ (스칼라)</h3>
+                            <div class="flex flex-wrap gap-2 items-center">
+                                <div class="flex items-center gap-1 bg-slate-900 px-2 py-1 rounded border border-slate-600">
+                                    <button onclick="window.phys_zoomChart('spd1', -0.2)" class="px-2 py-0.5 bg-slate-700 hover:bg-slate-500 text-white text-xs rounded font-bold">-</button>
+                                    <button onclick="window.phys_zoomChart('spd1', 0.2)" class="px-2 py-0.5 bg-slate-700 hover:bg-slate-500 text-white text-xs rounded font-bold">+</button>
+                                </div>
+                                <div class="flex items-center gap-1 bg-slate-900 px-2 py-1 rounded border border-slate-600">
+                                    <button onclick="window.phys_resizeChartWindow('spd1', -1)" class="px-2 py-0.5 bg-slate-700 hover:bg-slate-500 text-white text-xs rounded font-bold">창 축소(-)</button>
+                                    <button onclick="window.phys_resizeChartWindow('spd1', 1)" class="px-2 py-0.5 bg-slate-700 hover:bg-slate-500 text-white text-xs rounded font-bold">창 확대(+)</button>
+                                </div>
+                                <button onclick="window.phys_toggleChart('spd1')" id="btn-tg-spd1" class="w-7 h-7 bg-slate-700 hover:bg-slate-500 rounded text-white font-bold ml-1">_</button>
+                            </div>
+                        </div>
+                        <div id="body-spd1" class="w-full bg-slate-900 relative graph-body" style="height: 256px;">
+                            <canvas id="chart-spd1"></canvas>
+                            <div class="absolute bottom-2 left-2 text-[10px] text-slate-400 pointer-events-none">마이너스 불가 (V형 반전). 드래그시 이동</div>
                         </div>
                     </div>
 
@@ -382,8 +410,9 @@
 
                         <div class="lg:col-span-3 flex flex-col gap-3">
                             <div class="flex justify-end gap-3 mb-1">
-                                <button id="t2-btn-gas" class="px-6 py-2 bg-green-600 hover:bg-green-500 text-white rounded font-bold shadow opacity-50 cursor-not-allowed transition-all" disabled>가속</button>
-                                <button id="t2-btn-brake" class="px-6 py-2 bg-red-600 hover:bg-red-500 text-white rounded font-bold shadow opacity-50 cursor-not-allowed transition-all" disabled>감속</button>
+                                <!-- Toggle Buttons -->
+                                <button id="t2-btn-gas" class="px-6 py-2 bg-green-600 hover:bg-green-500 text-white rounded font-bold shadow opacity-50 cursor-not-allowed transition-all" disabled>가속 (토글)</button>
+                                <button id="t2-btn-brake" class="px-6 py-2 bg-red-600 hover:bg-red-500 text-white rounded font-bold shadow opacity-50 cursor-not-allowed transition-all" disabled>감속 (토글)</button>
                             </div>
 
                             <div class="w-full h-64 md:h-80 bg-[#87CEEB] rounded-xl overflow-hidden border-2 border-slate-700 relative shadow-inner">
@@ -391,14 +420,14 @@
                                 <div class="absolute top-3 left-3 bg-slate-900/85 backdrop-blur-md p-3 rounded-xl border border-slate-500 shadow-2xl pointer-events-none z-10">
                                     <h3 class="text-xs font-bold text-white mb-1 border-b border-slate-500 pb-1">Dynamic Telemetry</h3>
                                     <div class="grid grid-cols-1 gap-1 text-sm hud-font font-bold w-56 md:w-64">
-                                        <div class="flex justify-between text-blue-300"><span>x:</span><span id="h2-pos">0.00 m (meter)</span></div>
-                                        <div class="flex justify-between text-green-300"><span>v:</span><span id="h2-vel">0.00 m/s</span></div>
-                                        <div class="flex justify-between text-orange-300"><span>a:</span><span id="h2-acc">0.00 m/s²</span></div>
+                                        <div class="flex justify-between text-blue-300"><span>위치(x):</span><span id="h2-pos">0.00 m</span></div>
+                                        <div class="flex justify-between text-green-300"><span>속도(v):</span><span id="h2-vel">0.00 m/s</span></div>
+                                        <div class="flex justify-between text-orange-300"><span>가속도(a):</span><span id="h2-acc">0.00 m/s²</span></div>
                                         <div class="flex justify-between text-purple-300 border-t border-slate-600 mt-1 pt-1">
-                                            <span>p:</span><span id="h2-mom">0 kg·m/s</span>
+                                            <span>운동량(p):</span><span id="h2-mom">0 kg·m/s</span>
                                         </div>
-                                        <div class="flex justify-between text-red-400"><span>F:</span><span id="h2-force">0 N</span></div>
-                                        <div class="flex justify-between text-yellow-400"><span>J:</span><span id="h2-impulse">0 N·s</span></div>
+                                        <div class="flex justify-between text-red-400"><span>힘(F):</span><span id="h2-force">0 N</span></div>
+                                        <div class="flex justify-between text-yellow-400"><span>충격량(J):</span><span id="h2-impulse">0 N·s</span></div>
                                     </div>
                                 </div>
                                 <div id="status-msg" class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-3xl md:text-5xl font-black text-white bg-black/60 px-6 py-3 rounded-2xl border-4 border-slate-600 shadow-2xl pointer-events-none z-20">
@@ -416,8 +445,8 @@
                                                 <button onclick="window.phys_zoomChart('mom2', 0.2)" class="px-2 py-0.5 bg-slate-700 hover:bg-slate-500 text-white text-xs rounded font-bold">+</button>
                                             </div>
                                             <div class="flex items-center gap-1 bg-slate-900 px-2 py-1 rounded border border-slate-600">
-                                                <button onclick="window.phys_resizeChartWindow('mom2', -1)" class="px-2 py-0.5 bg-slate-700 hover:bg-slate-500 text-white text-xs rounded font-bold">축소(-)</button>
-                                                <button onclick="window.phys_resizeChartWindow('mom2', 1)" class="px-2 py-0.5 bg-slate-700 hover:bg-slate-500 text-white text-xs rounded font-bold">확대(+)</button>
+                                                <button onclick="window.phys_resizeChartWindow('mom2', -1)" class="px-2 py-0.5 bg-slate-700 hover:bg-slate-500 text-white text-xs rounded font-bold">창 축소(-)</button>
+                                                <button onclick="window.phys_resizeChartWindow('mom2', 1)" class="px-2 py-0.5 bg-slate-700 hover:bg-slate-500 text-white text-xs rounded font-bold">창 확대(+)</button>
                                             </div>
                                             <button onclick="window.phys_toggleChart('mom2')" id="btn-tg-mom2" class="w-7 h-7 bg-slate-700 hover:bg-slate-500 rounded text-white font-bold ml-1">_</button>
                                         </div>
@@ -438,8 +467,8 @@
                                                 <button onclick="window.phys_zoomChart('force2', 0.2)" class="px-2 py-0.5 bg-slate-700 hover:bg-slate-500 text-white text-xs rounded font-bold">+</button>
                                             </div>
                                             <div class="flex items-center gap-1 bg-slate-900 px-2 py-1 rounded border border-slate-600">
-                                                <button onclick="window.phys_resizeChartWindow('force2', -1)" class="px-2 py-0.5 bg-slate-700 hover:bg-slate-500 text-white text-xs rounded font-bold">축소(-)</button>
-                                                <button onclick="window.phys_resizeChartWindow('force2', 1)" class="px-2 py-0.5 bg-slate-700 hover:bg-slate-500 text-white text-xs rounded font-bold">확대(+)</button>
+                                                <button onclick="window.phys_resizeChartWindow('force2', -1)" class="px-2 py-0.5 bg-slate-700 hover:bg-slate-500 text-white text-xs rounded font-bold">창 축소(-)</button>
+                                                <button onclick="window.phys_resizeChartWindow('force2', 1)" class="px-2 py-0.5 bg-slate-700 hover:bg-slate-500 text-white text-xs rounded font-bold">창 확대(+)</button>
                                             </div>
                                             <button onclick="window.phys_toggleChart('force2')" id="btn-tg-force2" class="w-7 h-7 bg-slate-700 hover:bg-slate-500 rounded text-white font-bold ml-1">_</button>
                                         </div>
@@ -1108,6 +1137,7 @@
     let phys_globalMass = 1000;
     let phys_animationFrameId = null;
 
+    // [핵심] speed(속력) 데이터를 저장하기 위해 history 구조 보강
     const phys_kState = { t: 0, x: 0, v: 0, a: 0, inputAcc: 0, history: [] };
     const phys_dState = { phase: 'ready', t: 0, x: 0, v: 0, a: 0, p: 0, F: 0, J: 0, inputAcc: 0, v0: 20, matKey: 'concrete', crashTime: 0, p_impact: 0, chartData: [] };
 
@@ -1118,9 +1148,11 @@
         'sponge':   { name: '스펀지', T: 1.0, color: '#3b82f6', renderColor: '#fcd34d', width: 10 }
     };
 
+    // [핵심] spd1 (속력) 차트 객체 추가
     const phys_charts = {
         pos1: { id: 'chart-pos1', wrapId: 'wrapper-pos1', zoom: 1, collapsed: false, selT: -1, yKey: 'x', color: '#60a5fa', ylabel: 'x (m)', winH: 256, offsetX: 0, offsetY: 0 },
         vel1: { id: 'chart-vel1', wrapId: 'wrapper-vel1', zoom: 1, collapsed: false, selT: -1, yKey: 'v', color: '#4ade80', ylabel: 'v (m/s)', winH: 256, offsetX: 0, offsetY: 0 },
+        spd1: { id: 'chart-spd1', wrapId: 'wrapper-spd1', zoom: 1, collapsed: false, selT: -1, yKey: 'speed', color: '#14b8a6', ylabel: '|v| (m/s)', winH: 256, offsetX: 0, offsetY: 0 },
         acc1: { id: 'chart-acc1', wrapId: 'wrapper-acc1', zoom: 1, collapsed: false, selT: -1, yKey: 'a', color: '#fb923c', ylabel: 'a (m/s²)', winH: 256, offsetX: 0, offsetY: 0 },
         force2: { id: 'chart-force2', wrapId: 'wrapper-force2', zoom: 1, collapsed: false, selT: -1, yKey: 'F', ylabel: 'F (N)', winH: 300, offsetX: 0, offsetY: 0 },
         mom2: { id: 'chart-mom2', wrapId: 'wrapper-mom2', zoom: 1, collapsed: false, selT: -1, yKey: 'p', ylabel: 'p (kg·m/s)', winH: 300, offsetX: 0, offsetY: 0 }
@@ -1189,8 +1221,8 @@
         document.getElementById(`body-${key}`).style.height = chart.winH + 'px';
         if (key !== 'force2' && key !== 'mom2') {
             const wrapper = document.getElementById(chart.wrapId);
-            if (chart.winH > 300) { wrapper.classList.remove('lg:col-span-1'); wrapper.classList.add('lg:col-span-3'); }
-            else { wrapper.classList.remove('lg:col-span-3'); wrapper.classList.add('lg:col-span-1'); }
+            if (chart.winH > 300) { wrapper.classList.remove('lg:col-span-1'); wrapper.classList.add('lg:col-span-2'); }
+            else { wrapper.classList.remove('lg:col-span-2'); wrapper.classList.add('lg:col-span-1'); }
         }
     };
     window.phys_toggleChart = function(key) {
@@ -1209,7 +1241,10 @@
 
     const phys_drawEnv = (ctx, w, h, camPosM) => {
         const roadY = h - 40; ctx.fillStyle = '#22c55e'; ctx.fillRect(0, roadY - 10, w, h - roadY + 10);
-        const tSpace = 30 * phys_PIXELS_PER_METER; const camOff = camPosM * phys_PIXELS_PER_METER; const startX = -(camOff % tSpace);
+        const tSpace = 30 * phys_PIXELS_PER_METER; const camOff = camPosM * phys_PIXELS_PER_METER; 
+        
+        // [핵심] 음수 렌더링을 위해 Modulo 연산 교정
+        const startX = -(((camOff % tSpace) + tSpace) % tSpace); 
         for(let i = startX - tSpace; i < w + tSpace; i += tSpace) {
             const idx = Math.floor((camOff + i) / tSpace); const s = 1 + (Math.abs(idx) % 3) * 0.2; phys_drawTree(ctx, i, roadY - 10, s);
         }
@@ -1228,7 +1263,6 @@
         ctx.fillStyle = '#fde047'; ctx.fillRect(22, -8, 4, 6); ctx.fillStyle = '#f87171'; ctx.fillRect(-26, -10, 2, 6); ctx.restore();
     };
 
-    // [핵심] X축, Y축, 원점을 명확하고 굵게 렌더링하도록 엔진 개선
     function phys_drawAxes(ctx, w, h, pad, xMin, xMax, yMin, yMax, xLabel, yLabel) {
         const {L, R, T, B} = pad; const gw = w - L - R, gh = h - T - B;
         const rangeY = (yMax - yMin) === 0 ? 1 : (yMax - yMin); const rangeX = (xMax - xMin) === 0 ? 1 : (xMax - xMin);
@@ -1250,17 +1284,14 @@
         
         ctx.strokeStyle = '#475569'; ctx.lineWidth = 2; ctx.beginPath(); ctx.rect(L, T, gw, gh); ctx.stroke();
         
-        // 굵은 X축 (y=0)
         if(yMin <= 0 && yMax >= 0) {
             ctx.strokeStyle = '#cbd5e1'; ctx.lineWidth = 3; 
             ctx.beginPath(); ctx.moveTo(L, yZeroPx); ctx.lineTo(w - R, yZeroPx); ctx.stroke();
         }
-        // 굵은 Y축 (t=0)
         if(xMin <= 0 && xMax >= 0) {
             ctx.strokeStyle = '#cbd5e1'; ctx.lineWidth = 3; 
             ctx.beginPath(); ctx.moveTo(tZeroPx, T); ctx.lineTo(tZeroPx, h - B); ctx.stroke();
         }
-        // 강렬한 원점 마커 (0, 0)
         if(xMin <= 0 && xMax >= 0 && yMin <= 0 && yMax >= 0) {
             ctx.fillStyle = '#ffffff'; 
             ctx.beginPath(); ctx.arc(tZeroPx, yZeroPx, 4, 0, Math.PI*2); ctx.fill();
@@ -1292,7 +1323,8 @@
         const hData = phys_kState.history; if (hData.length === 0) return;
         const baseTMin = hData[0].t; const baseTMax = Math.max(baseTMin + 1, hData[hData.length-1].t); 
 
-        ['pos1', 'vel1', 'acc1'].forEach(key => {
+        // [핵심] spd1(속력) 추가 렌더링
+        ['pos1', 'vel1', 'spd1', 'acc1'].forEach(key => {
             const chart = phys_charts[key]; if(chart.collapsed) return;
             const canvas = document.getElementById(chart.id); if(!canvas || canvas.width <= 1) return;
             const ctx = canvas.getContext('2d'); const w = canvas.width, h = canvas.height;
@@ -1301,6 +1333,7 @@
             let yMin = -1, yMax = 1;
             if(key === 'pos1') { yMin = hData[0].x - 1; yMax = Math.max(10, hData[hData.length-1].x + 5); }
             if(key === 'vel1') { yMin = -5; yMax = 40; }
+            if(key === 'spd1') { yMin = -5; yMax = 40; } // V자 곡선 표시용으로 하단 여백 부여
             if(key === 'acc1') { yMin = -15; yMax = 15; }
 
             const yCenter = (yMax + yMin) / 2; const baseRange = (yMax - yMin);
@@ -1316,10 +1349,12 @@
             const mapX = (t) => pad.L + (w - pad.L - pad.R) * (t - tMin) / (tMax - tMin || 1);
             const mapY = (v) => pad.T + (h - pad.T - pad.B) - (h - pad.T - pad.B) * (v - yMin) / (yMax - yMin || 1);
 
-            if (key === 'vel1') {
+            // [핵심] 속도, 속력은 Area Fill (0을 기준으로)
+            if (key === 'vel1' || key === 'spd1') {
                 ctx.fillStyle = chart.color.replace(')', ', 0.2)').replace('rgb', 'rgba'); ctx.beginPath(); 
                 const y0 = Math.min(Math.max(mapY(0), pad.T), pad.T + (h - pad.T - pad.B));
-                ctx.moveTo(mapX(hData[0].t), y0); hData.forEach(pt => ctx.lineTo(mapX(pt.t), mapY(Math.max(0, pt.v))));
+                ctx.moveTo(mapX(hData[0].t), y0); 
+                hData.forEach(pt => ctx.lineTo(mapX(pt.t), mapY(pt[chart.yKey])));
                 ctx.lineTo(mapX(hData[hData.length-1].t), y0); ctx.fill();
             }
 
@@ -1403,7 +1438,6 @@
         const iEl = document.getElementById('integral-val'); if (iEl) iEl.innerText = Math.round(calJ).toLocaleString();
     }
 
-    // 마우스/손가락으로 물리 그래프를 패닝(드래그 스크롤)하는 로직 연동
     window.phys_attachPanZoomDrag = function(key) {
         const canvas = document.getElementById(phys_charts[key].id); if(!canvas) return;
         let isDrag = false, lastX = 0, lastY = 0, hasMoved = false;
@@ -1485,7 +1519,6 @@
         const matSel = document.getElementById('material-select');
         if(matSel) matSel.addEventListener('change', (e) => { phys_dState.matKey = e.target.value; });
 
-        // [핵심] 클릭 시 켜지고/꺼지는 토글 가속 방식
         function bindToggle(id, otherId, stateObj, val) {
             const btn = document.getElementById(id);
             if(!btn) return;
@@ -1516,7 +1549,7 @@
         const btnClearChart = document.getElementById('btn-clear-chart');
         if(btnClearChart) btnClearChart.addEventListener('click', () => { phys_dState.chartData = []; phys_charts['force2'].selT = -1; phys_charts['mom2'].selT = -1; });
 
-        ['pos1', 'vel1', 'acc1', 'force2', 'mom2'].forEach(window.phys_attachPanZoomDrag);
+        ['pos1', 'vel1', 'spd1', 'acc1', 'force2', 'mom2'].forEach(window.phys_attachPanZoomDrag);
     }
 
     function phys_updatePhysicsLoop() {
@@ -1532,14 +1565,18 @@
                 const drag = -0.05 * phys_kState.v; phys_kState.a = phys_kState.inputAcc + drag;
                 if (Math.abs(phys_kState.v) < 0.1 && phys_kState.inputAcc === 0) { phys_kState.a = 0; phys_kState.v = 0; }
                 phys_kState.v += phys_kState.a * phys_dt;
-                if (phys_kState.x < 0 && phys_kState.v < 0) { phys_kState.x = 0; phys_kState.v = 0; phys_kState.a = 0; } else { phys_kState.x += phys_kState.v * phys_dt; }
+                
+                // [핵심] Clamping 제거: 위치 및 속도의 마이너스 후진 허용
+                phys_kState.x += phys_kState.v * phys_dt;
                 phys_kState.t += phys_dt;
 
-                phys_kState.history.push({t: phys_kState.t, x: phys_kState.x, v: phys_kState.v, a: phys_kState.a});
+                // 속력은 속도의 절댓값
+                phys_kState.history.push({t: phys_kState.t, x: phys_kState.x, v: phys_kState.v, speed: Math.abs(phys_kState.v), a: phys_kState.a});
                 if (phys_kState.history.length > 400) phys_kState.history.shift(); 
                 
-                let elP = document.getElementById('h1-pos'); if(elP) elP.innerText = `${phys_kState.x.toFixed(2)} m (meter)`;
+                let elP = document.getElementById('h1-pos'); if(elP) elP.innerText = `${phys_kState.x.toFixed(2)} m`;
                 let elV = document.getElementById('h1-vel'); if(elV) elV.innerText = `${phys_kState.v.toFixed(2)} m/s`;
+                let elS = document.getElementById('h1-spd'); if(elS) elS.innerText = `${Math.abs(phys_kState.v).toFixed(2)} m/s`;
                 let elA = document.getElementById('h1-acc'); if(elA) elA.innerText = `${phys_kState.a.toFixed(2)} m/s²`;
 
                 const cvs = document.getElementById('sim-canvas-t1');
@@ -1552,7 +1589,7 @@
                     }
                 }
                 
-                ['pos1', 'vel1', 'acc1'].forEach(key => {
+                ['pos1', 'vel1', 'spd1', 'acc1'].forEach(key => {
                     const canvas = document.getElementById(phys_charts[key].id); 
                     if(canvas && canvas.parentElement.clientWidth > 0) { canvas.width = canvas.parentElement.clientWidth; canvas.height = canvas.parentElement.clientHeight; }
                 });
