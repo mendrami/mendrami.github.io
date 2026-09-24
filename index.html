@@ -10,10 +10,7 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
     <script>
-        MathJax = {
-            tex: { inlineMath: [['$', '$'], ['\\(', '\\)']] },
-            startup: { typeset: true }
-        };
+        MathJax = { tex: { inlineMath: [['$', '$'], ['\\(', '\\)']] }, startup: { typeset: true } };
     </script>
     <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
 
@@ -27,8 +24,12 @@
         .nav-btn.inactive { background-color: #1e293b; color: #94a3b8; }
         .nav-btn.inactive:hover { background-color: #334155; color: white; }
 
+        .app-view { display: none !important; width: 100%; min-height: 100vh; padding-top: 75px; }
+        #app-func.active { display: block !important; }
+        #app-phys.active { display: flex !important; flex-direction: column; align-items: center; }
+
         /* === [함수 비교] 전용 스타일 === */
-        #app-func { display: block; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f0f2f5; min-height: 100vh; padding: 80px 15px 30px 15px; color: #212529; }
+        #app-func { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f0f2f5; color: #212529; }
         .func-container { max-width: 1450px; margin: 0 auto; background: white; padding: 15px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.08); }
         .func-container h1 { color: #212529; text-align: center; font-size: 1.6rem; margin-bottom: 5px; font-weight: 800; }
         
@@ -77,6 +78,7 @@
         .coord-item { font-family: 'Courier New', Courier, monospace; font-size: 0.9rem; background: #f8f9fa; padding: 6px 10px; border-radius: 6px; margin-bottom: 5px; border-left: 4px solid #0d6efd; font-weight: bold; color: #212529; }
         .empty-msg { font-size: 0.85rem; color: #adb5bd; font-style: italic; }
 
+        .workspace { display: block; }
         .graph-wrapper { position: relative; width: 100%; }
         #graphPlot { width: 100%; height: 650px; border-radius: 8px; overflow: hidden; border: 1px solid #dee2e6; background-color: white; touch-action: none; }
         
@@ -92,7 +94,7 @@
         .scroll-notice { text-align: center; color: #6c757d; font-size: 0.85rem; margin-top: 10px; font-weight: bold; padding-bottom: 60px; }
 
         /* === [수학 물리 시뮬레이터] 전용 스타일 === */
-        #app-phys { display: none; font-family: 'Inter', sans-serif; color: #f8fafc; padding-top: 75px; min-height: 100vh; flex-direction: column; items-center; }
+        #app-phys { font-family: 'Inter', sans-serif; color: #f8fafc; }
         #app-phys canvas { display: block; width: 100%; height: 100%; touch-action: none; cursor: crosshair; }
         .tab-btn { transition: all 0.2s ease; }
         .tab-btn.active { background-color: #3b82f6; color: white; border-color: #3b82f6; }
@@ -106,7 +108,7 @@
         .graph-body { transition: height 0.3s ease, opacity 0.3s ease; overflow: hidden; }
     </style>
 </head>
-<body class="bg-slate-900">
+<body>
 
     <!-- 최상단 통합 네비게이션 메뉴 -->
     <header class="global-nav">
@@ -121,7 +123,7 @@
     <!-- =========================================================
          1. 함수 비교 (Function Grapher) 영역
          ========================================================= -->
-    <div id="app-func">
+    <div id="app-func" class="app-view active">
         <div class="func-container">
             <h1>함수 비교</h1>
             <div id="statusBoard" class="status-board">
@@ -186,7 +188,7 @@
     <!-- =========================================================
          2. 수학 물리 시뮬레이터 (Physics Simulator) 영역
          ========================================================= -->
-    <div id="app-phys" class="w-full flex-col items-center p-2 md:p-6 lg:p-8">
+    <div id="app-phys" class="app-view p-2 md:p-6 lg:p-8">
         <header class="w-full max-w-7xl mb-4 mt-2">
             <div class="text-center mb-4">
                 <h1 class="text-3xl md:text-5xl font-bold mb-2 text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-indigo-400">
@@ -296,7 +298,7 @@
                         </div>
                         <div id="body-pos1" class="w-full bg-slate-900 relative graph-body" style="height: 256px;">
                             <canvas id="chart-pos1"></canvas>
-                            <div class="absolute bottom-2 left-2 text-[10px] text-slate-400 pointer-events-none">클릭하여 접선/기울기 확인 (드래그하여 이동)</div>
+                            <div class="absolute bottom-2 left-2 text-[10px] text-slate-400 pointer-events-none">클릭시 접선, 드래그시 이동</div>
                         </div>
                     </div>
 
@@ -313,7 +315,7 @@
                         </div>
                         <div id="body-vel1" class="w-full bg-slate-900 relative graph-body" style="height: 256px;">
                             <canvas id="chart-vel1"></canvas>
-                            <div class="absolute bottom-2 left-2 text-[10px] text-slate-400 pointer-events-none">클릭하여 접선/기울기 확인 (드래그하여 이동)</div>
+                            <div class="absolute bottom-2 left-2 text-[10px] text-slate-400 pointer-events-none">클릭시 접선, 드래그시 이동</div>
                         </div>
                     </div>
 
@@ -406,7 +408,7 @@
                                     </div>
                                     <div id="body-mom2" class="w-full bg-slate-900 relative graph-body" style="height: 300px;">
                                         <canvas id="chart-mom2"></canvas>
-                                        <div class="absolute bottom-2 left-2 text-[10px] text-slate-400 pointer-events-none">클릭시 접선, 드래그시 이동</div>
+                                        <div class="absolute bottom-2 left-2 text-[10px] text-slate-400 pointer-events-none">클릭시 미분, 드래그시 이동</div>
                                     </div>
                                 </div>
 
@@ -446,9 +448,12 @@
 
 <script>
     /* =========================================================================
-       0. 전역 유틸 및 앱 스위칭 로직
+       0. 통합 앱 전환 로직 (App Switcher)
        ========================================================================= */
+    let currentGlobalApp = 'func';
+
     window.switchApp = function(appId) {
+        currentGlobalApp = appId;
         const btnFunc = document.getElementById('nav-btn-func');
         const btnPhys = document.getElementById('nav-btn-phys');
         const appFunc = document.getElementById('app-func');
@@ -456,12 +461,12 @@
 
         if (appId === 'func') {
             btnFunc.className = "nav-btn active"; btnPhys.className = "nav-btn inactive";
-            appFunc.style.display = 'block'; appPhys.style.display = 'none';
-            if(window.Plotly && document.getElementById('graphPlot')) Plotly.Plots.resize('graphPlot');
+            appFunc.classList.add('active'); appPhys.classList.remove('active');
+            if(window.Plotly && document.getElementById('graphPlot')) { Plotly.Plots.resize('graphPlot'); }
         } else {
             btnPhys.className = "nav-btn active"; btnFunc.className = "nav-btn inactive";
-            appFunc.style.display = 'none'; appPhys.style.display = 'flex';
-            if(window.MathJax && MathJax.typesetPromise) MathJax.typesetPromise([appPhys]).catch(e=>{});
+            appPhys.classList.add('active'); appFunc.classList.remove('active');
+            if(window.MathJax && MathJax.typesetPromise) { MathJax.typesetPromise([appPhys]).catch(e=>{}); }
         }
     };
 
@@ -552,8 +557,9 @@
         }
     }
 
-    window.addFunction = function() {
-        const type = document.getElementById('newFuncType').value;
+    window.func_addFunction = function() {
+        const typeSelect = document.getElementById('newFuncType'); if(!typeSelect) return;
+        const type = typeSelect.value;
         const newFunc = { id: 'f_' + Date.now(), type: type, color: func_colorPalette[func_colorIndex % func_colorPalette.length], visible: true, showInverse: false, H: 0, K: 0 };
         if (type === 'poly') { newFunc.degree = 2; newFunc.coeffs = [0, 0, 1]; } 
         else if (type === 'power') { newFunc.C = 1; newFunc.p = 0.5; }
@@ -563,14 +569,14 @@
         func_renderUI(); func_updateAll();
     };
 
-    window.removeFunction = function(id) {
+    window.func_removeFunction = function(id) {
         let idx = func_functionsList.findIndex(f => f.id === id);
         if(idx !== -1) func_functionsList.splice(idx, 1);
         if (func_selectedFuncId === id) window.func_deselectGraph();
         func_renderUI(); func_updateAll();
     };
 
-    window.updateState = function(id, field, value, index = null) {
+    window.func_updateState = function(id, field, value, index = null) {
         const func = func_functionsList.find(f => f.id === id); if (!func) return;
         if (field === 'visible') func.visible = value;
         else if (field === 'showInverse') func.showInverse = value;
@@ -599,7 +605,7 @@
     }
 
     function func_renderUI() {
-        const grid = document.getElementById('functionsGrid'); grid.innerHTML = '';
+        const grid = document.getElementById('functionsGrid'); if(!grid) return; grid.innerHTML = '';
         func_functionsList.forEach((func) => {
             let sameTypeFuncs = func_functionsList.filter(x => x.type === func.type); let typeIndex = sameTypeFuncs.indexOf(func) + 1;
             const card = document.createElement('div'); card.className = 'func-card' + (func_selectedFuncId === func.id ? ' selected' : '');
@@ -609,26 +615,26 @@
 
             let innerHTML = `
                 <div class="func-card-header">
-                    <div class="func-card-title"><input type="color" value="${func.color}" onchange="window.updateState('${func.id}', 'color', this.value)"> ${typeName}</div>
+                    <div class="func-card-title"><input type="color" value="${func.color}" onchange="window.func_updateState('${func.id}', 'color', this.value)"> ${typeName}</div>
                     <div style="display:flex; align-items:center; gap:6px;">
-                        ${func.type !== 'custom' ? `<label title="역함수 렌더링" style="font-size:0.8rem; display:flex; align-items:center; gap:2px; cursor:pointer; background:#f8f9fa; padding:3px 6px; border-radius:4px; border:1px solid #dee2e6;"><input type="checkbox" ${func.showInverse ? 'checked' : ''} onchange="window.updateState('${func.id}', 'showInverse', this.checked)"> 역함수</label><div style="width:1px; height:18px; background:#dee2e6; margin: 0 2px;"></div>` : ''}
-                        <label class="switch"><input type="checkbox" ${func.visible ? 'checked' : ''} onchange="window.updateState('${func.id}', 'visible', this.checked)"><span class="slider"></span></label>
-                        <button class="btn-delete" onclick="window.removeFunction('${func.id}')">삭제</button>
+                        ${func.type !== 'custom' ? `<label title="역함수 렌더링" style="font-size:0.8rem; display:flex; align-items:center; gap:2px; cursor:pointer; background:#f8f9fa; padding:3px 6px; border-radius:4px; border:1px solid #dee2e6;"><input type="checkbox" ${func.showInverse ? 'checked' : ''} onchange="window.func_updateState('${func.id}', 'showInverse', this.checked)"> 역함수</label><div style="width:1px; height:18px; background:#dee2e6; margin: 0 2px;"></div>` : ''}
+                        <label class="switch"><input type="checkbox" ${func.visible ? 'checked' : ''} onchange="window.func_updateState('${func.id}', 'visible', this.checked)"><span class="slider"></span></label>
+                        <button class="btn-delete" onclick="window.func_removeFunction('${func.id}')">삭제</button>
                     </div>
                 </div>
             `;
             if (func.type === 'poly') {
-                innerHTML += `<div class="input-row"><label>차수 (N):</label><input type="number" min="1" max="10" value="${func.degree}" onchange="window.updateState('${func.id}', 'degree', this.value)"></div><div class="poly-coeffs">`;
-                for (let i = func.degree; i >= 0; i--) innerHTML += `<div class="input-row" style="margin:0;"><label>x<sup>${i}</sup> 계수:</label><input type="number" step="0.1" id="input_${func.id}_c${i}" value="${func.coeffs[i]}" oninput="window.updateState('${func.id}', 'coeffs', this.value, ${i})"></div>`;
+                innerHTML += `<div class="input-row"><label>차수 (N):</label><input type="number" min="1" max="10" value="${func.degree}" onchange="window.func_updateState('${func.id}', 'degree', this.value)"></div><div class="poly-coeffs">`;
+                for (let i = func.degree; i >= 0; i--) innerHTML += `<div class="input-row" style="margin:0;"><label>x<sup>${i}</sup> 계수:</label><input type="number" step="0.1" id="input_${func.id}_c${i}" value="${func.coeffs[i]}" oninput="window.func_updateState('${func.id}', 'coeffs', this.value, ${i})"></div>`;
                 innerHTML += `</div>`;
             } else if (func.type === 'power') {
-                innerHTML += `<div class="input-row"><label>계수 (C):</label><input type="number" step="0.5" value="${func.C}" oninput="window.updateState('${func.id}', 'C', this.value)"></div><div class="input-row"><label>지수 (p):</label><input type="number" step="0.1" id="input_${func.id}_p" value="${func.p}" oninput="window.updateState('${func.id}', 'p', this.value)"></div><div class="input-row"><label>X 이동 (H):</label><input type="number" step="0.5" id="input_${func.id}_H" value="${func.H}" oninput="window.updateState('${func.id}', 'H', this.value)"></div><div class="input-row"><label>Y 이동 (K):</label><input type="number" step="0.5" id="input_${func.id}_K" value="${func.K}" oninput="window.updateState('${func.id}', 'K', this.value)"></div>`;
+                innerHTML += `<div class="input-row"><label>계수 (C):</label><input type="number" step="0.5" value="${func.C}" oninput="window.func_updateState('${func.id}', 'C', this.value)"></div><div class="input-row"><label>지수 (p):</label><input type="number" step="0.1" id="input_${func.id}_p" value="${func.p}" oninput="window.func_updateState('${func.id}', 'p', this.value)"></div><div class="input-row"><label>X 이동 (H):</label><input type="number" step="0.5" id="input_${func.id}_H" value="${func.H}" oninput="window.func_updateState('${func.id}', 'H', this.value)"></div><div class="input-row"><label>Y 이동 (K):</label><input type="number" step="0.5" id="input_${func.id}_K" value="${func.K}" oninput="window.func_updateState('${func.id}', 'K', this.value)"></div>`;
             } else if (func.type === 'custom') {
-                innerHTML += `<div class="custom-expr-row"><label><strong>함수/음함수 식 입력:</strong></label><input type="text" id="input_${func.id}_expr" value="${func.expr}" onchange="window.updateState('${func.id}', 'expr', this.value)" placeholder="예: x^2 + y^2 = 4 또는 sec(x)">
-                              <span style="font-size:0.75rem; color:#0d6efd; font-weight:bold;">* 삼각함수(sin, cos, tan)의 x축 단위는 라디안(rad). ex: 180° = π라디안(rad). 단 라디안(rad) 표시는 생략.</span>
+                innerHTML += `<div class="custom-expr-row"><label><strong>함수/음함수 식 입력:</strong></label><input type="text" id="input_${func.id}_expr" value="${func.expr}" onchange="window.func_updateState('${func.id}', 'expr', this.value)" placeholder="예: x^2 + y^2 = 4 또는 sec(x)">
+                              <span style="font-size:0.75rem; color:#0d6efd; font-weight:bold;">* 삼각함수(sin, cos, tan, csc, sec, cot)의 x축 단위는 라디안(rad). ex: 180° = π라디안(rad). 단 라디안(rad) 표시는 생략.</span>
                               <span style="font-size:0.75rem; color:#6c757d;">* 팩토리얼(!) 연산 지원. 드래그 이동 시 식이 자동 업데이트 됩니다.</span></div>`;
             } else {
-                innerHTML += `<div class="input-row"><label>계수 (C):</label><input type="number" step="0.5" value="${func.C}" oninput="window.updateState('${func.id}', 'C', this.value)"></div><div class="input-row"><label>밑 (a):</label><input type="number" step="0.1" min="0.1" value="${func.base}" oninput="window.updateState('${func.id}', 'base', this.value)"></div><div class="input-row"><label>X 이동 (H):</label><input type="number" step="0.5" id="input_${func.id}_H" value="${func.H}" oninput="window.updateState('${func.id}', 'H', this.value)"></div><div class="input-row"><label>Y 이동 (K):</label><input type="number" step="0.5" id="input_${func.id}_K" value="${func.K}" oninput="window.updateState('${func.id}', 'K', this.value)"></div>`;
+                innerHTML += `<div class="input-row"><label>계수 (C):</label><input type="number" step="0.5" value="${func.C}" oninput="window.func_updateState('${func.id}', 'C', this.value)"></div><div class="input-row"><label>밑 (a):</label><input type="number" step="0.1" min="0.1" value="${func.base}" oninput="window.func_updateState('${func.id}', 'base', this.value)"></div><div class="input-row"><label>X 이동 (H):</label><input type="number" step="0.5" id="input_${func.id}_H" value="${func.H}" oninput="window.func_updateState('${func.id}', 'H', this.value)"></div><div class="input-row"><label>Y 이동 (K):</label><input type="number" step="0.5" id="input_${func.id}_K" value="${func.K}" oninput="window.func_updateState('${func.id}', 'K', this.value)"></div>`;
             }
             card.innerHTML = innerHTML; grid.appendChild(card);
         });
@@ -670,7 +676,7 @@
                 if (f.showInverse && f.type !== 'custom') { let rhsInv = rhs.replace(/x/g, 'y'); tex += `\\color{${f.color}}{x = ${rhsInv} \\quad \\text{(역함수)}} \\\\ `; }
             });
         }
-        const display = document.getElementById('math-display'); display.innerHTML = `$$ \\begin{align*} ${tex} \\end{align*} $$`;
+        const display = document.getElementById('math-display'); if(display) display.innerHTML = `$$ \\begin{align*} ${tex} \\end{align*} $$`;
         if (typeof MathJax !== 'undefined' && MathJax.typesetPromise) MathJax.typesetPromise([display]).catch(e => {});
     }
 
@@ -742,6 +748,7 @@
 
     function func_updateIntersectionPanel(panelData) {
         const xDiv = document.getElementById('panel-x-axis'); const yDiv = document.getElementById('panel-y-axis'); const fDiv = document.getElementById('panel-intersections');
+        if(!xDiv || !yDiv || !fDiv) return;
         let xHTML = '', yHTML = '', fHTML = '';
         if (panelData.xInt.length === 0) xHTML = '<div class="empty-msg">교점이 없습니다.</div>'; else panelData.xInt.forEach(p => xHTML += `<div class="coord-item" style="border-left-color: ${p.color};"><span style="color:${p.color}">${p.name}</span> : (${p.x.toFixed(2)}, 0.00)</div>`);
         if (panelData.yInt.length === 0) yHTML = '<div class="empty-msg">교점이 없습니다.</div>'; else panelData.yInt.forEach(p => yHTML += `<div class="coord-item" style="border-left-color: ${p.color};"><span style="color:${p.color}">${p.name}</span> : (0.00, ${p.y.toFixed(2)})</div>`);
@@ -890,6 +897,13 @@
     function func_getDynamicTick(range) { return (!range || range.length < 2) ? 0.5 : (Math.abs(range[1] - range[0]) <= 20 ? 0.5 : undefined); }
     function func_clearTangentShape() { Plotly.relayout('graphPlot', { shapes: [], annotations: [] }); }
 
+    function func_floatXAxis() {
+        const graphDiv = document.getElementById('graphPlot'); if (!graphDiv) return;
+        const xAxisLayers = graphDiv.querySelectorAll('.xaxislayer-above');
+        const rect = graphDiv.getBoundingClientRect(); const bottomHidden = rect.bottom - window.innerHeight;
+        xAxisLayers.forEach(layer => { layer.style.transform = bottomHidden > 0 ? `translateY(-${bottomHidden}px)` : `translateY(0px)`; });
+    }
+
     function func_updateAll(skipHeavy = false) {
         if (!skipHeavy) func_renderLatex();
         const graphDiv = document.getElementById('graphPlot'); if (!graphDiv || !graphDiv.layout) return;
@@ -918,7 +932,9 @@
 
     function func_drawTangentFromObj(f, px, py, isInverse) {
         let m = 0; let isImplicit = func_isImplicitFunc(f);
-        if (isImplicit) { m = func_evaluateImplicitDerivative(f, px, py); } else if (isInverse) { const origM = func_evaluateDerivative(f, py); if (Math.abs(origM) < 1e-8 || isNaN(origM)) return; m = 1 / origM; } else { m = func_evaluateDerivative(f, px); }
+        if (isImplicit) { m = func_evaluateImplicitDerivative(f, px, py); } 
+        else if (isInverse) { const origM = func_evaluateDerivative(f, py); if (Math.abs(origM) < 1e-8 || isNaN(origM)) return; m = 1 / origM; } 
+        else { m = func_evaluateDerivative(f, px); }
         if (isNaN(m)) return;
         const shape = { type: 'line', x0: px - 10, y0: py - m * 10, x1: px + 10, y1: py + m * 10, line: { color: f.color, width: 2, dash: 'dot' } };
         const annotation = { x: px, y: py, text: `<b>기울기(m) = ${m.toFixed(3)}</b>`, showarrow: true, arrowhead: 2, ax: 0, ay: -40, font: { size: 14, color: '#fff' }, bgcolor: '#212529', bordercolor: f.color, borderpad: 4, borderwidth: 2 };
@@ -926,12 +942,15 @@
     }
 
     function func_findClosestFunction(px, py) {
-        let closest = null; let minDist = Infinity; const graphDiv = document.getElementById('graphPlot'); if (!graphDiv || !graphDiv.layout) return null;
+        let closest = null; let minDist = Infinity;
+        const graphDiv = document.getElementById('graphPlot'); if (!graphDiv || !graphDiv.layout) return null;
         let threshold = Math.abs(graphDiv.layout.yaxis.range[1] - graphDiv.layout.yaxis.range[0]) * 0.08; 
         func_functionsList.forEach(f => {
             if (!f.visible) return;
             if (func_isImplicitFunc(f)) {
-                let eps = threshold * 0.5; let v00 = func_evaluateImplicit(f, px - eps, py - eps), v01 = func_evaluateImplicit(f, px - eps, py + eps); let v10 = func_evaluateImplicit(f, px + eps, py - eps), v11 = func_evaluateImplicit(f, px + eps, py + eps);
+                let eps = threshold * 0.5;
+                let v00 = func_evaluateImplicit(f, px - eps, py - eps), v01 = func_evaluateImplicit(f, px - eps, py + eps);
+                let v10 = func_evaluateImplicit(f, px + eps, py - eps), v11 = func_evaluateImplicit(f, px + eps, py + eps);
                 let minV = Math.min(v00, v01, v10, v11), maxV = Math.max(v00, v01, v10, v11);
                 if (minV <= 0 && maxV >= 0) { let dist = Math.abs((minV + maxV)/2); if (dist < minDist) { minDist = dist; closest = { f: f, isInverse: false, px: px, py: py }; } }
                 return;
@@ -943,9 +962,12 @@
     }
 
     function initFuncGraph() {
+        if (typeof Plotly === 'undefined') { setTimeout(initFuncGraph, 100); return; }
         const layout = { dragmode: 'pan', hovermode: 'closest', xaxis: { range: [-5, 5], dtick: 0.5, zeroline: true, zerolinecolor: '#343a40', zerolinewidth: 2, gridcolor: '#e9ecef', showticklabels: true, tickfont: { size: 14, color: '#212529', weight: 'bold' } }, yaxis: { range: [-5, 5], dtick: 0.5, zeroline: true, zerolinecolor: '#343a40', zerolinewidth: 2, gridcolor: '#e9ecef', scaleanchor: 'x', scaleratio: 1, showticklabels: true, tickfont: { size: 14, color: '#212529', weight: 'bold' } }, margin: { l: 60, r: 40, t: 50, b: 60 }, legend: { orientation: 'h', yanchor: 'bottom', y: 1.02, xanchor: 'left', x: 0 } };
         Plotly.newPlot('graphPlot', [], layout, { responsive: true, scrollZoom: true, displayModeBar: false, doubleClick: false });
         const graphDiv = document.getElementById('graphPlot');
+
+        graphDiv.on('plotly_afterplot', func_floatXAxis);
 
         graphDiv.addEventListener('mousemove', function(e) {
             if (func_isTouchInteraction || func_isDraggingTrace || !func_isTangentMode || func_selectedFuncId) return;
@@ -1002,7 +1024,7 @@
             func_touchIgnoreTimeout = setTimeout(() => { func_isTouchInteraction = false; }, 1000);
             if (func_isTangentMode && !func_selectedFuncId) setTimeout(() => { if (!func_isDraggingTrace) func_clearTangentShape(); }, 1000);
         });
-
+        
         function func_handleDragStart(clientX, clientY) {
             if (!func_selectedFuncId) return;
             func_clearTangentShape(); const bgRect = graphDiv.querySelector('.gridlayer').getBoundingClientRect();
@@ -1034,7 +1056,6 @@
 
         graphDiv.addEventListener('mousedown', function(e) { func_mouseStartClientX = e.clientX; func_mouseStartClientY = e.clientY; func_handleDragStart(e.clientX, e.clientY); });
         window.addEventListener('mousemove', function(e) { func_handleDragMove(e.clientX, e.clientY); });
-        
         window.addEventListener('mouseup', function(e) {
             let dx = e.clientX - func_mouseStartClientX; let dy = e.clientY - func_mouseStartClientY;
             if (Math.sqrt(dx*dx + dy*dy) < 5 && !func_isTouchInteraction && !func_selectedFuncId) {
@@ -1055,7 +1076,7 @@
             func_relayoutDebounceTimer = setTimeout(() => { func_updateAll(false); }, 250); 
         });
 
-        window.addFunction(); 
+        window.func_addFunction(); // 초기 함수 생성
     }
 
     /* =========================================================================
@@ -1338,20 +1359,29 @@
         const iEl = document.getElementById('integral-val'); if (iEl) iEl.innerText = Math.round(calJ).toLocaleString();
     }
 
-    function phys_attachPanZoomDrag(key) {
+    // 마우스/손가락으로 물리 그래프를 패닝(드래그 스크롤)하는 이벤트 바인딩
+    window.phys_attachPanZoomDrag = function(key) {
         const canvas = document.getElementById(phys_charts[key].id); if(!canvas) return;
         let isDrag = false, lastX = 0, lastY = 0, hasMoved = false;
 
-        const down = (e) => { isDrag = true; hasMoved = false; const pt = e.touches ? e.touches[0] : e; lastX = pt.clientX; lastY = pt.clientY; };
+        const down = (e) => { 
+            isDrag = true; hasMoved = false; 
+            const pt = e.touches ? e.touches[0] : e; lastX = pt.clientX; lastY = pt.clientY; 
+        };
         const move = (e) => {
-            if (!isDrag) return; hasMoved = true; const pt = e.touches ? e.touches[0] : e;
-            const dx = pt.clientX - lastX, dy = pt.clientY - lastY; lastX = pt.clientX; lastY = pt.clientY;
+            if (!isDrag) return; 
+            if (e.cancelable && e.touches) e.preventDefault(); // 모바일 스크롤 방지
+            hasMoved = true; 
+            const pt = e.touches ? e.touches[0] : e;
+            const dx = pt.clientX - lastX, dy = pt.clientY - lastY; 
+            lastX = pt.clientX; lastY = pt.clientY;
             const c = phys_charts[key]; const padL = (key==='force2' || key==='mom2') ? 60 : 50;
             const gridW = canvas.width - padL - 20, gridH = canvas.height - 50;
             const tR = c.currentTRange || 1, yR = c.currentYRange || 1;
             c.offsetX -= (dx / gridW) * tR; c.offsetY += (dy / gridH) * yR;
         };
         const up = (e) => {
+            if(!isDrag) return;
             isDrag = false;
             if (!hasMoved) {
                 const rect = canvas.getBoundingClientRect(); const pt = e.changedTouches ? e.changedTouches[0] : e;
@@ -1362,44 +1392,58 @@
             }
         };
 
-        canvas.addEventListener('mousedown', down); window.addEventListener('mousemove', move); window.addEventListener('mouseup', up);
+        canvas.addEventListener('mousedown', down); window.addEventListener('mousemove', move, {passive: false}); window.addEventListener('mouseup', up);
         canvas.addEventListener('touchstart', down, {passive: false}); window.addEventListener('touchmove', move, {passive: false}); window.addEventListener('touchend', up);
-    }
+    };
 
     function initPhysicsSim() {
         const btnToggleGlossary = document.getElementById('btn-toggle-glossary');
-        const glossaryWrapper = document.getElementById('glossary-wrapper');
-        const glossaryContent = document.getElementById('glossary-content');
+        if(btnToggleGlossary) {
+            btnToggleGlossary.addEventListener('click', () => {
+                const glossaryWrapper = document.getElementById('glossary-wrapper');
+                if (glossaryWrapper.classList.contains('glossary-collapsed')) {
+                    glossaryWrapper.classList.remove('glossary-collapsed'); glossaryWrapper.classList.add('glossary-expanded');
+                    btnToggleGlossary.innerText = '▲ 물리 기호 및 용어 해설 닫기';
+                } else {
+                    glossaryWrapper.classList.remove('glossary-expanded'); glossaryWrapper.classList.add('glossary-collapsed');
+                    btnToggleGlossary.innerText = '▼ 물리 기호 및 용어 해설 열기';
+                }
+            });
+        }
+        
         let glFontSize = 16;
-        btnToggleGlossary.addEventListener('click', () => {
-            if (glossaryWrapper.classList.contains('glossary-collapsed')) {
-                glossaryWrapper.classList.remove('glossary-collapsed'); glossaryWrapper.classList.add('glossary-expanded');
-                btnToggleGlossary.innerText = '▲ 물리 기호 및 용어 해설 닫기';
-            } else {
-                glossaryWrapper.classList.remove('glossary-expanded'); glossaryWrapper.classList.add('glossary-collapsed');
-                btnToggleGlossary.innerText = '▼ 물리 기호 및 용어 해설 열기';
-            }
-        });
-        document.getElementById('btn-gl-in').addEventListener('click', () => { glFontSize = Math.min(32, glFontSize + 2); glossaryContent.style.fontSize = glFontSize + 'px'; });
-        document.getElementById('btn-gl-out').addEventListener('click', () => { glFontSize = Math.max(10, glFontSize - 2); glossaryContent.style.fontSize = glFontSize + 'px'; });
+        const glossaryContent = document.getElementById('glossary-content');
+        const btnGlIn = document.getElementById('btn-gl-in');
+        const btnGlOut = document.getElementById('btn-gl-out');
+        if(btnGlIn) btnGlIn.addEventListener('click', () => { glFontSize = Math.min(32, glFontSize + 2); glossaryContent.style.fontSize = glFontSize + 'px'; });
+        if(btnGlOut) btnGlOut.addEventListener('click', () => { glFontSize = Math.max(10, glFontSize - 2); glossaryContent.style.fontSize = glFontSize + 'px'; });
 
         const tabs = ['tab1', 'tab2']; let activePhysicsTab = 'tab1';
         tabs.forEach(tab => {
-            document.getElementById(`${tab}-btn`).addEventListener('click', () => {
-                activePhysicsTab = tab;
-                tabs.forEach(t => {
-                    document.getElementById(`${t}-btn`).classList.toggle('active', t === tab);
-                    document.getElementById(`${t}-content`).classList.toggle('hide', t !== tab);
+            const tabBtn = document.getElementById(`${tab}-btn`);
+            if(tabBtn) {
+                tabBtn.addEventListener('click', () => {
+                    activePhysicsTab = tab;
+                    tabs.forEach(t => {
+                        document.getElementById(`${t}-btn`).classList.toggle('active', t === tab);
+                        document.getElementById(`${t}-content`).classList.toggle('hide', t !== tab);
+                    });
                 });
-            });
+            }
         });
 
-        document.getElementById('mass-input').addEventListener('input', (e) => { let val = parseInt(e.target.value); if (!isNaN(val) && val > 0) phys_globalMass = val; });
-        document.getElementById('v0-slider').addEventListener('input', (e) => { phys_dState.v0 = parseFloat(e.target.value); document.getElementById('v0-display').innerText = `${phys_dState.v0} m/s`; if (phys_dState.phase === 'ready' || phys_dState.phase === 'done') phys_resetDynamics(); });
-        document.getElementById('material-select').addEventListener('change', (e) => { phys_dState.matKey = e.target.value; });
+        const massInp = document.getElementById('mass-input');
+        if(massInp) massInp.addEventListener('input', (e) => { let val = parseInt(e.target.value); if (!isNaN(val) && val > 0) phys_globalMass = val; });
+        
+        const v0Sld = document.getElementById('v0-slider');
+        if(v0Sld) v0Sld.addEventListener('input', (e) => { phys_dState.v0 = parseFloat(e.target.value); document.getElementById('v0-display').innerText = `${phys_dState.v0} m/s`; if (phys_dState.phase === 'ready' || phys_dState.phase === 'done') phys_resetDynamics(); });
+        
+        const matSel = document.getElementById('material-select');
+        if(matSel) matSel.addEventListener('change', (e) => { phys_dState.matKey = e.target.value; });
 
         function bindBtn(id, onDown, onUp) {
             const btn = document.getElementById(id);
+            if(!btn) return;
             const down = (e) => { e.preventDefault(); if(!btn.disabled) onDown(); }; const up = (e) => { e.preventDefault(); if(!btn.disabled) onUp(); };
             btn.addEventListener('mousedown', down); window.addEventListener('mouseup', up);
             btn.addEventListener('touchstart', down, { passive: false }); btn.addEventListener('touchend', up, { passive: false });
@@ -1409,10 +1453,13 @@
         bindBtn('t2-btn-gas', () => { phys_dState.inputAcc = 5.0; }, () => { if(phys_dState.inputAcc > 0) phys_dState.inputAcc = 0; });
         bindBtn('t2-btn-brake', () => { phys_dState.inputAcc = -10.0; }, () => { if(phys_dState.inputAcc < 0) phys_dState.inputAcc = 0; });
 
-        document.getElementById('btn-start-test').addEventListener('click', () => { if (phys_dState.phase === 'running' || phys_dState.phase === 'crashing') phys_resetDynamics(); else phys_startDynamicsTest(); });
-        document.getElementById('btn-clear-chart').addEventListener('click', () => { phys_dState.chartData = []; phys_charts['force2'].selT = -1; phys_charts['mom2'].selT = -1; });
+        const btnStartTest = document.getElementById('btn-start-test');
+        if(btnStartTest) btnStartTest.addEventListener('click', () => { if (phys_dState.phase === 'running' || phys_dState.phase === 'crashing') phys_resetDynamics(); else phys_startDynamicsTest(); });
+        
+        const btnClearChart = document.getElementById('btn-clear-chart');
+        if(btnClearChart) btnClearChart.addEventListener('click', () => { phys_dState.chartData = []; phys_charts['force2'].selT = -1; phys_charts['mom2'].selT = -1; });
 
-        ['pos1', 'vel1', 'acc1', 'force2', 'mom2'].forEach(phys_attachPanZoomDrag);
+        ['pos1', 'vel1', 'acc1', 'force2', 'mom2'].forEach(window.phys_attachPanZoomDrag);
     }
 
     function phys_updatePhysicsLoop() {
@@ -1421,7 +1468,9 @@
             phys_animationFrameId = requestAnimationFrame(phys_updatePhysicsLoop); return;
         }
         try {
-            const activePhysicsTab = document.getElementById('tab1-content').classList.contains('hide') ? 'tab2' : 'tab1';
+            const tab1Content = document.getElementById('tab1-content');
+            const activePhysicsTab = (tab1Content && tab1Content.classList.contains('hide')) ? 'tab2' : 'tab1';
+            
             if (activePhysicsTab === 'tab1') {
                 const drag = -0.05 * phys_kState.v; phys_kState.a = phys_kState.inputAcc + drag;
                 if (Math.abs(phys_kState.v) < 0.1 && phys_kState.inputAcc === 0) { phys_kState.a = 0; phys_kState.v = 0; }
@@ -1432,16 +1481,18 @@
                 phys_kState.history.push({t: phys_kState.t, x: phys_kState.x, v: phys_kState.v, a: phys_kState.a});
                 if (phys_kState.history.length > 400) phys_kState.history.shift(); 
                 
-                document.getElementById('h1-pos').innerText = `${phys_kState.x.toFixed(2)} m (meter)`;
-                document.getElementById('h1-vel').innerText = `${phys_kState.v.toFixed(2)} m/s`;
-                document.getElementById('h1-acc').innerText = `${phys_kState.a.toFixed(2)} m/s²`;
+                let elP = document.getElementById('h1-pos'); if(elP) elP.innerText = `${phys_kState.x.toFixed(2)} m (meter)`;
+                let elV = document.getElementById('h1-vel'); if(elV) elV.innerText = `${phys_kState.v.toFixed(2)} m/s`;
+                let elA = document.getElementById('h1-acc'); if(elA) elA.innerText = `${phys_kState.a.toFixed(2)} m/s²`;
 
                 const cvs = document.getElementById('sim-canvas-t1');
-                let pWidth = cvs.parentElement.clientWidth, pHeight = cvs.parentElement.clientHeight;
-                if(pWidth > 0 && pHeight > 0) {
-                    cvs.width = pWidth; cvs.height = pHeight; const ctx = cvs.getContext('2d');
-                    ctx.fillStyle = '#87CEEB'; ctx.fillRect(0, 0, cvs.width, cvs.height);
-                    phys_drawEnv(ctx, cvs.width, cvs.height, phys_kState.x); phys_drawCar(ctx, cvs.width * 0.25, cvs.height - 45, 1.4);
+                if(cvs) {
+                    let pWidth = cvs.parentElement.clientWidth, pHeight = cvs.parentElement.clientHeight;
+                    if(pWidth > 0 && pHeight > 0) {
+                        cvs.width = pWidth; cvs.height = pHeight; const ctx = cvs.getContext('2d');
+                        ctx.fillStyle = '#87CEEB'; ctx.fillRect(0, 0, cvs.width, cvs.height);
+                        phys_drawEnv(ctx, cvs.width, cvs.height, phys_kState.x); phys_drawCar(ctx, cvs.width * 0.25, cvs.height - 45, 1.4);
+                    }
                 }
                 
                 ['pos1', 'vel1', 'acc1'].forEach(key => {
@@ -1488,27 +1539,33 @@
                 }
                 phys_dState.t += phys_dt;
 
-                document.getElementById('h2-pos').innerText = `${phys_dState.x.toFixed(2)} m (meter)`; document.getElementById('h2-vel').innerText = `${phys_dState.v.toFixed(2)} m/s`;
-                document.getElementById('h2-acc').innerText = `${phys_dState.a.toFixed(2)} m/s²`; document.getElementById('h2-mom').innerText = `${Math.round(phys_dState.p).toLocaleString()} kg·m/s`;
-                document.getElementById('h2-force').innerText = `${Math.round(phys_dState.F).toLocaleString()} N`; document.getElementById('h2-impulse').innerText = `${Math.round(phys_dState.J).toLocaleString()} N·s`;
+                let h2p=document.getElementById('h2-pos'); if(h2p) h2p.innerText = `${phys_dState.x.toFixed(2)} m (meter)`; 
+                let h2v=document.getElementById('h2-vel'); if(h2v) h2v.innerText = `${phys_dState.v.toFixed(2)} m/s`;
+                let h2a=document.getElementById('h2-acc'); if(h2a) h2a.innerText = `${phys_dState.a.toFixed(2)} m/s²`; 
+                let h2m=document.getElementById('h2-mom'); if(h2m) h2m.innerText = `${Math.round(phys_dState.p).toLocaleString()} kg·m/s`;
+                let h2f=document.getElementById('h2-force'); if(h2f) h2f.innerText = `${Math.round(phys_dState.F).toLocaleString()} N`; 
+                let h2i=document.getElementById('h2-impulse'); if(h2i) h2i.innerText = `${Math.round(phys_dState.J).toLocaleString()} N·s`;
 
-                const cvs = document.getElementById('sim-canvas-t2'); let pWidth = cvs.parentElement.clientWidth, pHeight = cvs.parentElement.clientHeight;
-                if(pWidth > 0 && pHeight > 0) {
-                    cvs.width = pWidth; cvs.height = pHeight; const ctx = cvs.getContext('2d');
-                    ctx.fillStyle = '#87CEEB'; ctx.fillRect(0, 0, cvs.width, cvs.height);
-                    let camPos = phys_dState.x - (cvs.width * 0.2 / phys_PIXELS_PER_METER);
-                    if (phys_WALL_POS_M - camPos < (cvs.width * 0.8 / phys_PIXELS_PER_METER)) camPos = phys_WALL_POS_M - (cvs.width * 0.8 / phys_PIXELS_PER_METER);
-                    if(camPos < 0) camPos = 0;
-                    
-                    phys_drawEnv(ctx, cvs.width, cvs.height, camPos);
-                    const roadY = cvs.height - 40; const wallScreenX = (phys_WALL_POS_M - camPos) * phys_PIXELS_PER_METER; const carScreenX = (phys_dState.x - camPos) * phys_PIXELS_PER_METER;
-                    const mat = phys_materials[phys_dState.matKey]; const cWidth = mat.width * phys_PIXELS_PER_METER;
-                    
-                    ctx.fillStyle = mat.renderColor; ctx.beginPath(); ctx.roundRect(wallScreenX - cWidth, roadY - 70, cWidth, 70, 4); ctx.fill();
-                    ctx.fillStyle = '#334155'; ctx.fillRect(wallScreenX, roadY - 90, 30, 90); phys_drawCar(ctx, carScreenX, roadY - 15, 1.4);
-                    
-                    if (phys_dState.phase === 'crashing' && phys_dState.F > 2000) {
-                        ctx.fillStyle = `rgba(239, 68, 68, ${Math.min(1, phys_dState.F / (phys_globalMass * 100))})`; ctx.beginPath(); ctx.arc(wallScreenX - cWidth/2, roadY - 30, phys_dState.F / 8000, 0, Math.PI * 2); ctx.fill();
+                const cvs = document.getElementById('sim-canvas-t2'); 
+                if(cvs) {
+                    let pWidth = cvs.parentElement.clientWidth, pHeight = cvs.parentElement.clientHeight;
+                    if(pWidth > 0 && pHeight > 0) {
+                        cvs.width = pWidth; cvs.height = pHeight; const ctx = cvs.getContext('2d');
+                        ctx.fillStyle = '#87CEEB'; ctx.fillRect(0, 0, cvs.width, cvs.height);
+                        let camPos = phys_dState.x - (cvs.width * 0.2 / phys_PIXELS_PER_METER);
+                        if (phys_WALL_POS_M - camPos < (cvs.width * 0.8 / phys_PIXELS_PER_METER)) camPos = phys_WALL_POS_M - (cvs.width * 0.8 / phys_PIXELS_PER_METER);
+                        if(camPos < 0) camPos = 0;
+                        
+                        phys_drawEnv(ctx, cvs.width, cvs.height, camPos);
+                        const roadY = cvs.height - 40; const wallScreenX = (phys_WALL_POS_M - camPos) * phys_PIXELS_PER_METER; const carScreenX = (phys_dState.x - camPos) * phys_PIXELS_PER_METER;
+                        const mat = phys_materials[phys_dState.matKey]; const cWidth = mat.width * phys_PIXELS_PER_METER;
+                        
+                        ctx.fillStyle = mat.renderColor; ctx.beginPath(); ctx.roundRect(wallScreenX - cWidth, roadY - 70, cWidth, 70, 4); ctx.fill();
+                        ctx.fillStyle = '#334155'; ctx.fillRect(wallScreenX, roadY - 90, 30, 90); phys_drawCar(ctx, carScreenX, roadY - 15, 1.4);
+                        
+                        if (phys_dState.phase === 'crashing' && phys_dState.F > 2000) {
+                            ctx.fillStyle = `rgba(239, 68, 68, ${Math.min(1, phys_dState.F / (phys_globalMass * 100))})`; ctx.beginPath(); ctx.arc(wallScreenX - cWidth/2, roadY - 30, phys_dState.F / 8000, 0, Math.PI * 2); ctx.fill();
+                        }
                     }
                 }
 
@@ -1527,7 +1584,7 @@
                 phys_engineOsc.frequency.setTargetAtTime(tFreq, phys_audioCtx.currentTime, 0.1);
                 phys_engineGain.gain.setTargetAtTime((Math.abs(currentVel)>0.5 || isGas) ? 0.2 : 0, phys_audioCtx.currentTime, 0.1);
             }
-        } catch (error) {}
+        } catch (error) { console.error(error); }
         phys_animationFrameId = requestAnimationFrame(phys_updatePhysicsLoop);
     }
 
@@ -1539,7 +1596,7 @@
             phys_resetDynamics();
             if (phys_animationFrameId) cancelAnimationFrame(phys_animationFrameId);
             phys_animationFrameId = requestAnimationFrame(phys_updatePhysicsLoop);
-        } catch(e) { console.error(e); }
+        } catch(e) { console.error("Initialize Error: ", e); }
     };
 </script>
 </body>
