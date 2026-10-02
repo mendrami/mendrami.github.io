@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>수학 & 물리 학습 도구</title>
     
-    <!-- Plotly, Tailwind, MathJax, Fonts -->
+    <!-- Plotly, Tailwind -->
     <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
@@ -28,6 +28,9 @@
         #app-func { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f0f2f5; color: #212529; }
         .func-container { max-width: 1450px; margin: 0 auto; background: white; padding: 15px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.08); }
         .func-container h1 { color: #212529; text-align: center; font-size: 1.6rem; margin-bottom: 15px; font-weight: 800; }
+        
+        .status-board { text-align: center; background: #e9ecef; padding: 12px; border-radius: 6px; color: #495057; margin-bottom: 20px; transition: all 0.3s; display: flex; flex-direction: column; justify-content: center; align-items: center; font-size: 1rem; line-height: 1.5; }
+        .status-board.active { background: #fff3cd; color: #856404; border: 2px dashed #ffe8a1; flex-direction: row; font-weight: bold; }
         
         .add-controls { display: flex; justify-content: center; align-items: center; gap: 10px; margin-bottom: 15px; background: #fff; padding: 12px; border-radius: 8px; border: 1px solid #dee2e6; flex-wrap: wrap; }
         .add-controls button { padding: 8px 16px; font-size: 1rem; cursor: pointer; border: none; border-radius: 5px; color: white; font-weight: bold; transition: background 0.2s; }
@@ -111,6 +114,11 @@
     <div id="app-func" class="app-view active">
         <div class="func-container">
             <h1 id="planeTitle">함수 비교</h1>
+
+            <div class="status-board" id="statusBoard">
+                <div style="font-weight: bold; color:#212529;">- 그래프 이동 선택 -</div>
+                <div style="margin-top: 5px;">[모바일] 1초 이상 터치 &nbsp;&nbsp;|&nbsp;&nbsp; [데스크탑] 마우스 좌측 버튼 클릭</div>
+            </div>
 
             <div class="add-controls" id="addControlsSection">
                 <button onclick="window.func_addFunction()" class="px-5 py-2 bg-blue-600 hover:bg-blue-700 shadow">+ 새로운 수식 입력 추가</button>
@@ -501,7 +509,6 @@
         } else {
             btnPhys.className = "nav-btn active"; btnFunc.className = "nav-btn inactive";
             appPhys.classList.add('active'); appFunc.classList.remove('active');
-            if(window.MathJax && MathJax.typesetPromise) { MathJax.typesetPromise([appPhys]).catch(e=>{}); }
         }
     };
 
@@ -512,7 +519,7 @@
     const func_colorPalette = ['#0d6efd', '#9333ea', '#16a34a', '#ea580c', '#e11d48', '#0284c7', '#d97706', '#4f46e5'];
     let func_colorIndex = 0;
     let func_selectedFuncId = null;
-    let func_isDraggingTrace = false;
+    let isDraggingTrace = false;
     let func_startDataX = 0, func_startDataY = 0;
     let func_startFuncState = null;
     let func_isTangentMode = false;
@@ -583,7 +590,6 @@
         }
     }
 
-    // 일반 수식 추가
     window.func_addFunction = function() {
         const newFunc = { 
             id: 'f_' + Date.now(), 
@@ -600,7 +606,6 @@
         func_renderUI(); func_updateAll();
     };
 
-    // 복소수 입력 추가
     window.func_addComplex = function() {
         const newComplex = {
             id: 'c_' + Date.now(),
@@ -637,7 +642,6 @@
         if (elExpr) elExpr.value = func.expr;
     }
 
-    // [핵심] 완벽한 복소수 사칙연산 수식 파서 (재귀 하강 파서)
     function evaluateComplexExpression(exprStr) {
         class Complex {
             constructor(re = 0, im = 0) { this.re = re; this.im = im; }
@@ -652,31 +656,20 @@
         }
 
         try {
-            // 토크나이저
             let s = exprStr.replace(/\s+/g, '').replace(/÷/g, '/');
             let tokens = [];
             let i = 0;
             while (i < s.length) {
                 let c = s[i];
-                if ('+-*/()'.includes(c)) {
-                    tokens.push(c);
-                    i++;
-                } else if (c.toLowerCase() === 'i') {
-                    tokens.push('i');
-                    i++;
-                } else if (/\d|\./.test(c)) {
+                if ('+-*/()'.includes(c)) { tokens.push(c); i++; } 
+                else if (c.toLowerCase() === 'i') { tokens.push('i'); i++; } 
+                else if (/\d|\./.test(c)) {
                     let numStr = '';
-                    while (i < s.length && (/\d|\./.test(s[i]))) {
-                        numStr += s[i];
-                        i++;
-                    }
+                    while (i < s.length && (/\d|\./.test(s[i]))) { numStr += s[i]; i++; }
                     tokens.push(parseFloat(numStr));
-                } else {
-                    i++; // 기타 무시
-                }
+                } else { i++; }
             }
 
-            // 암시적 곱셈 보정 (예: 2i -> 2 * i, 2(3) -> 2 * (3))
             let expTokens = [];
             for (let j = 0; j < tokens.length; j++) {
                 expTokens.push(tokens[j]);
@@ -684,13 +677,10 @@
                     let cur = tokens[j], next = tokens[j + 1];
                     let curIsVal = (typeof cur === 'number' || cur === 'i' || cur === ')');
                     let nextIsVal = (typeof next === 'number' || next === 'i' || next === '(');
-                    if (curIsVal && nextIsVal) {
-                        expTokens.push('*');
-                    }
+                    if (curIsVal && nextIsVal) expTokens.push('*');
                 }
             }
 
-            // 구문 분석기
             let pos = 0;
             function parseExpr() {
                 let res = parseTerm();
@@ -714,17 +704,14 @@
 
             function parseFactor() {
                 if (pos < expTokens.length && expTokens[pos] === '-') {
-                    pos++;
-                    let f = parseFactor();
+                    pos++; let f = parseFactor();
                     return new Complex(-f.re, -f.im);
                 }
                 if (pos < expTokens.length && expTokens[pos] === '+') {
-                    pos++;
-                    return parseFactor();
+                    pos++; return parseFactor();
                 }
                 if (pos < expTokens.length && expTokens[pos] === '(') {
-                    pos++;
-                    let res = parseExpr();
+                    pos++; let res = parseExpr();
                     if (pos < expTokens.length && expTokens[pos] === ')') pos++;
                     return res;
                 }
@@ -732,20 +719,15 @@
                     return new Complex(expTokens[pos++], 0);
                 }
                 if (pos < expTokens.length && expTokens[pos] === 'i') {
-                    pos++;
-                    return new Complex(0, 1);
+                    pos++; return new Complex(0, 1);
                 }
                 return new Complex(NaN, NaN);
             }
 
             let result = parseExpr();
-            if (isFinite(result.re) && isFinite(result.im)) {
-                return { re: result.re, im: result.im };
-            }
+            if (isFinite(result.re) && isFinite(result.im)) return { re: result.re, im: result.im };
             return { re: NaN, im: NaN };
-        } catch (e) {
-            return { re: NaN, im: NaN };
-        }
+        } catch (e) { return { re: NaN, im: NaN }; }
     }
 
     function func_renderUI() {
@@ -779,7 +761,7 @@
                 innerHTML += `
                     <div class="custom-expr-row">
                         <label><strong>복소수 식 입력:</strong></label>
-                        <input type="text" inputmode="text" autocorrect="off" autocapitalize="none" spellcheck="false" id="input_${func.id}_expr" value="${func.expr}" oninput="window.func_updateState('${func.id}', 'expr', this.value)" placeholder="예: 3 + 2i, 1 * i">
+                        <input type="text" inputmode="text" autocorrect="off" autocapitalize="none" spellcheck="false" id="input_${func.id}_expr" value="${func.expr}" onchange="window.func_updateState('${func.id}', 'expr', this.value)" placeholder="예: 3 + 2i, 1 * i">
                         <div style="font-size:0.75rem; color:#6c757d; margin-top:4px;">
                             * 예: <code>3 + 2i</code>, <code>1 * i</code> (90° 회전), <code>(2 + 3i) * (1 - i)</code>
                         </div>
@@ -798,6 +780,10 @@
             }
             card.innerHTML = innerHTML; grid.appendChild(card);
         });
+    }
+
+    function func_renderLatex() {
+        // 상단 수식 표시 상자 제거로 공백 처리
     }
 
     const func_customMath = {
@@ -917,17 +903,14 @@
             let fName = f.type === 'complex' ? `복소수 ${typeIndex}` : `함수 ${typeIndex}`;
             let isSelected = (f.id === func_selectedFuncId);
 
-            // [핵심] 복소수 플롯 (점 + 원점 연결 벡터 + 켤레복소수)
             if (f.type === 'complex') {
                 let c = evaluateComplexExpression(f.expr);
                 if (!isNaN(c.re) && !isNaN(c.im)) {
-                    // 원점 -> 복소수 연결 점선
                     traces.push({
                         x: [0, c.re], y: [0, c.im], mode: 'lines',
                         line: { color: f.color, width: 2, dash: 'dot' },
                         hoverinfo: 'none', showlegend: false
                     });
-                    // 복소수 좌표 마커 (동그란 점)
                     traces.push({
                         x: [c.re], y: [c.im], mode: 'markers+text', name: fName,
                         marker: { size: isSelected ? 16 : 12, color: f.color, symbol: 'circle', line: { color: '#ffffff', width: 2 } },
@@ -937,7 +920,6 @@
                         hovertemplate: `<b>${fName}</b>: ${func_formatNumber(c.re)} + ${func_formatNumber(c.im)}i<extra></extra>`
                     });
 
-                    // 켤레복소수
                     if (f.showConjugate) {
                         traces.push({
                             x: [0, c.re], y: [0, -c.im], mode: 'lines',
@@ -990,7 +972,7 @@
                     if (Math.abs(y2 - y1) > (spanY * 2)) continue;
                     if (y1 * y2 <= 0 && (y1 !== 0 || y2 !== 0)) {
                         let root = func_bisectionRoot(x => func_evaluateFunction(f, x), xVal[k], xVal[k+1]); let ix = !isNaN(root) ? root : (xVal[k] + (y1 / (y1 - y2)) * (xVal[k+1] - xVal[k]));
-                        if (!panelData.xInt.some(p => p.name === fName && Math.abs(p.x - root) < 0.05)) { panelData.xInt.push({ name: fName, color: f.color, x: ix, y: 0 }); axisIntX.push(ix); axisIntY.push(0); axisIntText.push(`(${ix.toFixed(2)}, 0.00)`); }
+                        if (!panelData.xInt.some(p => p.name === fName && Math.abs(p.x - ix) < 0.05)) { panelData.xInt.push({ name: fName, color: f.color, x: ix, y: 0 }); axisIntX.push(ix); axisIntY.push(0); axisIntText.push(`(${ix.toFixed(2)}, 0.00)`); }
                     }
                 }
             }
@@ -1005,8 +987,50 @@
 
         if (hasInverse) traces.push({ x: [-10000, 10000], y: [-10000, 10000], mode: 'lines', name: 'y = x 대칭축', line: { color: '#adb5bd', width: 2, dash: 'dash' }, hoverinfo: 'none' });
 
-        if (axisIntX.length > 0) traces.push({ x: axisIntX, y: axisIntY, mode: 'markers+text', name: '축 교점', marker: { size: 10, color: '#fd7e14', symbol: 'diamond' }, text: axisIntText, textposition: 'bottom right', textfont: { size: 13, weight: 'bold', color: '#fd7e14' }, hoverinfo: 'text' });
-        func_updateIntersectionPanel(panelData);
+        if (!skipHeavy) {
+            const intersectX = [], intersectY = [], intersectText = [];
+            for (let i = 0; i < visibleFunctions.length; i++) {
+                for (let j = i + 1; j < visibleFunctions.length; j++) {
+                    const f1 = visibleFunctions[i], f2 = visibleFunctions[j]; 
+                    if (f1.type === 'complex' || f2.type === 'complex') continue;
+                    const isImp1 = func_isImplicitFunc(f1), isImp2 = func_isImplicitFunc(f2);
+                    if (!isImp1 && !isImp2) {
+                        const y1 = yDataCollection[i], y2 = yDataCollection[j];
+                        for (let k = 0; k < xVal.length - 1; k++) {
+                            if (isNaN(y1[k]) || isNaN(y2[k]) || isNaN(y1[k+1]) || isNaN(y2[k+1])) continue;
+                            if (Math.abs(y1[k+1] - y1[k]) > (spanY * 2) || Math.abs(y2[k+1] - y2[k]) > (spanY * 2)) continue;
+                            let diff1 = y1[k] - y2[k], diff2 = y1[k+1] - y2[k+1];
+                            if (diff1 * diff2 <= 0 && (diff1 !== 0 || diff2 !== 0)) {
+                                let rootX = func_bisectionRoot(x => func_evaluateFunction(f1, x) - func_evaluateFunction(f2, x), xVal[k], xVal[k+1]);
+                                let ix = !isNaN(rootX) ? rootX : (xVal[k] + (diff1 / (diff1 - diff2)) * (xVal[k+1] - xVal[k])); let iy = func_evaluateFunction(f1, ix);
+                                if (!intersectX.some(x => Math.abs(x - ix) < 0.08 && Math.abs(intersectY[intersectX.indexOf(x)] - iy) < 0.08)) {
+                                    intersectX.push(ix); intersectY.push(iy); intersectText.push(`(${ix.toFixed(2)}, ${iy.toFixed(2)})`); panelData.funcInt.push({ c1: f1.color, c2: f2.color, x: ix, y: iy });
+                                }
+                            }
+                        }
+                    } else if (isImp1 !== isImp2) {
+                        const impF = isImp1 ? f1 : f2, expF = isImp1 ? f2 : f1;
+                        for (let k = 0; k < xVal.length - 1; k++) {
+                            let xA = xVal[k], xB = xVal[k+1]; let yA = func_evaluateFunction(expF, xA), yB = func_evaluateFunction(expF, xB);
+                            if (isNaN(yA) || isNaN(yB)) continue;
+                            let vA = func_evaluateImplicit(impF, xA, yA), vB = func_evaluateImplicit(impF, xB, yB);
+                            if (isNaN(vA) || isNaN(vB)) continue;
+                            if (vA * vB <= 0 && (vA !== 0 || vB !== 0)) {
+                                let rootX = func_bisectionRoot(x => { let y = func_evaluateFunction(expF, x); return isNaN(y) ? NaN : func_evaluateImplicit(impF, x, y); }, xA, xB);
+                                if (!isNaN(rootX)) {
+                                    let rootY = func_evaluateFunction(expF, rootX);
+                                    if (!intersectX.some(x => Math.abs(x - rootX) < 0.08 && Math.abs(intersectY[intersectX.indexOf(x)] - rootY) < 0.08)) {
+                                        intersectX.push(rootX); intersectY.push(rootY); intersectText.push(`(${rootX.toFixed(2)}, ${rootY.toFixed(2)})`); panelData.funcInt.push({ c1: f1.color, c2: f2.color, x: rootX, y: rootY });
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            if (axisIntX.length > 0) traces.push({ x: axisIntX, y: axisIntY, mode: 'markers+text', name: '축 교점', marker: { size: 10, color: '#fd7e14', symbol: 'diamond' }, text: axisIntText, textposition: 'bottom right', textfont: { size: 13, weight: 'bold', color: '#fd7e14' }, hoverinfo: 'text' });
+            func_updateIntersectionPanel(panelData);
+        }
         if (traces.length === 0) traces.push({ x: [], y: [], name: '활성화 없음' });
         return traces;
     }
@@ -1112,7 +1136,7 @@
         graphDiv.on('plotly_afterplot', func_floatXAxis);
 
         graphDiv.addEventListener('mousemove', function(e) {
-            if (func_isTouchInteraction || func_isDraggingTrace || !func_isTangentMode || func_selectedFuncId) return;
+            if (func_isTouchInteraction || isDraggingTrace || !func_isTangentMode || func_selectedFuncId) return;
             const bgRect = graphDiv.querySelector('.gridlayer').getBoundingClientRect();
             if (e.clientX < bgRect.left || e.clientX > bgRect.right || e.clientY < bgRect.top || e.clientY > bgRect.bottom) return;
             let px = graphDiv._fullLayout.xaxis.p2d(e.clientX - bgRect.left); let py = graphDiv._fullLayout.yaxis.p2d(e.clientY - bgRect.top);
@@ -1150,7 +1174,7 @@
                 let dx = coords.clientX - func_touchStartClientX, dy = coords.clientY - func_touchStartClientY;
                 if (Math.sqrt(dx*dx + dy*dy) > 10) { clearTimeout(func_touchTimer); func_touchTimer = null; }
             }
-            if (func_isDraggingTrace && func_selectedFuncId) { func_handleDragMove(coords.clientX, coords.clientY); if(e.cancelable) e.preventDefault(); return; }
+            if (isDraggingTrace && func_selectedFuncId) { func_handleDragMove(coords.clientX, coords.clientY); if(e.cancelable) e.preventDefault(); return; }
             if (func_isTangentMode && !func_selectedFuncId && func_isTouchInteraction) {
                 const bgRect = graphDiv.querySelector('.gridlayer').getBoundingClientRect();
                 let px = graphDiv._fullLayout.xaxis.p2d(coords.clientX - bgRect.left), py = graphDiv._fullLayout.yaxis.p2d(coords.clientY - bgRect.top);
@@ -1162,21 +1186,21 @@
 
         window.addEventListener('touchend', function() {
             if (func_touchTimer) { clearTimeout(func_touchTimer); func_touchTimer = null; }
-            if (func_isDraggingTrace) func_handleDragEnd();
+            if (isDraggingTrace) func_handleDragEnd();
             func_touchIgnoreTimeout = setTimeout(() => { func_isTouchInteraction = false; }, 1000);
-            if (func_isTangentMode && !func_selectedFuncId) setTimeout(() => { if (!func_isDraggingTrace) func_clearTangentShape(); }, 1000);
+            if (func_isTangentMode && !func_selectedFuncId) setTimeout(() => { if (!isDraggingTrace) func_clearTangentShape(); }, 1000);
         });
         
         function func_handleDragStart(clientX, clientY) {
             if (!func_selectedFuncId) return;
             func_clearTangentShape(); const bgRect = graphDiv.querySelector('.gridlayer').getBoundingClientRect();
             if (clientX < bgRect.left || clientX > bgRect.right || clientY < bgRect.top || clientY > bgRect.bottom) return;
-            func_isDraggingTrace = true; func_startDataX = graphDiv._fullLayout.xaxis.p2d(clientX - bgRect.left); func_startDataY = graphDiv._fullLayout.yaxis.p2d(clientY - bgRect.top);
+            isDraggingTrace = true; func_startDataX = graphDiv._fullLayout.xaxis.p2d(clientX - bgRect.left); func_startDataY = graphDiv._fullLayout.yaxis.p2d(clientY - bgRect.top);
             func_startFuncState = JSON.parse(JSON.stringify(func_functionsList.find(f => f.id === func_selectedFuncId)));
         }
 
         function func_handleDragMove(clientX, clientY) {
-            if (!func_isDraggingTrace || !func_selectedFuncId) return;
+            if (!isDraggingTrace || !func_selectedFuncId) return;
             const bgRect = graphDiv.querySelector('.gridlayer').getBoundingClientRect();
             let currDataX = graphDiv._fullLayout.xaxis.p2d(clientX - bgRect.left), currDataY = graphDiv._fullLayout.yaxis.p2d(clientY - bgRect.top);
             let dx = currDataX - func_startDataX, dy = currDataY - func_startDataY;
@@ -1197,7 +1221,7 @@
         }
 
         function func_handleDragEnd() {
-            if (func_isDraggingTrace) { func_isDraggingTrace = false; let targetFunc = func_functionsList.find(f => f.id === func_selectedFuncId); if (targetFunc) func_syncInputValues(targetFunc); func_updateAll(false); }
+            if (isDraggingTrace) { isDraggingTrace = false; let targetFunc = func_functionsList.find(f => f.id === func_selectedFuncId); if (targetFunc) func_syncInputValues(targetFunc); func_updateAll(false); }
         }
 
         graphDiv.addEventListener('mousedown', function(e) { func_mouseStartClientX = e.clientX; func_mouseStartClientY = e.clientY; func_handleDragStart(e.clientX, e.clientY); });
