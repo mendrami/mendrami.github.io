@@ -439,8 +439,8 @@
                                                 <button onclick="window.phys_zoomChart('mom2', 0.2)" class="px-2 py-0.5 bg-slate-700 hover:bg-slate-500 text-white text-xs rounded font-bold">+</button>
                                             </div>
                                             <div class="flex items-center gap-1 bg-slate-900 px-2 py-1 rounded border border-slate-600">
-                                                <button onclick="window.phys_resizeChartWindow('mom2', -1)" class="px-2 py-0.5 bg-slate-700 hover:bg-slate-500 text-white text-xs rounded font-bold">축소(-)</button>
-                                                <button onclick="window.phys_resizeChartWindow('mom2', 1)" class="px-2 py-0.5 bg-slate-700 hover:bg-slate-500 text-white text-xs rounded font-bold">확대(+)</button>
+                                                <button onclick="window.phys_resizeChartWindow('mom2', -1)" class="px-2 py-0.5 bg-slate-700 hover:bg-slate-500 text-white text-xs rounded font-bold">창 축소(-)</button>
+                                                <button onclick="window.phys_resizeChartWindow('mom2', 1)" class="px-2 py-0.5 bg-slate-700 hover:bg-slate-500 text-white text-xs rounded font-bold">창 확대(+)</button>
                                             </div>
                                             <button onclick="window.phys_toggleChart('mom2')" id="btn-tg-mom2" class="w-7 h-7 bg-slate-700 hover:bg-slate-500 rounded text-white font-bold ml-1">_</button>
                                         </div>
@@ -597,7 +597,6 @@
         }
     }
 
-    // [핵심] 일원화된 자유 입력 전용 추가 함수
     window.func_addFunction = function() {
         const newFunc = { 
             id: 'f_' + Date.now(), 
@@ -637,7 +636,6 @@
         }
     }
 
-    // [핵심] H, K 필드가 제거된 깔끔한 UI 렌더링
     function func_renderUI() {
         const grid = document.getElementById('functionsGrid'); if(!grid) return; grid.innerHTML = '';
         func_functionsList.forEach((func, idx) => {
@@ -658,10 +656,10 @@
             innerHTML += `
                 <div class="custom-expr-row">
                     <label><strong>수식 직접 입력:</strong></label>
-                    <input type="text" inputmode="text" autocorrect="off" autocapitalize="none" spellcheck="false" id="input_${func.id}_expr" value="${func.expr}" onchange="window.func_updateState('${func.id}', 'expr', this.value)" placeholder="예: x^2 + y^2 = 4, log7(x)">
+                    <input type="text" inputmode="text" autocorrect="off" autocapitalize="none" spellcheck="false" id="input_${func.id}_expr" value="${func.expr}" onchange="window.func_updateState('${func.id}', 'expr', this.value)" placeholder="예: x^2 + y^2 = 4, log3(x)">
                     <div style="font-size:0.75rem; color:#6c757d; margin-top:6px; line-height:1.4;">
                         * <b>기본:</b> <code>x^2</code>, <code>2^x</code>, <code>x^(1/2)</code> 또는 <code>x^(1÷2)</code><br>
-                        * <b>로그:</b> <code>ln(x)</code>, <code>log7(x)</code>, <code>log10(x)</code><br>
+                        * <b>로그:</b> <code>ln(x)</code>, <code>log3(x)</code>, <code>log10(x)</code><br>
                         * <b>삼각/방정식:</b> <code>sin(x)</code>, <code>x^2+y^2=4</code> (대소문자 무관)
                     </div>
                 </div>
@@ -670,7 +668,6 @@
         });
     }
 
-    // [핵심] 역함수 표기 오류 완벽 교정
     function func_renderLatex() {
         let tex = ''; const visibleFunctions = func_functionsList.filter(f => f.visible);
         if (visibleFunctions.length === 0) tex = '\\text{활성화된 함수가 없습니다.}';
@@ -678,7 +675,9 @@
             visibleFunctions.forEach(f => {
                 let clean = f.expr.trim().replace(/\*/g, '\\cdot ').replace(/÷/g, '/');
                 
+                // [핵심] logN(x) 또는 log(x) 렌더링
                 clean = clean.replace(/\blog([0-9.]+)\s*\(([^)]+)\)/gi, '\\log_{$1}\\left($2\\right)');
+                clean = clean.replace(/\blog\s*\(([^)]+)\)/gi, '\\log_{10}\\left($1\\right)');
                 clean = clean.replace(/\^\(\s*([^/)]+?)\s*\/\s*([^)]+?)\s*\)/g, '^{\\frac{$1}{$2}}');
                 clean = clean.replace(/\^\(([^)]+)\)/g, '^{$1}');
                 clean = clean.replace(/\^([0-9.]+)/g, '^{$1}');
@@ -724,28 +723,34 @@
         cot: function(x) { let s = Math.sin(x); let c = Math.cos(x); return Math.abs(s) < 1e-12 ? NaN : c / s; }
     };
 
+    // [핵심 엔진 교정] logN(x) 및 log(x)의 정의역 안전 연산 파서
     function func_evaluateCustomExpr(expr, rawX, rawY) {
         try {
             let x = rawX; let y = rawY !== undefined ? rawY : 0;
-            let cleanExpr = expr.replace(/X/g, 'x').replace(/Y/g, 'y').replace(/÷/g, '/')
-                .replace(/\blog([0-9.]+)\s*\(([^)]+)\)/gi, '(Math.log($2)/Math.log($1))')
-                .replace(/(^|[^a-zA-Z0-9_])(\d+(?:\.\d+)?)\s*([a-zA-Z(])/g, '$1$2*$3')
+            let cleanExpr = expr.replace(/X/g, 'x').replace(/Y/g, 'y').replace(/÷/g, '/');
+
+            // 1) logN(inner) 치환: 밑 N, 진수 inner > 0 조건 보장
+            cleanExpr = cleanExpr.replace(/\blog([0-9.]+)\s*\(([^)]+)\)/gi, '((($2) > 0) ? (Math.log($2)/Math.log($1)) : NaN)');
+            // 2) 일반 log(inner) -> 상용로그(밑 10) 치환
+            cleanExpr = cleanExpr.replace(/\blog\s*\(([^)]+)\)/gi, '((($1) > 0) ? (Math.log($1)/Math.LN10) : NaN)');
+            // 3) 자연로그 ln(inner) 치환
+            cleanExpr = cleanExpr.replace(/\bln\s*\(([^)]+)\)/gi, '((($1) > 0) ? Math.log($1) : NaN)');
+
+            // 4) 암시적 곱셈 처리 (로그가 이미 처리된 후 안전하게 변환)
+            cleanExpr = cleanExpr.replace(/(^|[^a-zA-Z0-9_])(\d+(?:\.\d+)?)\s*([a-zA-Z(])/g, '$1$2*$3')
                 .replace(/([0-9.]+)\s*!/g, 'factorial($1)')
                 .replace(/([xy])\s*!/g, 'factorial($1)')
                 .replace(/\^/g, '**')
                 .replace(/\b(csc|sec|cot)\b/gi, function(match) { return 'customMath.' + match.toLowerCase(); })
-                .replace(/\b(sin|cos|tan|asin|acos|atan|sinh|cosh|tanh|log10|log2|log|ln|exp|sqrt|abs)\b/gi, function(match) { 
-                    let m = match.toLowerCase(); 
-                    if (m === 'ln') return 'Math.log'; 
-                    if (m === 'log10') return 'Math.log10';
-                    if (m === 'log2') return 'Math.log2';
-                    return 'Math.' + m; 
+                .replace(/\b(sin|cos|tan|asin|acos|atan|sinh|cosh|tanh|exp|sqrt|abs)\b/gi, function(match) { 
+                    return 'Math.' + match.toLowerCase(); 
                 })
                 .replace(/\b(pi|PI)\b/g, 'Math.PI')
                 .replace(/\b(e|E)\b/g, 'Math.E');
                 
             let fn = new Function('x', 'y', 'Math', 'customMath', 'factorial', 'return ' + cleanExpr);
-            let val = fn(x, y, Math, func_customMath, func_factorial); return typeof val === 'number' ? val : NaN;
+            let val = fn(x, y, Math, func_customMath, func_factorial); 
+            return (typeof val === 'number' && isFinite(val)) ? val : NaN;
         } catch (e) { return NaN; }
     }
 
@@ -844,7 +849,11 @@
             }
 
             const yVal = [];
-            for (let i = 0; i < xVal.length; i++) { let y = func_evaluateFunction(f, xVal[i]); if (!isFinite(y) || Math.abs(y) > 1e6) y = NaN; yVal.push(y); }
+            for (let i = 0; i < xVal.length; i++) { 
+                let y = func_evaluateFunction(f, xVal[i]); 
+                if (!isFinite(y) || Math.abs(y) > 1e6) y = NaN; 
+                yVal.push(y); 
+            }
             yDataCollection.push(yVal);
 
             if (!skipHeavy) {
@@ -997,7 +1006,13 @@
                 return;
             }
             let y = func_evaluateFunction(f, px); if (!isNaN(y)) { let dist = Math.abs(y - py); if (dist < minDist && dist < threshold) { minDist = dist; closest = { f: f, isInverse: false, px: px, py: y }; } }
-            if (f.showInverse && f.type !== 'custom') { let invX = func_evaluateFunction(f, py); if (!isNaN(invX)) { let dist = Math.abs(invX - px); if (dist < minDist && dist < threshold) { minDist = dist; closest = { f: f, isInverse: true, px: invX, py: py }; } } }
+            if (f.showInverse && !func_isImplicitFunc(f)) { 
+                let invX = func_evaluateFunction(f, py); 
+                if (!isNaN(invX)) { 
+                    let dist = Math.abs(invX - px); 
+                    if (dist < minDist && dist < threshold) { minDist = dist; closest = { f: f, isInverse: true, px: invX, py: py }; } 
+                } 
+            }
         });
         return closest;
     }
@@ -1387,7 +1402,8 @@
                     ctx.lineTo(mapX(series.data[series.data.length-1].t), mapY(0)); ctx.fill();
                 }
                 ctx.strokeStyle = series.color; ctx.lineWidth = 3; ctx.lineJoin = 'round'; ctx.beginPath();
-                series.data.forEach((pt, i) => i === 0 ? ctx.moveTo(mapX(pt.t), mapY(pt[chart.yKey])) : ctx.lineTo(mapX(pt.t), mapY(pt[chart.yKey]))); ctx.stroke();
+                series.data.forEach((pt, i) => i === 0 ? ctx.moveTo(mapX(pt.t), mapY(pt[chart.yKey])) : ctx.lineTo(mapX(pt.t), mapY(pt[chart.yKey])));
+                ctx.stroke();
             });
             
             if (phys_dState.chartData.length > 0) {
