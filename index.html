@@ -126,7 +126,7 @@
 
             <div class="add-controls" id="addControlsSection">
                 <button onclick="window.func_addRealMode()" class="px-5 py-2 bg-blue-600 hover:bg-blue-700 shadow">+ 실평면에서 함수 입력</button>
-                <button onclick="window.func_addComplexMode()" class="px-5 py-2 bg-purple-600 hover:bg-purple-700 shadow">+ 복소평면 전환</button>
+                <button onclick="window.func_addComplexMode()" class="px-5 py-2 bg-purple-600 hover:bg-purple-700 shadow">+ 복소평면에서 복소수 표시 추가</button>
                 <div style="border-left: 2px solid #dee2e6; height: 25px; margin: 0 5px;"></div>
                 
                 <button id="intersectToggleBtn" class="toggle-btn" onclick="window.func_toggleIntersectionPanel()">
@@ -780,7 +780,7 @@
                 innerHTML += `
                     <div class="custom-expr-row">
                         <label><strong>복소수 식 입력:</strong></label>
-                        <input type="text" inputmode="text" autocorrect="off" autocapitalize="none" spellcheck="false" id="input_${func.id}_expr" value="${func.expr}" onchange="window.func_updateState('${func.id}', 'expr', this.value)" placeholder="예: 3 + 2i, 1 * i">
+                        <input type="text" inputmode="text" autocorrect="off" autocapitalize="none" spellcheck="false" id="input_${func.id}_expr" value="${func.expr}" oninput="window.func_updateState('${func.id}', 'expr', this.value)" placeholder="예: 3 + 2i, 1 * i">
                         <div style="font-size:0.75rem; color:#6c757d; margin-top:4px;">
                             * 예: <code>3 + 2i</code>, <code>1 * i</code> (90° 회전), <code>(2 + 3i) * (1 - i)</code>
                         </div>
@@ -963,26 +963,6 @@
                 }
                 traces.push({ x: xGrid, y: yGrid, z: zGrid, type: 'contour', contours: {start: 0, end: 0, size: 1, coloring: 'none'}, line: {color: f.color, width: isSelected ? 7 : 3}, showscale: false, name: fName, hoverinfo: 'none', customdata: Array(zGrid.length).fill(f.id) });
                 yDataCollection.push(null);
-
-                if (!skipHeavy) {
-                    for (let k = 0; k < xVal.length - 1; k++) {
-                        let root = func_bisectionRoot(x => func_evaluateImplicit(f, x, 0), xVal[k], xVal[k+1]);
-                        if (!isNaN(root)) {
-                            if (!panelData.xInt.some(p => p.name === fName && Math.abs(p.x - root) < 0.05)) {
-                                panelData.xInt.push({ name: fName, color: f.color, x: root, y: 0 }); axisIntX.push(root); axisIntY.push(0); axisIntText.push(`(${root.toFixed(2)}, 0.00)`);
-                            }
-                        }
-                    }
-                    let ySteps = []; for (let y = minY; y <= maxY; y += step) ySteps.push(y);
-                    for (let k = 0; k < ySteps.length - 1; k++) {
-                        let rootY = func_bisectionRoot(y => func_evaluateImplicit(f, 0, y), ySteps[k], ySteps[k+1]);
-                        if (!isNaN(rootY)) {
-                            if (!panelData.yInt.some(p => p.name === fName && Math.abs(p.y - rootY) < 0.05)) {
-                                panelData.yInt.push({ name: fName, color: f.color, x: 0, y: rootY }); axisIntX.push(0); axisIntY.push(rootY); axisIntText.push(`(0.00, ${rootY.toFixed(2)})`);
-                            }
-                        }
-                    }
-                }
                 return; 
             }
 
@@ -1007,7 +987,7 @@
                     if (Math.abs(y2 - y1) > (spanY * 2)) continue;
                     if (y1 * y2 <= 0 && (y1 !== 0 || y2 !== 0)) {
                         let root = func_bisectionRoot(x => func_evaluateFunction(f, x), xVal[k], xVal[k+1]); let ix = !isNaN(root) ? root : (xVal[k] + (y1 / (y1 - y2)) * (xVal[k+1] - xVal[k]));
-                        if (!panelData.xInt.some(p => p.name === fName && Math.abs(p.x - ix) < 0.05)) { panelData.xInt.push({ name: fName, color: f.color, x: ix, y: 0 }); axisIntX.push(ix); axisIntY.push(0); axisIntText.push(`(${ix.toFixed(2)}, 0.00)`); }
+                        if (!panelData.xInt.some(p => p.name === fName && Math.abs(p.x - root) < 0.05)) { panelData.xInt.push({ name: fName, color: f.color, x: ix, y: 0 }); axisIntX.push(ix); axisIntY.push(0); axisIntText.push(`(${ix.toFixed(2)}, 0.00)`); }
                     }
                 }
             }
@@ -1077,7 +1057,6 @@
                 }
             }
             if (axisIntX.length > 0) traces.push({ x: axisIntX, y: axisIntY, mode: 'markers+text', name: '축 교점', marker: { size: 10, color: '#fd7e14', symbol: 'diamond' }, text: axisIntText, textposition: 'bottom right', textfont: { size: 13, weight: 'bold', color: '#fd7e14' }, hoverinfo: 'text' });
-            if (intersectX.length > 0) traces.push({ x: intersectX, y: intersectY, mode: 'markers+text', name: '함수 교점', marker: { size: 10, color: '#212529', symbol: 'circle' }, text: intersectText, textposition: 'top left', textfont: { size: 13, weight: 'bold', color: '#212529' }, hoverinfo: 'text' });
             func_updateIntersectionPanel(panelData);
         }
         if (traces.length === 0) traces.push({ x: [], y: [], name: '활성화 없음' });
@@ -1299,7 +1278,7 @@
     }
 
     /* =========================================================================
-       2. 수학 물리 시뮬레이터 (Physics Simulation) 네임스페이스 로직
+       3. 수학 물리 시뮬레이터 (Physics Simulation) 네임스페이스 로직
        ========================================================================= */
     const phys_dt = 1/60; 
     const phys_PIXELS_PER_METER = 15; 
