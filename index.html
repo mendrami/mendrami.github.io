@@ -58,7 +58,6 @@
         .input-row input[type="number"] { width: 80px; text-align: right; }
         
         .custom-expr-row { display: flex; flex-direction: column; align-items: flex-start; gap: 5px; width: 100%; margin-bottom: 12px; color: #212529; }
-        /* [핵심] 모바일 전체 키보드 유도를 위한 텍스트 입력창 스타일 */
         .custom-expr-row input[type="text"] { width: 100%; font-family: monospace; box-sizing: border-box; padding: 8px; border: 1px solid #ced4da; border-radius: 4px; font-size: 1rem; }
         .custom-expr-row input[type="text"]:focus { border-color: #86b7fe; outline: 0; box-shadow: 0 0 0 0.25rem rgba(13,110,253,.25); }
         
@@ -132,7 +131,6 @@
             </div>
 
             <div class="add-controls" id="addControlsSection">
-                <!-- [핵심] 셀렉트 박스를 제거하고 일원화된 추가 버튼으로 변경 -->
                 <button onclick="window.func_addFunction()" class="px-6 py-2 bg-blue-600 text-white rounded-lg shadow font-bold hover:bg-blue-700 transition-colors">+ 새로운 수식 입력 추가</button>
                 <div style="border-left: 2px solid #dee2e6; height: 25px; margin: 0 10px;"></div>
                 
@@ -582,15 +580,7 @@
 
     function func_formatNumber(num) { return Number(Math.round(num + "e3") + "e-3"); }
     function func_binomial(n, k) { let c = 1; for(let i=n-k+1; i<=n; i++) c*=i; for(let i=1; i<=k; i++) c/=i; return c; }
-    function func_shiftPolynomial(coeffs, dx, dy) {
-        let n = coeffs.length - 1; let newCoeffs = new Array(n + 1).fill(0);
-        for (let j = 0; j <= n; j++) {
-            if (coeffs[j] === 0) continue;
-            for (let k = 0; k <= j; k++) newCoeffs[k] += coeffs[j] * func_binomial(j, k) * Math.pow(-dx, j - k);
-        }
-        newCoeffs[0] += dy; return newCoeffs.map(func_formatNumber);
-    }
-
+    
     function func_buildShiftedExpression(baseExpr, totalH, totalK) {
         let clean = (baseExpr || '').trim();
         let hVal = func_formatNumber(totalH), kVal = func_formatNumber(totalK);
@@ -655,7 +645,6 @@
         }
     }
 
-    // [핵심] 일원화된 UI 렌더링
     function func_renderUI() {
         const grid = document.getElementById('functionsGrid'); if(!grid) return; grid.innerHTML = '';
         func_functionsList.forEach((func, idx) => {
@@ -673,7 +662,6 @@
                     </div>
                 </div>
             `;
-            // 자유 입력 전용 UI 블록
             if (func.type === 'custom') {
                 innerHTML += `
                     <div class="custom-expr-row">
@@ -703,6 +691,15 @@
                 let rhs = '';
                 if (f.type === 'custom') {
                     let cleanExpr = f.expr.replace(/\*/g, '\\cdot ');
+                    
+                    // [핵심 추가] 거듭제곱(지수) LaTeX 변환 처리
+                    // 1) 분수 지수: x^(1/2) -> x^{\frac{1}{2}}
+                    cleanExpr = cleanExpr.replace(/\^\(\s*([^/)]+?)\s*\/\s*([^)]+?)\s*\)/g, '^{\\frac{$1}{$2}}');
+                    // 2) 일반 괄호 지수: x^(n) -> x^{n}
+                    cleanExpr = cleanExpr.replace(/\^\(([^)]+)\)/g, '^{$1}');
+                    // 3) 소수점 연속 지수: x^2.5 -> x^{2.5}
+                    cleanExpr = cleanExpr.replace(/\^([0-9.]+)/g, '^{$1}');
+
                     if (cleanExpr.includes('=')) { rhs = cleanExpr; } else if (cleanExpr.toLowerCase().includes('y')) { rhs = cleanExpr + ' = 0'; } else { rhs = `y = ${cleanExpr}`; }
                 }
                 let eqStr = (f.type === 'custom') ? rhs : `y = ${rhs}`;
@@ -731,7 +728,6 @@
     function func_evaluateCustomExpr(expr, rawX, rawY) {
         try {
             let x = rawX; let y = rawY !== undefined ? rawY : 0;
-            // [핵심] log10, log2 정규식 처리 추가
             let cleanExpr = expr.replace(/X/g, 'x').replace(/Y/g, 'y').replace(/([0-9.]+)\s*!/g, 'factorial($1)').replace(/([xy])\s*!/g, 'factorial($1)').replace(/\^/g, '**').replace(/\b(csc|sec|cot)\b/gi, function(match) { return 'customMath.' + match.toLowerCase(); })
                 .replace(/\b(sin|cos|tan|asin|acos|atan|sinh|cosh|tanh|log10|log2|log|ln|exp|sqrt|abs)\b/gi, function(match) { 
                     let m = match.toLowerCase(); 
