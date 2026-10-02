@@ -37,7 +37,6 @@
         .status-board.active { background: #fff3cd; color: #856404; border: 2px dashed #ffe8a1; flex-direction: row; font-weight: bold; }
         
         .add-controls { display: flex; justify-content: center; align-items: center; gap: 10px; margin-bottom: 20px; background: #fff; padding: 12px; border-radius: 8px; border: 1px solid #dee2e6; flex-wrap: wrap; }
-        .add-controls input[type="text"], .func-card input[type="number"] { padding: 6px 10px; font-size: 1rem; border-radius: 5px; border: 1px solid #ced4da; background-color: white; color: #212529; }
         .add-controls button { padding: 8px 16px; font-size: 1rem; cursor: pointer; border: none; border-radius: 5px; background-color: #0d6efd; color: white; font-weight: bold; transition: background 0.2s; }
         .add-controls button:hover { background-color: #0b5ed7; }
         
@@ -54,10 +53,7 @@
         .btn-delete { background: #dc3545; color: white; border: none; border-radius: 4px; padding: 4px 8px; cursor: pointer; font-size: 0.8rem; margin-left: 4px;}
         .btn-delete:hover { background: #c82333; }
         
-        .input-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; font-size: 0.9rem; white-space: nowrap; gap: 5px; color: #212529; }
-        .input-row input[type="number"] { width: 80px; text-align: right; }
-        
-        .custom-expr-row { display: flex; flex-direction: column; align-items: flex-start; gap: 5px; width: 100%; margin-bottom: 12px; color: #212529; }
+        .custom-expr-row { display: flex; flex-direction: column; align-items: flex-start; gap: 5px; width: 100%; margin-bottom: 4px; color: #212529; }
         .custom-expr-row input[type="text"] { width: 100%; font-family: monospace; box-sizing: border-box; padding: 8px; border: 1px solid #ced4da; border-radius: 4px; font-size: 1rem; }
         .custom-expr-row input[type="text"]:focus { border-color: #86b7fe; outline: 0; box-shadow: 0 0 0 0.25rem rgba(13,110,253,.25); }
         
@@ -443,8 +439,8 @@
                                                 <button onclick="window.phys_zoomChart('mom2', 0.2)" class="px-2 py-0.5 bg-slate-700 hover:bg-slate-500 text-white text-xs rounded font-bold">+</button>
                                             </div>
                                             <div class="flex items-center gap-1 bg-slate-900 px-2 py-1 rounded border border-slate-600">
-                                                <button onclick="window.phys_resizeChartWindow('mom2', -1)" class="px-2 py-0.5 bg-slate-700 hover:bg-slate-500 text-white text-xs rounded font-bold">창 축소(-)</button>
-                                                <button onclick="window.phys_resizeChartWindow('mom2', 1)" class="px-2 py-0.5 bg-slate-700 hover:bg-slate-500 text-white text-xs rounded font-bold">창 확대(+)</button>
+                                                <button onclick="window.phys_resizeChartWindow('mom2', -1)" class="px-2 py-0.5 bg-slate-700 hover:bg-slate-500 text-white text-xs rounded font-bold">축소(-)</button>
+                                                <button onclick="window.phys_resizeChartWindow('mom2', 1)" class="px-2 py-0.5 bg-slate-700 hover:bg-slate-500 text-white text-xs rounded font-bold">확대(+)</button>
                                             </div>
                                             <button onclick="window.phys_toggleChart('mom2')" id="btn-tg-mom2" class="w-7 h-7 bg-slate-700 hover:bg-slate-500 rounded text-white font-bold ml-1">_</button>
                                         </div>
@@ -579,7 +575,6 @@
     };
 
     function func_formatNumber(num) { return Number(Math.round(num + "e3") + "e-3"); }
-    function func_binomial(n, k) { let c = 1; for(let i=n-k+1; i<=n; i++) c*=i; for(let i=1; i<=k; i++) c/=i; return c; }
     
     function func_buildShiftedExpression(baseExpr, totalH, totalK) {
         let clean = (baseExpr || '').trim();
@@ -602,6 +597,7 @@
         }
     }
 
+    // [핵심] 일원화된 자유 입력 전용 추가 함수
     window.func_addFunction = function() {
         const newFunc = { 
             id: 'f_' + Date.now(), 
@@ -625,13 +621,12 @@
         func_renderUI(); func_updateAll();
     };
 
-    window.func_updateState = function(id, field, value, index = null) {
+    window.func_updateState = function(id, field, value) {
         const func = func_functionsList.find(f => f.id === id); if (!func) return;
         if (field === 'visible') func.visible = value;
         else if (field === 'showInverse') func.showInverse = value;
         else if (field === 'color') { func.color = value; document.getElementById(`card_${id}`).style.borderLeftColor = value; } 
         else if (field === 'expr') { func.expr = value; func.baseExpr = value; func.H = 0; func.K = 0; }
-        else func[field] = parseFloat(value) || 0;
         
         func_updateAll();
     };
@@ -639,11 +634,10 @@
     function func_syncInputValues(func) {
         if (func.type === 'custom') {
             let elExpr = document.getElementById(`input_${func.id}_expr`); if (elExpr) elExpr.value = func.expr;
-            let elH = document.getElementById(`input_${func.id}_H`); let elK = document.getElementById(`input_${func.id}_K`);
-            if (elH) elH.value = func.H; if (elK) elK.value = func.K;
         }
     }
 
+    // [핵심] H, K 필드가 제거된 깔끔한 UI 렌더링
     function func_renderUI() {
         const grid = document.getElementById('functionsGrid'); if(!grid) return; grid.innerHTML = '';
         func_functionsList.forEach((func, idx) => {
@@ -661,28 +655,22 @@
                     </div>
                 </div>
             `;
-            if (func.type === 'custom') {
-                innerHTML += `
-                    <div class="custom-expr-row">
-                        <label><strong>수식 직접 입력:</strong></label>
-                        <input type="text" inputmode="text" autocorrect="off" autocapitalize="none" spellcheck="false" id="input_${func.id}_expr" value="${func.expr}" onchange="window.func_updateState('${func.id}', 'expr', this.value)" placeholder="예: x^2 + y^2 = 4, log7(x)">
-                        <div style="font-size:0.75rem; color:#6c757d; margin-top:6px; line-height:1.4;">
-                            * <b>기본:</b> <code>x^2</code>, <code>2^x</code>, <code>x^(1/2)</code> 또는 <code>x^(1÷2)</code><br>
-                            * <b>로그:</b> <code>ln(x)</code>, <code>log7(x)</code>, <code>log10(x)</code><br>
-                            * <b>삼각/방정식:</b> <code>sin(x)</code>, <code>x^2+y^2=4</code> (대소문자 무관)
-                        </div>
+            innerHTML += `
+                <div class="custom-expr-row">
+                    <label><strong>수식 직접 입력:</strong></label>
+                    <input type="text" inputmode="text" autocorrect="off" autocapitalize="none" spellcheck="false" id="input_${func.id}_expr" value="${func.expr}" onchange="window.func_updateState('${func.id}', 'expr', this.value)" placeholder="예: x^2 + y^2 = 4, log7(x)">
+                    <div style="font-size:0.75rem; color:#6c757d; margin-top:6px; line-height:1.4;">
+                        * <b>기본:</b> <code>x^2</code>, <code>2^x</code>, <code>x^(1/2)</code> 또는 <code>x^(1÷2)</code><br>
+                        * <b>로그:</b> <code>ln(x)</code>, <code>log7(x)</code>, <code>log10(x)</code><br>
+                        * <b>삼각/방정식:</b> <code>sin(x)</code>, <code>x^2+y^2=4</code> (대소문자 무관)
                     </div>
-                    <div style="display:flex; gap:10px; margin-top:8px;">
-                        <div class="input-row" style="flex:1;"><label>X 이동 (H):</label><input type="number" step="0.5" id="input_${func.id}_H" value="${func.H}" oninput="window.func_updateState('${func.id}', 'H', this.value)"></div>
-                        <div class="input-row" style="flex:1;"><label>Y 이동 (K):</label><input type="number" step="0.5" id="input_${func.id}_K" value="${func.K}" oninput="window.func_updateState('${func.id}', 'K', this.value)"></div>
-                    </div>
-                `;
-            }
+                </div>
+            `;
             card.innerHTML = innerHTML; grid.appendChild(card);
         });
     }
 
-    // [핵심] 역함수 및 logN(x) 수식 깔끔한 LaTeX 렌더링
+    // [핵심] 역함수 표기 오류 완벽 교정
     function func_renderLatex() {
         let tex = ''; const visibleFunctions = func_functionsList.filter(f => f.visible);
         if (visibleFunctions.length === 0) tex = '\\text{활성화된 함수가 없습니다.}';
@@ -690,10 +678,7 @@
             visibleFunctions.forEach(f => {
                 let clean = f.expr.trim().replace(/\*/g, '\\cdot ').replace(/÷/g, '/');
                 
-                // logN(x) -> \log_{N}(x) 변환
                 clean = clean.replace(/\blog([0-9.]+)\s*\(([^)]+)\)/gi, '\\log_{$1}\\left($2\\right)');
-
-                // 지수 분수 변환
                 clean = clean.replace(/\^\(\s*([^/)]+?)\s*\/\s*([^)]+?)\s*\)/g, '^{\\frac{$1}{$2}}');
                 clean = clean.replace(/\^\(([^)]+)\)/g, '^{$1}');
                 clean = clean.replace(/\^([0-9.]+)/g, '^{$1}');
@@ -739,12 +724,10 @@
         cot: function(x) { let s = Math.sin(x); let c = Math.cos(x); return Math.abs(s) < 1e-12 ? NaN : c / s; }
     };
 
-    // [핵심] 임의의 밑을 가진 로그(logN(x)) 및 나눗셈 기호(÷) 계산 엔진 파서
     function func_evaluateCustomExpr(expr, rawX, rawY) {
         try {
             let x = rawX; let y = rawY !== undefined ? rawY : 0;
             let cleanExpr = expr.replace(/X/g, 'x').replace(/Y/g, 'y').replace(/÷/g, '/')
-                // 1) logN(x) -> (Math.log(x)/Math.log(N)) 변환
                 .replace(/\blog([0-9.]+)\s*\(([^)]+)\)/gi, '(Math.log($2)/Math.log($1))')
                 .replace(/(^|[^a-zA-Z0-9_])(\d+(?:\.\d+)?)\s*([a-zA-Z(])/g, '$1$2*$3')
                 .replace(/([0-9.]+)\s*!/g, 'factorial($1)')
@@ -1135,7 +1118,7 @@
     }
 
     /* =========================================================================
-       2. 수학 물리 시뮬레이터 (Physics Simulator) 네임스페이스 로직
+       2. 수학 물리 시뮬레이터 (Physics Simulation) 네임스페이스 로직
        ========================================================================= */
     const phys_dt = 1/60; 
     const phys_PIXELS_PER_METER = 15; 
