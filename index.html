@@ -665,10 +665,10 @@
                 innerHTML += `
                     <div class="custom-expr-row">
                         <label><strong>수식 직접 입력:</strong></label>
-                        <input type="text" inputmode="text" autocorrect="off" autocapitalize="none" spellcheck="false" id="input_${func.id}_expr" value="${func.expr}" onchange="window.func_updateState('${func.id}', 'expr', this.value)" placeholder="예: x^2 + y^2 = 4, 2^x, log10(x)">
+                        <input type="text" inputmode="text" autocorrect="off" autocapitalize="none" spellcheck="false" id="input_${func.id}_expr" value="${func.expr}" onchange="window.func_updateState('${func.id}', 'expr', this.value)" placeholder="예: x^2 + y^2 = 4, log7(x)">
                         <div style="font-size:0.75rem; color:#6c757d; margin-top:6px; line-height:1.4;">
                             * <b>기본:</b> <code>x^2</code>, <code>2^x</code>, <code>x^(1/2)</code> 또는 <code>x^(1÷2)</code><br>
-                            * <b>로그:</b> <code>ln(x)</code>, <code>log10(x)</code>, <code>log2(x)</code><br>
+                            * <b>로그:</b> <code>ln(x)</code>, <code>log7(x)</code>, <code>log10(x)</code><br>
                             * <b>삼각/방정식:</b> <code>sin(x)</code>, <code>x^2+y^2=4</code> (대소문자 무관)
                         </div>
                     </div>
@@ -682,7 +682,7 @@
         });
     }
 
-    // [핵심] 역함수 표기 오류 완벽 교정 함수
+    // [핵심] 역함수 및 logN(x) 수식 깔끔한 LaTeX 렌더링
     function func_renderLatex() {
         let tex = ''; const visibleFunctions = func_functionsList.filter(f => f.visible);
         if (visibleFunctions.length === 0) tex = '\\text{활성화된 함수가 없습니다.}';
@@ -690,7 +690,10 @@
             visibleFunctions.forEach(f => {
                 let clean = f.expr.trim().replace(/\*/g, '\\cdot ').replace(/÷/g, '/');
                 
-                // 분수 및 괄호 지수 예쁜 첨자로 변환
+                // logN(x) -> \log_{N}(x) 변환
+                clean = clean.replace(/\blog([0-9.]+)\s*\(([^)]+)\)/gi, '\\log_{$1}\\left($2\\right)');
+
+                // 지수 분수 변환
                 clean = clean.replace(/\^\(\s*([^/)]+?)\s*\/\s*([^)]+?)\s*\)/g, '^{\\frac{$1}{$2}}');
                 clean = clean.replace(/\^\(([^)]+)\)/g, '^{$1}');
                 clean = clean.replace(/\^([0-9.]+)/g, '^{$1}');
@@ -700,15 +703,12 @@
 
                 if (clean.includes('=')) {
                     origEq = clean;
-                    // 음함수나 방정식 형태의 역함수: x와 y를 상호 교환
                     invEq = clean.replace(/\bx\b/g, '__TEMP_X__').replace(/\by\b/g, 'x').replace(/__TEMP_X__/g, 'y');
                 } else if (clean.toLowerCase().includes('y')) {
                     origEq = clean + ' = 0';
                     invEq = clean.replace(/\bx\b/g, '__TEMP_X__').replace(/\by\b/g, 'x').replace(/__TEMP_X__/g, 'y') + ' = 0';
                 } else {
-                    // 순수 함수 형태: y = f(x)
                     origEq = `y = ${clean}`;
-                    // 역함수는 x = f(y) 이므로 우변의 x만 y로 교체!
                     let rhsInv = clean.replace(/\bx\b/g, 'y');
                     invEq = `x = ${rhsInv}`;
                 }
@@ -716,7 +716,6 @@
                 if (f.id === func_selectedFuncId) tex += `\\color{${f.color}}{\\boxed{${origEq}}} \\\\ `; 
                 else tex += `\\color{${f.color}}{${origEq}} \\\\ `;
 
-                // 역함수 체크박스가 활성화된 경우
                 if (f.showInverse) {
                     tex += `\\color{${f.color}}{${invEq} \\quad \\text{(역함수)}} \\\\ `;
                 }
@@ -740,10 +739,13 @@
         cot: function(x) { let s = Math.sin(x); let c = Math.cos(x); return Math.abs(s) < 1e-12 ? NaN : c / s; }
     };
 
+    // [핵심] 임의의 밑을 가진 로그(logN(x)) 및 나눗셈 기호(÷) 계산 엔진 파서
     function func_evaluateCustomExpr(expr, rawX, rawY) {
         try {
             let x = rawX; let y = rawY !== undefined ? rawY : 0;
             let cleanExpr = expr.replace(/X/g, 'x').replace(/Y/g, 'y').replace(/÷/g, '/')
+                // 1) logN(x) -> (Math.log(x)/Math.log(N)) 변환
+                .replace(/\blog([0-9.]+)\s*\(([^)]+)\)/gi, '(Math.log($2)/Math.log($1))')
                 .replace(/(^|[^a-zA-Z0-9_])(\d+(?:\.\d+)?)\s*([a-zA-Z(])/g, '$1$2*$3')
                 .replace(/([0-9.]+)\s*!/g, 'factorial($1)')
                 .replace(/([xy])\s*!/g, 'factorial($1)')
@@ -882,7 +884,6 @@
 
             traces.push({ x: xVal, y: yVal, mode: 'lines', name: fName, line: { color: f.color, width: isSelected ? 7 : 3 }, customdata: Array(xVal.length).fill(f.id), hovertemplate: '(%{x:.2f}, %{y:.2f})<extra></extra>' });
             
-            // [핵심] 역함수 곡선 대칭 렌더링
             if (f.showInverse && !func_isImplicitFunc(f)) { 
                 hasInverse = true; 
                 traces.push({ x: yVal, y: xVal, mode: 'lines', name: `${fName} 역함수`, line: { color: f.color, width: 2, dash: 'dot' }, customdata: Array(xVal.length).fill('inv_' + f.id), hovertemplate: '(%{x:.2f}, %{y:.2f})<extra></extra>' }); 
@@ -1134,7 +1135,7 @@
     }
 
     /* =========================================================================
-       2. 수학 물리 시뮬레이터 (Physics Simulation) 네임스페이스 로직
+       2. 수학 물리 시뮬레이터 (Physics Simulator) 네임스페이스 로직
        ========================================================================= */
     const phys_dt = 1/60; 
     const phys_PIXELS_PER_METER = 15; 
