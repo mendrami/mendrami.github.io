@@ -1665,4 +1665,1671 @@
     };
 </script>
 </body>
+</html><!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>수학 & 물리 학습 도구</title>
+    
+    <!-- Plotly, Tailwind, MathJax, Fonts -->
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <script>
+        MathJax = { tex: { inlineMath: [['$', '$'], ['\\(', '\\)']] }, startup: { typeset: true } };
+    </script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
+
+    <style>
+        /* === 공통 전역 스타일 === */
+        body { margin: 0; background-color: #0f172a; -webkit-tap-highlight-color: transparent; }
+        
+        .global-nav { position: fixed; top: 0; left: 0; right: 0; z-index: 99999; display: flex; justify-content: center; gap: 10px; padding: 12px; background: rgba(15, 23, 42, 0.95); backdrop-filter: blur(10px); border-bottom: 1px solid #334155; box-shadow: 0 4px 15px rgba(0,0,0,0.3); }
+        .nav-btn { padding: 8px 20px; font-size: 1rem; font-weight: bold; border-radius: 999px; cursor: pointer; transition: all 0.2s ease; border: 2px solid #3b82f6; }
+        .nav-btn.active { background-color: #3b82f6; color: white; box-shadow: 0 0 15px rgba(59,130,246,0.5); }
+        .nav-btn.inactive { background-color: #1e293b; color: #94a3b8; }
+        .nav-btn.inactive:hover { background-color: #334155; color: white; }
+
+        .app-view { display: none !important; width: 100%; min-height: 100vh; padding-top: 75px; }
+        #app-func.active { display: block !important; }
+        #app-phys.active { display: flex !important; flex-direction: column; align-items: center; }
+
+        /* === [함수 비교] 전용 스타일 === */
+        #app-func { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f0f2f5; color: #212529; }
+        .func-container { max-width: 1450px; margin: 0 auto; background: white; padding: 15px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.08); }
+        .func-container h1 { color: #212529; text-align: center; font-size: 1.6rem; margin-bottom: 5px; font-weight: 800; }
+        
+        .status-board { text-align: center; background: #e9ecef; padding: 12px; border-radius: 6px; color: #495057; margin-bottom: 20px; transition: all 0.3s; display: flex; flex-direction: column; justify-content: center; align-items: center; font-size: 1rem; line-height: 1.5; }
+        .status-board.active { background: #fff3cd; color: #856404; border: 2px dashed #ffe8a1; flex-direction: row; font-weight: bold; }
+        
+        .add-controls { display: flex; justify-content: center; align-items: center; gap: 10px; margin-bottom: 20px; background: #fff; padding: 12px; border-radius: 8px; border: 1px solid #dee2e6; flex-wrap: wrap; }
+        .add-controls input[type="text"], .func-card input[type="number"] { padding: 6px 10px; font-size: 1rem; border-radius: 5px; border: 1px solid #ced4da; background-color: white; color: #212529; }
+        .add-controls button { padding: 8px 16px; font-size: 1rem; cursor: pointer; border: none; border-radius: 5px; background-color: #0d6efd; color: white; font-weight: bold; transition: background 0.2s; }
+        .add-controls button:hover { background-color: #0b5ed7; }
+        
+        .toggle-btn { display: flex; align-items: center; gap: 6px; font-weight: bold; padding: 8px 16px; border-radius: 5px; cursor: pointer; transition: all 0.2s; border: 2px solid #0d6efd; background: white; color: #0d6efd; font-size: 1rem; }
+        .toggle-btn.active { background: #0d6efd; color: white; }
+
+        .functions-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 15px; margin-bottom: 20px; }
+        .func-card { background: #fff; border: 2px solid #dee2e6; border-radius: 8px; padding: 16px; box-shadow: 0 2px 5px rgba(0,0,0,0.04); position: relative; transition: all 0.2s; border-left-width: 6px; }
+        .func-card.selected { border-color: #212529; box-shadow: 0 0 12px rgba(0,0,0,0.2); transform: scale(1.02); }
+        .func-card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; border-bottom: 1px solid #f1f3f5; padding-bottom: 8px; }
+        .func-card-title { font-weight: bold; font-size: 1.05rem; display: flex; align-items: center; gap: 8px; color: #212529; }
+        
+        .func-card input[type="color"] { border: none; width: 28px; height: 28px; border-radius: 4px; cursor: pointer; padding: 0; background: none; }
+        .btn-delete { background: #dc3545; color: white; border: none; border-radius: 4px; padding: 4px 8px; cursor: pointer; font-size: 0.8rem; margin-left: 4px;}
+        .btn-delete:hover { background: #c82333; }
+        
+        .input-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; font-size: 0.9rem; white-space: nowrap; gap: 5px; color: #212529; }
+        .input-row input[type="number"] { width: 80px; text-align: right; }
+        
+        .custom-expr-row { display: flex; flex-direction: column; align-items: flex-start; gap: 5px; width: 100%; margin-bottom: 12px; color: #212529; }
+        .custom-expr-row input[type="text"] { width: 100%; font-family: monospace; box-sizing: border-box; padding: 8px; border: 1px solid #ced4da; border-radius: 4px; font-size: 1rem; }
+        .custom-expr-row input[type="text"]:focus { border-color: #86b7fe; outline: 0; box-shadow: 0 0 0 0.25rem rgba(13,110,253,.25); }
+        
+        .switch { position: relative; display: inline-block; width: 34px; height: 18px; }
+        .switch input { opacity: 0; width: 0; height: 0; }
+        .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #ccc; transition: .4s; border-radius: 18px; }
+        .slider:before { position: absolute; content: ""; height: 12px; width: 12px; left: 3px; bottom: 3px; background-color: white; transition: .4s; border-radius: 50%; }
+        input:checked + .slider { background-color: #0d6efd; }
+        input:checked + .slider:before { transform: translateX(16px); }
+
+        #math-display { background: #f8f9fa; padding: 15px; border-radius: 8px; border: 1px solid #dee2e6; margin-bottom: 15px; font-size: 1.1rem; overflow-x: auto; text-align: center; min-height: 45px; color: #212529; }
+        
+        .top-info-panel { display: none; background: #fff; border: 1px solid #dee2e6; border-radius: 8px; padding: 15px; margin-bottom: 20px; box-shadow: 0 2px 6px rgba(0,0,0,0.03); gap: 20px; flex-wrap: wrap; justify-content: space-around; }
+        .top-info-panel.visible { display: flex; }
+        .top-info-group { flex: 1; min-width: 250px; }
+        .top-info-group h4 { margin: 0 0 8px 0; font-size: 0.95rem; color: #495057; display: flex; align-items: center; gap: 6px; border-bottom: 1px solid #f1f3f5; padding-bottom: 5px; }
+        .coord-item { font-family: 'Courier New', Courier, monospace; font-size: 0.9rem; background: #f8f9fa; padding: 6px 10px; border-radius: 6px; margin-bottom: 5px; border-left: 4px solid #0d6efd; font-weight: bold; color: #212529; }
+        .empty-msg { font-size: 0.85rem; color: #adb5bd; font-style: italic; }
+
+        .workspace { display: block; }
+        .graph-wrapper { position: relative; width: 100%; }
+        #graphPlot { width: 100%; height: 650px; border-radius: 8px; overflow: hidden; border: 1px solid #dee2e6; background-color: white; touch-action: none; }
+        
+        .zoom-controls { position: absolute; top: 60px; right: 20px; display: flex; flex-direction: row; gap: 8px; z-index: 100; }
+        .zoom-controls button { height: 36px; border-radius: 8px; border: 1px solid rgba(206, 212, 218, 0.6); background: rgba(255, 255, 255, 0.6); font-weight: bold; color: #495057; cursor: pointer; box-shadow: 0 2px 6px rgba(0,0,0,0.1); display: flex; justify-content: center; align-items: center; transition: all 0.2s; backdrop-filter: blur(3px); }
+        .zoom-controls button:hover { background: rgba(255, 255, 255, 0.95); color: #0d6efd; transform: scale(1.05); }
+        .zoom-btn-icon { width: 36px; font-size: 1.2rem; }
+        .zoom-btn-text { padding: 0 12px; font-size: 0.9rem; display: none; background: rgba(33, 37, 41, 0.7) !important; color: white !important; border-color: rgba(33, 37, 41, 0.7) !important; }
+        .zoom-btn-text:hover { background: rgba(73, 80, 87, 0.9) !important; color: white !important; }
+
+        .floating-origin-btn { position: fixed; bottom: 25px; right: 25px; width: 48px; height: 48px; border-radius: 50%; border: 1px solid rgba(255,255,255,0.4); background: rgba(13, 110, 253, 0.65); color: #ffffff; font-size: 1.4rem; font-weight: bold; cursor: pointer; z-index: 9999; backdrop-filter: blur(6px); transition: all 0.2s; display: flex; justify-content: center; align-items: center; box-shadow: 0 4px 15px rgba(0,0,0,0.25); }
+        .floating-origin-btn:hover { background: rgba(13, 110, 253, 0.95); transform: scale(1.08); }
+        .scroll-notice { text-align: center; color: #6c757d; font-size: 0.85rem; margin-top: 10px; font-weight: bold; padding-bottom: 60px; }
+
+        /* === [수학 물리 시뮬레이터] 전용 스타일 === */
+        #app-phys { font-family: 'Inter', sans-serif; color: #f8fafc; }
+        #app-phys canvas { display: block; width: 100%; height: 100%; touch-action: none; cursor: crosshair; }
+        .tab-btn { transition: all 0.2s ease; }
+        .tab-btn.active { background-color: #3b82f6; color: white; border-color: #3b82f6; }
+        .glass-panel { background: rgba(30, 41, 59, 0.7); backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.1); }
+        .hud-font { font-family: 'JetBrains Mono', monospace; text-shadow: 1px 1px 2px black; }
+        #app-phys input[type=range] { accent-color: #3b82f6; }
+        .hide { display: none !important; }
+        #glossary-wrapper { transition: max-height 0.3s ease-out, opacity 0.3s ease-out; overflow: hidden; }
+        .glossary-collapsed { max-height: 0; opacity: 0; padding-top: 0 !important; padding-bottom: 0 !important; margin: 0 !important; border: none !important; }
+        .glossary-expanded { max-height: 1200px; opacity: 1; }
+        .graph-body { transition: height 0.3s ease, opacity 0.3s ease; overflow: hidden; }
+    </style>
+</head>
+<body class="bg-slate-900">
+
+    <!-- 최상단 통합 네비게이션 메뉴 -->
+    <header class="global-nav">
+        <button id="nav-btn-func" class="nav-btn active" onclick="window.switchApp('func')">
+            📈 함수 비교
+        </button>
+        <button id="nav-btn-phys" class="nav-btn inactive" onclick="window.switchApp('phys')">
+            🚗 수학 물리 시뮬레이터
+        </button>
+    </header>
+
+    <!-- =========================================================
+         1. 함수 비교 (Function Grapher) 영역
+         ========================================================= -->
+    <div id="app-func" class="app-view active">
+        <div class="func-container">
+            <h1>함수 비교</h1>
+            <div id="statusBoard" class="status-board">
+                <div style="font-weight: bold; color:#212529;">- 그래프 이동 선택 -</div>
+                <div style="margin-top: 5px;">[모바일] 1초 이상 터치 &nbsp;&nbsp;|&nbsp;&nbsp; [데스크탑] 마우스 좌측 버튼 클릭</div>
+            </div>
+
+            <div class="add-controls" id="addControlsSection">
+                <button onclick="window.func_addFunction()" class="px-6 py-2 bg-blue-600 text-white rounded-lg shadow font-bold hover:bg-blue-700 transition-colors">+ 새로운 수식 입력 추가</button>
+                <div style="border-left: 2px solid #dee2e6; height: 25px; margin: 0 10px;"></div>
+                
+                <button id="intersectToggleBtn" class="toggle-btn" onclick="window.func_toggleIntersectionPanel()">
+                    <span>📍</span> 교점 좌표
+                </button>
+                
+                <button id="tangentModeBtn" class="toggle-btn" onclick="window.func_toggleTangentMode()">
+                    <span style="font-size:1.1rem;">⤡</span> 실시간 접선 모드: OFF
+                </button>
+            </div>
+
+            <div id="functionsGrid" class="functions-grid"></div>
+            <div id="math-display">수식을 불러오는 중입니다...</div>
+            
+            <div id="topInfoPanel" class="top-info-panel">
+                <div class="top-info-group">
+                    <h4><span style="color:#212529;">●</span> 함수 간의 교점</h4>
+                    <div id="panel-intersections"><div class="empty-msg">계산 중...</div></div>
+                </div>
+                <div class="top-info-group">
+                    <h4><span style="color:#fd7e14;">◆</span> X축 교점 (X절편, y=0)</h4>
+                    <div id="panel-x-axis"><div class="empty-msg">계산 중...</div></div>
+                </div>
+                <div class="top-info-group">
+                    <h4><span style="color:#fd7e14;">◆</span> Y축 교점 (Y절편, x=0)</h4>
+                    <div id="panel-y-axis"><div class="empty-msg">계산 중...</div></div>
+                </div>
+            </div>
+
+            <div class="workspace">
+                <div class="graph-wrapper">
+                    <div class="zoom-controls">
+                        <button id="deselectBtn" class="zoom-btn-text" style="display: none;" onclick="window.func_deselectGraph()">선택 해제</button>
+                        <button class="zoom-btn-icon" onclick="window.func_zoomGraph('in')" title="확대(줌인)">＋</button>
+                        <button class="zoom-btn-icon" onclick="window.func_zoomGraph('out')" title="축소(줌아웃)">－</button>
+                    </div>
+                    
+                    <div id="graphPlot"></div>
+                    <div class="scroll-notice">▼ 스크롤을 내리면 캔버스가 Y축 하단으로 무한 확장됩니다 ▼</div>
+                </div>
+            </div>
+        </div>
+        <button class="floating-origin-btn" onclick="window.func_resetAndScrollUp()" title="상단 컨트롤로 복귀 및 원점 정렬">⬆</button>
+    </div>
+
+    <!-- =========================================================
+         2. 수학 물리 시뮬레이터 (Physics Simulator) 영역
+         ========================================================= -->
+    <div id="app-phys" class="app-view p-2 md:p-6 lg:p-8">
+        <header class="w-full max-w-7xl mb-4 mt-2">
+            <div class="text-center mb-4">
+                <h1 class="text-3xl md:text-5xl font-bold mb-2 text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-indigo-400">
+                    미적분과 기초 물리
+                </h1>
+                <p class="text-slate-400 text-sm md:text-base font-semibold px-4 tracking-widest">
+                    기초 물리 시뮬레이터
+                </p>
+            </div>
+
+            <div class="flex justify-center mb-4">
+                <button id="btn-toggle-glossary" class="px-5 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-full border border-slate-600 text-sm font-bold shadow-lg transition-colors">
+                    ▼ 물리 기호 및 용어 해설 열기
+                </button>
+            </div>
+
+            <div id="glossary-wrapper" class="glass-panel rounded-xl mb-4 border-l-4 border-l-blue-500 glossary-collapsed">
+                <div class="p-4">
+                    <div class="flex justify-between items-center mb-4 border-b border-slate-700 pb-2">
+                        <h3 class="text-lg font-bold text-white">물리 기호 및 용어 해설</h3>
+                        <div class="flex gap-2 items-center">
+                            <span class="text-xs text-slate-400 mr-2">글자 크기</span>
+                            <button id="btn-gl-out" class="w-8 h-8 flex items-center justify-center bg-slate-700 hover:bg-slate-600 rounded text-xl font-bold" title="Zoom Out">-</button>
+                            <button id="btn-gl-in" class="w-8 h-8 flex items-center justify-center bg-slate-700 hover:bg-slate-600 rounded text-xl font-bold" title="Zoom In">+</button>
+                        </div>
+                    </div>
+                    <div id="glossary-content" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4" style="font-size: 16px;">
+                        <div class="bg-slate-800/80 p-3 rounded">
+                            <span class="font-bold text-blue-300">위치 (Position)</span>
+                            <div class="mt-1 text-slate-200">기호: $x(t)$, 단위: $\text{m}$ (meter)</div>
+                            <div class="mt-1 text-slate-400 text-sm">물체가 존재하는 기준점으로부터의 거리(벡터량). 뒤로 가면 마이너스(-)가 됩니다.</div>
+                        </div>
+                        <div class="bg-slate-800/80 p-3 rounded">
+                            <span class="font-bold text-green-300">속도 (Velocity)</span>
+                            <div class="mt-1 text-slate-200">기호: $v(t)$, 단위: $\text{m/s}$</div>
+                            <div class="mt-1 text-slate-400 text-sm">위치의 시간 변화율. 방향을 가지는 벡터량이므로 후진 시 마이너스(-) 값을 가집니다. $v(t) = \frac{dx}{dt}$</div>
+                        </div>
+                        <div class="bg-slate-800/80 p-3 rounded">
+                            <span class="font-bold text-teal-300">속력 (Speed)</span>
+                            <div class="mt-1 text-slate-200">기호: $|v(t)|$, 단위: $\text{m/s}$</div>
+                            <div class="mt-1 text-slate-400 text-sm">속도의 크기만을 나타내는 스칼라량. 방향이 없으므로 항상 0 이상입니다. 속도의 절댓값과 같습니다.</div>
+                        </div>
+                        <div class="bg-slate-800/80 p-3 rounded">
+                            <span class="font-bold text-orange-300">가속도 (Acceleration)</span>
+                            <div class="mt-1 text-slate-200">기호: $a(t)$, 단위: $\text{m/s}^2$</div>
+                            <div class="mt-1 text-slate-400 text-sm">속도의 시간 변화율. $a(t) = \frac{dv}{dt} = \frac{d^2x}{dt^2}$</div>
+                        </div>
+                        <div class="bg-slate-800/80 p-3 rounded">
+                            <span class="font-bold text-purple-300">선운동량 (Momentum)</span>
+                            <div class="mt-1 text-slate-200">기호: $p(t)$, 단위: $\text{kg} \cdot \text{m/s}$</div>
+                            <div class="mt-1 text-slate-400 text-sm">운동 상태를 나타내는 벡터량. $p = m \cdot v$</div>
+                        </div>
+                        <div class="bg-slate-800/80 p-3 rounded">
+                            <span class="font-bold text-red-400">힘 (Force)</span>
+                            <div class="mt-1 text-slate-200">기호: $F(t)$, 단위: $\text{N}$</div>
+                            <div class="mt-1 text-slate-400 text-sm">운동량의 시간 미분. $F = \frac{dp}{dt} = ma$</div>
+                        </div>
+                        <div class="bg-slate-800/80 p-3 rounded">
+                            <span class="font-bold text-yellow-400">충격량 (Impulse)</span>
+                            <div class="mt-1 text-slate-200">기호: $J$, 단위: $\text{N} \cdot \text{s}$</div>
+                            <div class="mt-1 text-slate-400 text-sm">힘의 시간 적분. $J = \int F dt = \Delta p$</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="flex flex-wrap justify-center gap-4 mt-2 px-2">
+                <button id="tab1-btn" class="tab-btn active px-6 py-3 text-sm md:text-lg font-bold rounded-full border border-slate-500 text-slate-300 hover:bg-slate-800 shadow-lg">
+                    1. 위치, 속도, 가속도
+                </button>
+                <button id="tab2-btn" class="tab-btn px-6 py-3 text-sm md:text-lg font-bold rounded-full border border-slate-500 text-slate-300 hover:bg-slate-800 shadow-lg">
+                    2. 운동량과 충격량
+                </button>
+            </div>
+        </header>
+
+        <main class="w-full max-w-7xl flex-grow relative pb-10">
+            <section id="tab1-content" class="w-full flex flex-col gap-6">
+                <div class="glass-panel rounded-2xl p-4 shadow-xl border-blue-900/50">
+                    <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-4 gap-4">
+                        <div><h2 class="text-xl font-bold text-blue-200">주행 시뮬레이터 (무한 궤도)</h2></div>
+                        <div class="flex gap-3 w-full md:w-auto">
+                            <button id="t1-btn-gas" class="flex-1 md:flex-none px-8 py-4 bg-green-600 hover:bg-green-500 text-white rounded-xl font-bold shadow-lg shadow-green-900/50 text-lg transition-all">가속 (토글)</button>
+                            <button id="t1-btn-brake" class="flex-1 md:flex-none px-8 py-4 bg-red-600 hover:bg-red-500 text-white rounded-xl font-bold shadow-lg shadow-red-900/50 text-lg transition-all">감속 (토글)</button>
+                        </div>
+                    </div>
+                    
+                    <div class="relative w-full h-56 md:h-72 bg-[#87CEEB] rounded-xl overflow-hidden border-2 border-slate-700 shadow-inner">
+                        <canvas id="sim-canvas-t1"></canvas>
+                        <div class="absolute top-3 left-3 bg-slate-900/80 backdrop-blur-md p-3 rounded-xl border border-slate-600 shadow-2xl pointer-events-none z-10">
+                            <h3 class="text-xs font-bold text-white mb-1 border-b border-slate-500 pb-1">Telemetry</h3>
+                            <div class="grid grid-cols-1 gap-1 text-sm hud-font font-bold">
+                                <div class="flex justify-between w-48 md:w-56 text-blue-300"><span>위치(x):</span><span id="h1-pos">0.00 m</span></div>
+                                <div class="flex justify-between w-48 md:w-56 text-green-300"><span>속도(v):</span><span id="h1-vel">0.00 m/s</span></div>
+                                <div class="flex justify-between w-48 md:w-56 text-teal-300"><span>속력(|v|):</span><span id="h1-spd">0.00 m/s</span></div>
+                                <div class="flex justify-between w-48 md:w-56 text-orange-300"><span>가속도(a):</span><span id="h1-acc">0.00 m/s²</span></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <div id="wrapper-pos1" class="graph-wrapper glass-panel rounded-2xl flex flex-col overflow-hidden col-span-1">
+                        <div class="bg-slate-800 p-3 flex justify-between items-center border-b border-slate-700 flex-wrap gap-2">
+                            <h3 class="text-md font-bold text-blue-400 whitespace-nowrap">위치 $x(t)$</h3>
+                            <div class="flex flex-wrap gap-2 items-center">
+                                <div class="flex items-center gap-1 bg-slate-900 px-2 py-1 rounded border border-slate-600">
+                                    <button onclick="window.phys_zoomChart('pos1', -0.2)" class="px-2 py-0.5 bg-slate-700 hover:bg-slate-500 text-white text-xs rounded font-bold">-</button>
+                                    <button onclick="window.phys_zoomChart('pos1', 0.2)" class="px-2 py-0.5 bg-slate-700 hover:bg-slate-500 text-white text-xs rounded font-bold">+</button>
+                                </div>
+                                <div class="flex items-center gap-1 bg-slate-900 px-2 py-1 rounded border border-slate-600">
+                                    <button onclick="window.phys_resizeChartWindow('pos1', -1)" class="px-2 py-0.5 bg-slate-700 hover:bg-slate-500 text-white text-xs rounded font-bold">창 축소(-)</button>
+                                    <button onclick="window.phys_resizeChartWindow('pos1', 1)" class="px-2 py-0.5 bg-slate-700 hover:bg-slate-500 text-white text-xs rounded font-bold">창 확대(+)</button>
+                                </div>
+                                <button onclick="window.phys_toggleChart('pos1')" id="btn-tg-pos1" class="w-7 h-7 bg-slate-700 hover:bg-slate-500 rounded text-white font-bold ml-1">_</button>
+                            </div>
+                        </div>
+                        <div id="body-pos1" class="w-full bg-slate-900 relative graph-body" style="height: 256px;">
+                            <canvas id="chart-pos1"></canvas>
+                            <div class="absolute bottom-2 left-2 pointer-events-none text-slate-400 text-[10px]">
+                                클릭시 접선, 드래그시 스크롤(이동)
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="wrapper-vel1" class="graph-wrapper glass-panel rounded-2xl flex flex-col overflow-hidden col-span-1">
+                        <div class="bg-slate-800 p-3 flex justify-between items-center border-b border-slate-700 flex-wrap gap-2">
+                            <h3 class="text-md font-bold text-green-400 whitespace-nowrap">속도 $v(t)$ (벡터)</h3>
+                            <div class="flex flex-wrap gap-2 items-center">
+                                <div class="flex items-center gap-1 bg-slate-900 px-2 py-1 rounded border border-slate-600">
+                                    <button onclick="window.phys_zoomChart('vel1', -0.2)" class="px-2 py-0.5 bg-slate-700 hover:bg-slate-500 text-white text-xs rounded font-bold">-</button>
+                                    <button onclick="window.phys_zoomChart('vel1', 0.2)" class="px-2 py-0.5 bg-slate-700 hover:bg-slate-500 text-white text-xs rounded font-bold">+</button>
+                                </div>
+                                <div class="flex items-center gap-1 bg-slate-900 px-2 py-1 rounded border border-slate-600">
+                                    <button onclick="window.phys_resizeChartWindow('vel1', -1)" class="px-2 py-0.5 bg-slate-700 hover:bg-slate-500 text-white text-xs rounded font-bold">창 축소(-)</button>
+                                    <button onclick="window.phys_resizeChartWindow('vel1', 1)" class="px-2 py-0.5 bg-slate-700 hover:bg-slate-500 text-white text-xs rounded font-bold">창 확대(+)</button>
+                                </div>
+                                <button onclick="window.phys_toggleChart('vel1')" id="btn-tg-vel1" class="w-7 h-7 bg-slate-700 hover:bg-slate-500 rounded text-white font-bold ml-1">_</button>
+                            </div>
+                        </div>
+                        <div id="body-vel1" class="w-full bg-slate-900 relative graph-body" style="height: 256px;">
+                            <canvas id="chart-vel1"></canvas>
+                            <div class="absolute bottom-2 left-2 pointer-events-none bg-slate-800/85 px-2 py-1.5 rounded border border-slate-600 shadow-lg">
+                                <div class="text-[10px] text-slate-400 mb-0.5">마이너스 허용 (클릭: 접선, 드래그: 이동)</div>
+                                <div class="text-[11px] text-green-300 font-bold">💡 색칠된 넓이 = 변위 (\( \int v \, dt \))</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="wrapper-spd1" class="graph-wrapper glass-panel rounded-2xl flex flex-col overflow-hidden col-span-1">
+                        <div class="bg-slate-800 p-3 flex justify-between items-center border-b border-slate-700 flex-wrap gap-2">
+                            <h3 class="text-md font-bold text-teal-400 whitespace-nowrap">속력 $|v(t)|$ (스칼라)</h3>
+                            <div class="flex flex-wrap gap-2 items-center">
+                                <div class="flex items-center gap-1 bg-slate-900 px-2 py-1 rounded border border-slate-600">
+                                    <button onclick="window.phys_zoomChart('spd1', -0.2)" class="px-2 py-0.5 bg-slate-700 hover:bg-slate-500 text-white text-xs rounded font-bold">-</button>
+                                    <button onclick="window.phys_zoomChart('spd1', 0.2)" class="px-2 py-0.5 bg-slate-700 hover:bg-slate-500 text-white text-xs rounded font-bold">+</button>
+                                </div>
+                                <div class="flex items-center gap-1 bg-slate-900 px-2 py-1 rounded border border-slate-600">
+                                    <button onclick="window.phys_resizeChartWindow('spd1', -1)" class="px-2 py-0.5 bg-slate-700 hover:bg-slate-500 text-white text-xs rounded font-bold">창 축소(-)</button>
+                                    <button onclick="window.phys_resizeChartWindow('spd1', 1)" class="px-2 py-0.5 bg-slate-700 hover:bg-slate-500 text-white text-xs rounded font-bold">창 확대(+)</button>
+                                </div>
+                                <button onclick="window.phys_toggleChart('spd1')" id="btn-tg-spd1" class="w-7 h-7 bg-slate-700 hover:bg-slate-500 rounded text-white font-bold ml-1">_</button>
+                            </div>
+                        </div>
+                        <div id="body-spd1" class="w-full bg-slate-900 relative graph-body" style="height: 256px;">
+                            <canvas id="chart-spd1"></canvas>
+                            <div class="absolute bottom-2 left-2 pointer-events-none bg-slate-800/85 px-2 py-1.5 rounded border border-slate-600 shadow-lg">
+                                <div class="text-[10px] text-slate-400 mb-0.5">마이너스 불가 (V형 반전, 드래그: 이동)</div>
+                                <div class="text-[11px] text-teal-300 font-bold">💡 색칠된 넓이 = 총 이동 거리 (\( \int |v| \, dt \))</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="wrapper-acc1" class="graph-wrapper glass-panel rounded-2xl flex flex-col overflow-hidden col-span-1">
+                        <div class="bg-slate-800 p-3 flex justify-between items-center border-b border-slate-700 flex-wrap gap-2">
+                            <h3 class="text-md font-bold text-orange-400 whitespace-nowrap">가속도 $a(t)$</h3>
+                            <div class="flex flex-wrap gap-2 items-center">
+                                <div class="flex items-center gap-1 bg-slate-900 px-2 py-1 rounded border border-slate-600">
+                                    <button onclick="window.phys_zoomChart('acc1', -0.2)" class="px-2 py-0.5 bg-slate-700 hover:bg-slate-500 text-white text-xs rounded font-bold">-</button>
+                                    <button onclick="window.phys_zoomChart('acc1', 0.2)" class="px-2 py-0.5 bg-slate-700 hover:bg-slate-500 text-white text-xs rounded font-bold">+</button>
+                                </div>
+                                <div class="flex items-center gap-1 bg-slate-900 px-2 py-1 rounded border border-slate-600">
+                                    <button onclick="window.phys_resizeChartWindow('acc1', -1)" class="px-2 py-0.5 bg-slate-700 hover:bg-slate-500 text-white text-xs rounded font-bold">창 축소(-)</button>
+                                    <button onclick="window.phys_resizeChartWindow('acc1', 1)" class="px-2 py-0.5 bg-slate-700 hover:bg-slate-500 text-white text-xs rounded font-bold">창 확대(+)</button>
+                                </div>
+                                <button onclick="window.phys_toggleChart('acc1')" id="btn-tg-acc1" class="w-7 h-7 bg-slate-700 hover:bg-slate-500 rounded text-white font-bold ml-1">_</button>
+                            </div>
+                        </div>
+                        <div id="body-acc1" class="w-full bg-slate-900 relative graph-body" style="height: 256px;">
+                            <canvas id="chart-acc1"></canvas>
+                            <div class="absolute bottom-2 left-2 text-[10px] text-slate-400 pointer-events-none">드래그시 스크롤(이동)</div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section id="tab2-content" class="w-full flex flex-col gap-6 hide">
+                <div class="glass-panel rounded-2xl p-4 md:p-6 shadow-xl border-purple-900/50">
+                    <div class="grid grid-cols-1 lg:grid-cols-4 gap-6">
+                        <div class="flex flex-col gap-5 lg:col-span-1 bg-slate-800/80 p-5 rounded-xl border border-slate-600 shadow-inner">
+                            <h2 class="text-xl font-bold text-purple-300 border-b border-slate-600 pb-2">충돌 테스트 설정</h2>
+                            <div>
+                                <label class="block text-sm font-bold text-slate-300 mb-2">질량 m <span class="font-normal text-slate-400">(kg)</span></label>
+                                <input type="number" id="mass-input" value="1000" min="100" max="10000" step="100" class="w-full bg-slate-900 border-2 border-slate-600 rounded p-3 text-lg font-bold text-white outline-none focus:border-purple-500 font-mono transition-colors">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-bold text-slate-300 mb-2 flex justify-between">
+                                    <span>초기 속도 ($v_0$)</span>
+                                    <span id="v0-display" class="text-green-400 font-mono">20 m/s</span>
+                                </label>
+                                <input type="range" id="v0-slider" min="5" max="50" step="1" value="20" class="w-full h-2 bg-slate-600 rounded-lg appearance-none cursor-pointer">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-bold text-slate-300 mb-2">장벽 완충재 (충돌 시간 $\Delta t$)</label>
+                                <select id="material-select" class="w-full bg-slate-900 border-2 border-slate-600 rounded p-3 text-base text-white outline-none focus:border-purple-500 font-bold transition-colors">
+                                    <option value="concrete">콘크리트 벽 (0.1초)</option>
+                                    <option value="water">플라스틱 물통 (0.25초)</option>
+                                    <option value="airbag">안전 에어백 (0.5초)</option>
+                                    <option value="sponge">초대형 스펀지 (1.0초)</option>
+                                </select>
+                            </div>
+                            <button id="btn-start-test" class="mt-2 w-full px-4 py-4 bg-blue-600 hover:bg-blue-500 active:bg-blue-700 text-white rounded-xl font-bold shadow-lg shadow-blue-900/50 text-lg transition-transform transform active:scale-95">
+                                테스트 시작 / 리셋
+                            </button>
+                        </div>
+
+                        <div class="lg:col-span-3 flex flex-col gap-3">
+                            <div class="flex justify-end gap-3 mb-1">
+                                <button id="t2-btn-gas" class="px-6 py-2 bg-green-600 hover:bg-green-500 text-white rounded font-bold shadow opacity-50 cursor-not-allowed transition-all" disabled>가속 (토글)</button>
+                                <button id="t2-btn-brake" class="px-6 py-2 bg-red-600 hover:bg-red-500 text-white rounded font-bold shadow opacity-50 cursor-not-allowed transition-all" disabled>감속 (토글)</button>
+                            </div>
+
+                            <div class="w-full h-64 md:h-80 bg-[#87CEEB] rounded-xl overflow-hidden border-2 border-slate-700 relative shadow-inner">
+                                <canvas id="sim-canvas-t2"></canvas>
+                                <div class="absolute top-3 left-3 bg-slate-900/85 backdrop-blur-md p-3 rounded-xl border border-slate-500 shadow-2xl pointer-events-none z-10">
+                                    <h3 class="text-xs font-bold text-white mb-1 border-b border-slate-500 pb-1">Dynamic Telemetry</h3>
+                                    <div class="grid grid-cols-1 gap-1 text-sm hud-font font-bold w-56 md:w-64">
+                                        <div class="flex justify-between text-blue-300"><span>위치(x):</span><span id="h2-pos">0.00 m</span></div>
+                                        <div class="flex justify-between text-green-300"><span>속도(v):</span><span id="h2-vel">0.00 m/s</span></div>
+                                        <div class="flex justify-between text-orange-300"><span>가속도(a):</span><span id="h2-acc">0.00 m/s²</span></div>
+                                        <div class="flex justify-between text-purple-300 border-t border-slate-600 mt-1 pt-1">
+                                            <span>운동량(p):</span><span id="h2-mom">0 kg·m/s</span>
+                                        </div>
+                                        <div class="flex justify-between text-red-400"><span>힘(F):</span><span id="h2-force">0 N</span></div>
+                                        <div class="flex justify-between text-yellow-400"><span>충격량(J):</span><span id="h2-impulse">0 N·s</span></div>
+                                    </div>
+                                </div>
+                                <div id="status-msg" class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-3xl md:text-5xl font-black text-white bg-black/60 px-6 py-3 rounded-2xl border-4 border-slate-600 shadow-2xl pointer-events-none z-20">
+                                    대기 중
+                                </div>
+                            </div>
+                            
+                            <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 mt-2">
+                                <div id="wrapper-mom2" class="graph-wrapper glass-panel rounded-2xl flex flex-col overflow-hidden border border-slate-600 shadow-xl">
+                                    <div class="bg-slate-800 p-3 flex justify-between items-center border-b border-slate-700 flex-wrap gap-2">
+                                        <h3 class="text-lg font-bold text-purple-400 whitespace-nowrap">운동량 $p(t)$</h3>
+                                        <div class="flex gap-2 items-center flex-wrap">
+                                            <div class="flex items-center gap-1 bg-slate-900 px-2 py-1 rounded border border-slate-600">
+                                                <button onclick="window.phys_zoomChart('mom2', -0.2)" class="px-2 py-0.5 bg-slate-700 hover:bg-slate-500 text-white text-xs rounded font-bold">-</button>
+                                                <button onclick="window.phys_zoomChart('mom2', 0.2)" class="px-2 py-0.5 bg-slate-700 hover:bg-slate-500 text-white text-xs rounded font-bold">+</button>
+                                            </div>
+                                            <div class="flex items-center gap-1 bg-slate-900 px-2 py-1 rounded border border-slate-600">
+                                                <button onclick="window.phys_resizeChartWindow('mom2', -1)" class="px-2 py-0.5 bg-slate-700 hover:bg-slate-500 text-white text-xs rounded font-bold">창 축소(-)</button>
+                                                <button onclick="window.phys_resizeChartWindow('mom2', 1)" class="px-2 py-0.5 bg-slate-700 hover:bg-slate-500 text-white text-xs rounded font-bold">창 확대(+)</button>
+                                            </div>
+                                            <button onclick="window.phys_toggleChart('mom2')" id="btn-tg-mom2" class="w-7 h-7 bg-slate-700 hover:bg-slate-500 rounded text-white font-bold ml-1">_</button>
+                                        </div>
+                                    </div>
+                                    <div id="body-mom2" class="w-full bg-slate-900 relative graph-body" style="height: 300px;">
+                                        <canvas id="chart-mom2"></canvas>
+                                        <div class="absolute bottom-2 left-2 text-[10px] md:text-[11px] text-slate-300 pointer-events-none bg-slate-800/80 px-2 py-1 rounded border border-slate-600">
+                                            <span class="text-purple-400 font-bold">※ 왜 우하향할까요?</span> 충돌 후 정지할 때까지의 감속 구간만 기록하기 때문입니다.<br>
+                                            <span class="text-slate-400 text-[9px] md:text-[10px]">(클릭시 미분, 드래그시 이동)</span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div id="wrapper-force2" class="graph-wrapper glass-panel rounded-2xl flex flex-col overflow-hidden border border-slate-600 shadow-xl">
+                                    <div class="bg-slate-800 p-3 flex justify-between items-center border-b border-slate-700 flex-wrap gap-2">
+                                        <h3 class="text-lg font-bold text-red-400 whitespace-nowrap">힘 $F(t)$</h3>
+                                        <div class="flex gap-2 items-center flex-wrap">
+                                            <button id="btn-clear-chart" class="text-xs px-3 py-1 bg-red-900/50 hover:bg-red-800/80 border border-red-700 rounded text-red-200 mr-1 font-bold">초기화</button>
+                                            <div class="flex items-center gap-1 bg-slate-900 px-2 py-1 rounded border border-slate-600">
+                                                <button onclick="window.phys_zoomChart('force2', -0.2)" class="px-2 py-0.5 bg-slate-700 hover:bg-slate-500 text-white text-xs rounded font-bold">-</button>
+                                                <button onclick="window.phys_zoomChart('force2', 0.2)" class="px-2 py-0.5 bg-slate-700 hover:bg-slate-500 text-white text-xs rounded font-bold">+</button>
+                                            </div>
+                                            <div class="flex items-center gap-1 bg-slate-900 px-2 py-1 rounded border border-slate-600">
+                                                <button onclick="window.phys_resizeChartWindow('force2', -1)" class="px-2 py-0.5 bg-slate-700 hover:bg-slate-500 text-white text-xs rounded font-bold">창 축소(-)</button>
+                                                <button onclick="window.phys_resizeChartWindow('force2', 1)" class="px-2 py-0.5 bg-slate-700 hover:bg-slate-500 text-white text-xs rounded font-bold">창 확대(+)</button>
+                                            </div>
+                                            <button onclick="window.phys_toggleChart('force2')" id="btn-tg-force2" class="w-7 h-7 bg-slate-700 hover:bg-slate-500 rounded text-white font-bold ml-1">_</button>
+                                        </div>
+                                    </div>
+                                    <div id="body-force2" class="w-full bg-slate-900 relative graph-body flex flex-col" style="height: 300px;">
+                                        <div class="relative flex-grow h-0">
+                                            <canvas id="chart-force2" class="absolute inset-0 w-full h-full"></canvas>
+                                            <div class="absolute bottom-2 left-2 pointer-events-none bg-slate-800/85 px-2 py-1.5 rounded border border-slate-600 shadow-lg">
+                                                <div class="text-[10px] md:text-[11px] text-slate-300 mb-0.5"><span class="text-red-400 font-bold">※ 충돌력:</span> 장벽에 부딪히는 찰나의 힘 변화 (클릭: 접선)</div>
+                                                <div class="text-[11px] text-yellow-400 font-bold">💡 색칠된 넓이 = 충격량 (\( \int F \, dt = \Delta p \))</div>
+                                            </div>
+                                        </div>
+                                        <div class="bg-slate-800/80 border-t border-slate-700 py-2 flex justify-center items-center h-10 shadow-inner z-10">
+                                            <span class="text-yellow-400 font-bold text-sm md:text-base flex items-center">
+                                                <span id="static-integral">\( J = \int F \, dt = \)</span>
+                                                <span id="integral-val" class="font-mono text-lg ml-2">0</span>
+                                                <span class="font-mono text-sm ml-1">N·s</span>
+                                            </span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+<script>
+    /* =========================================================================
+       0. 통합 앱 전환 로직 (App Switcher)
+       ========================================================================= */
+    let currentGlobalApp = 'func';
+
+    window.switchApp = function(appId) {
+        currentGlobalApp = appId;
+        const btnFunc = document.getElementById('nav-btn-func');
+        const btnPhys = document.getElementById('nav-btn-phys');
+        const appFunc = document.getElementById('app-func');
+        const appPhys = document.getElementById('app-phys');
+
+        if (appId === 'func') {
+            btnFunc.className = "nav-btn active"; btnPhys.className = "nav-btn inactive";
+            appFunc.classList.add('active'); appPhys.classList.remove('active');
+            if(window.Plotly && document.getElementById('graphPlot')) { Plotly.Plots.resize('graphPlot'); }
+        } else {
+            btnPhys.className = "nav-btn active"; btnFunc.className = "nav-btn inactive";
+            appPhys.classList.add('active'); appFunc.classList.remove('active');
+            if(window.MathJax && MathJax.typesetPromise) { MathJax.typesetPromise([appPhys]).catch(e=>{}); }
+        }
+    };
+
+    /* =========================================================================
+       1. 함수 비교 (Function Grapher) 네임스페이스 로직
+       ========================================================================= */
+    const func_functionsList = [];
+    const func_colorPalette = ['#0d6efd', '#dc3545', '#198754', '#fd7e14', '#6610f2', '#20c997', '#e83e8c', '#0dcaf0'];
+    let func_colorIndex = 0;
+    let func_selectedFuncId = null;
+    let func_isDraggingTrace = false;
+    let func_startDataX = 0, func_startDataY = 0;
+    let func_startFuncState = null;
+    let func_isTangentMode = false;
+    let func_isTouchInteraction = false;
+    let func_touchIgnoreTimeout = null;
+    let func_isIntersectionVisible = false;
+
+    window.func_toggleIntersectionPanel = function() {
+        func_isIntersectionVisible = !func_isIntersectionVisible;
+        const panel = document.getElementById('topInfoPanel');
+        const btn = document.getElementById('intersectToggleBtn');
+        if (func_isIntersectionVisible) { panel.classList.add('visible'); btn.classList.add('active'); } 
+        else { panel.classList.remove('visible'); btn.classList.remove('active'); }
+    };
+
+    window.func_resetAndScrollUp = function() {
+        const addSection = document.getElementById('addControlsSection');
+        if (addSection) addSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        const graphDiv = document.getElementById('graphPlot');
+        if (graphDiv && graphDiv.layout) {
+            graphDiv.style.height = '650px';
+            Plotly.Plots.resize(graphDiv).then(() => { Plotly.relayout('graphPlot', { 'xaxis.range': [-5, 5], 'yaxis.range': [-5, 5] }); });
+        }
+    };
+
+    window.func_toggleTangentMode = function() {
+        func_isTangentMode = !func_isTangentMode;
+        const btn = document.getElementById('tangentModeBtn');
+        if (func_isTangentMode) {
+            btn.className = 'toggle-btn active'; btn.innerHTML = `<span style="font-size:1.1rem;">⤡</span> 실시간 접선 모드: ON`;
+            Plotly.relayout('graphPlot', { hovermode: 'closest' });
+        } else {
+            btn.className = 'toggle-btn'; btn.innerHTML = `<span style="font-size:1.1rem;">⤡</span> 실시간 접선 모드: OFF`;
+            Plotly.relayout('graphPlot', { shapes: [], annotations: [], hovermode: 'closest' }); 
+        }
+    };
+
+    window.func_zoomGraph = function(direction) {
+        const graphDiv = document.getElementById('graphPlot');
+        if (!graphDiv || !graphDiv.layout) return;
+        const xRange = graphDiv.layout.xaxis.range, yRange = graphDiv.layout.yaxis.range;
+        const xSpan = xRange[1] - xRange[0], ySpan = yRange[1] - yRange[0];
+        const xCenter = (xRange[1] + xRange[0]) / 2, yCenter = (yRange[1] + yRange[0]) / 2;
+        const factor = direction === 'in' ? 0.75 : 1.333333; 
+        Plotly.relayout(graphDiv, { 'xaxis.range': [xCenter - (xSpan * factor / 2), xCenter + (xSpan * factor / 2)], 'yaxis.range': [yCenter - (ySpan * factor / 2), yCenter + (ySpan * factor / 2)] });
+    };
+
+    function func_formatNumber(num) { return Number(Math.round(num + "e3") + "e-3"); }
+    function func_binomial(n, k) { let c = 1; for(let i=n-k+1; i<=n; i++) c*=i; for(let i=1; i<=k; i++) c/=i; return c; }
+    
+    function func_buildShiftedExpression(baseExpr, totalH, totalK) {
+        let clean = (baseExpr || '').trim();
+        let hVal = func_formatNumber(totalH), kVal = func_formatNumber(totalK);
+        let subX = Math.abs(hVal) > 1e-4 ? (hVal > 0 ? `(x - ${hVal})` : `(x + ${Math.abs(hVal)})`) : `x`;
+        let subY = Math.abs(kVal) > 1e-4 ? (kVal > 0 ? `(y - ${kVal})` : `(y + ${Math.abs(kVal)})`) : `y`;
+
+        if (clean.includes('=')) {
+            let parts = clean.split('=');
+            let L = parts[0].replace(/X/g, 'x').replace(/Y/g, 'y'); let R = parts[1].replace(/X/g, 'x').replace(/Y/g, 'y');
+            let newL = L.replace(/\bx\b/g, subX).replace(/\by\b/g, subY); let newR = R.replace(/\bx\b/g, subX).replace(/\by\b/g, subY);
+            return `${newL.trim()} = ${newR.trim()}`;
+        } else if (clean.toLowerCase().includes('y')) {
+            let L = clean.replace(/X/g, 'x').replace(/Y/g, 'y');
+            return L.replace(/\bx\b/g, subX).replace(/\by\b/g, subY);
+        } else {
+            let L = clean.replace(/X/g, 'x'); let newExpr = L.replace(/\bx\b/g, subX);
+            if (Math.abs(kVal) > 1e-4) { let signVal = kVal > 0 ? `+ ${kVal}` : `- ${Math.abs(kVal)}`; return `${newExpr} ${signVal}`; }
+            return newExpr;
+        }
+    }
+
+    // [핵심] 일원화된 자유 입력 전용 추가 함수
+    window.func_addFunction = function() {
+        const newFunc = { 
+            id: 'f_' + Date.now(), 
+            type: 'custom', 
+            color: func_colorPalette[func_colorIndex % func_colorPalette.length], 
+            visible: true, 
+            showInverse: false, 
+            H: 0, 
+            K: 0,
+            baseExpr: 'x^2',
+            expr: 'x^2' 
+        };
+        func_functionsList.push(newFunc); func_colorIndex++;
+        func_renderUI(); func_updateAll();
+    };
+
+    window.func_removeFunction = function(id) {
+        let idx = func_functionsList.findIndex(f => f.id === id);
+        if(idx !== -1) func_functionsList.splice(idx, 1);
+        if (func_selectedFuncId === id) window.func_deselectGraph();
+        func_renderUI(); func_updateAll();
+    };
+
+    window.func_updateState = function(id, field, value, index = null) {
+        const func = func_functionsList.find(f => f.id === id); if (!func) return;
+        if (field === 'visible') func.visible = value;
+        else if (field === 'showInverse') func.showInverse = value;
+        else if (field === 'color') { func.color = value; document.getElementById(`card_${id}`).style.borderLeftColor = value; } 
+        else if (field === 'expr') { func.expr = value; func.baseExpr = value; func.H = 0; func.K = 0; }
+        else func[field] = parseFloat(value) || 0;
+        
+        func_updateAll();
+    };
+
+    function func_syncInputValues(func) {
+        if (func.type === 'custom') {
+            let elExpr = document.getElementById(`input_${func.id}_expr`); if (elExpr) elExpr.value = func.expr;
+            let elH = document.getElementById(`input_${func.id}_H`); let elK = document.getElementById(`input_${func.id}_K`);
+            if (elH) elH.value = func.H; if (elK) elK.value = func.K;
+        }
+    }
+
+    function func_renderUI() {
+        const grid = document.getElementById('functionsGrid'); if(!grid) return; grid.innerHTML = '';
+        func_functionsList.forEach((func, idx) => {
+            const card = document.createElement('div'); card.className = 'func-card' + (func_selectedFuncId === func.id ? ' selected' : '');
+            card.id = `card_${func.id}`; card.style.borderLeftColor = func.color;
+            let typeName = `함수 ${idx + 1}`;
+
+            let innerHTML = `
+                <div class="func-card-header">
+                    <div class="func-card-title"><input type="color" value="${func.color}" onchange="window.func_updateState('${func.id}', 'color', this.value)"> ${typeName}</div>
+                    <div style="display:flex; align-items:center; gap:6px;">
+                        <label title="역함수 렌더링" style="font-size:0.8rem; display:flex; align-items:center; gap:2px; cursor:pointer; background:#f8f9fa; padding:3px 6px; border-radius:4px; border:1px solid #dee2e6;"><input type="checkbox" ${func.showInverse ? 'checked' : ''} onchange="window.func_updateState('${func.id}', 'showInverse', this.checked)"> 역함수</label><div style="width:1px; height:18px; background:#dee2e6; margin: 0 2px;"></div>
+                        <label class="switch"><input type="checkbox" ${func.visible ? 'checked' : ''} onchange="window.func_updateState('${func.id}', 'visible', this.checked)"><span class="slider"></span></label>
+                        <button class="btn-delete" onclick="window.func_removeFunction('${func.id}')">삭제</button>
+                    </div>
+                </div>
+            `;
+            if (func.type === 'custom') {
+                innerHTML += `
+                    <div class="custom-expr-row">
+                        <label><strong>수식 직접 입력:</strong></label>
+                        <input type="text" inputmode="text" autocorrect="off" autocapitalize="none" spellcheck="false" id="input_${func.id}_expr" value="${func.expr}" onchange="window.func_updateState('${func.id}', 'expr', this.value)" placeholder="예: x^2 + y^2 = 4, 2^x, log10(x)">
+                        <div style="font-size:0.75rem; color:#6c757d; margin-top:6px; line-height:1.4;">
+                            * <b>기본:</b> <code>x^2</code>, <code>2^x</code>, <code>sqrt(x)</code>, <code>abs(x)</code>, <code>x!</code><br>
+                            * <b>로그:</b> <code>ln(x)</code>, <code>log10(x)</code>, <code>log2(x)</code><br>
+                            * <b>삼각/방정식:</b> <code>sin(x)</code>, <code>x^2+y^2=4</code> (대소문자 무관)
+                        </div>
+                    </div>
+                    <div style="display:flex; gap:10px; margin-top:8px;">
+                        <div class="input-row" style="flex:1;"><label>X 이동 (H):</label><input type="number" step="0.5" id="input_${func.id}_H" value="${func.H}" oninput="window.func_updateState('${func.id}', 'H', this.value)"></div>
+                        <div class="input-row" style="flex:1;"><label>Y 이동 (K):</label><input type="number" step="0.5" id="input_${func.id}_K" value="${func.K}" oninput="window.func_updateState('${func.id}', 'K', this.value)"></div>
+                    </div>
+                `;
+            }
+            card.innerHTML = innerHTML; grid.appendChild(card);
+        });
+    }
+
+    function func_renderLatex() {
+        let tex = ''; const visibleFunctions = func_functionsList.filter(f => f.visible);
+        if (visibleFunctions.length === 0) tex = '\\text{활성화된 함수가 없습니다.}';
+        else {
+            visibleFunctions.forEach(f => {
+                let rhs = '';
+                if (f.type === 'custom') {
+                    let cleanExpr = f.expr.replace(/\*/g, '\\cdot ');
+                    
+                    // [핵심 추가] 거듭제곱(지수) LaTeX 변환 처리
+                    // 1) 분수 지수: x^(1/2) -> x^{\frac{1}{2}}
+                    cleanExpr = cleanExpr.replace(/\^\(\s*([^/)]+?)\s*\/\s*([^)]+?)\s*\)/g, '^{\\frac{$1}{$2}}');
+                    // 2) 일반 괄호 지수: x^(n) -> x^{n}
+                    cleanExpr = cleanExpr.replace(/\^\(([^)]+)\)/g, '^{$1}');
+                    // 3) 소수점 연속 지수: x^2.5 -> x^{2.5}
+                    cleanExpr = cleanExpr.replace(/\^([0-9.]+)/g, '^{$1}');
+
+                    if (cleanExpr.includes('=')) { rhs = cleanExpr; } else if (cleanExpr.toLowerCase().includes('y')) { rhs = cleanExpr + ' = 0'; } else { rhs = `y = ${cleanExpr}`; }
+                }
+                let eqStr = (f.type === 'custom') ? rhs : `y = ${rhs}`;
+                if (f.id === func_selectedFuncId) tex += `\\color{${f.color}}{\\boxed{${eqStr}}} \\\\ `; else tex += `\\color{${f.color}}{${eqStr}} \\\\ `;
+                if (f.showInverse && f.type === 'custom') { let rhsInv = rhs.replace(/x/g, 'y'); tex += `\\color{${f.color}}{x = ${rhsInv} \\quad \\text{(역함수)}} \\\\ `; }
+            });
+        }
+        const display = document.getElementById('math-display'); if(display) display.innerHTML = `$$ \\begin{align*} ${tex} \\end{align*} $$`;
+        if (typeof MathJax !== 'undefined' && MathJax.typesetPromise) MathJax.typesetPromise([display]).catch(e => {});
+    }
+
+    function func_gamma(n) {
+        let g = 7, p = [0.99999999999980993, 676.5203681218851, -1259.1392167224028, 771.32342877765313, -176.12853995850013, 12.507343278693905, -0.13857109526572012, 9.9843695780195716e-6, 1.5056327351493116e-7];
+        if (n < 0.5) return Math.PI / (Math.sin(Math.PI * n) * func_gamma(1 - n));
+        n--; let x = p[0]; for (let i = 1; i < g + 2; i++) x += p[i] / (n + i); let t = n + g + 0.5;
+        return Math.sqrt(2 * Math.PI) * Math.pow(t, n + 0.5) * Math.exp(-t) * x;
+    }
+    function func_factorial(n) { if (n < 0) return NaN; return func_gamma(n + 1); }
+
+    const func_customMath = {
+        csc: function(x) { let s = Math.sin(x); return Math.abs(s) < 1e-12 ? NaN : 1 / s; },
+        sec: function(x) { let c = Math.cos(x); return Math.abs(c) < 1e-12 ? NaN : 1 / c; },
+        cot: function(x) { let s = Math.sin(x); let c = Math.cos(x); return Math.abs(s) < 1e-12 ? NaN : c / s; }
+    };
+
+    function func_evaluateCustomExpr(expr, rawX, rawY) {
+        try {
+            let x = rawX; let y = rawY !== undefined ? rawY : 0;
+            let cleanExpr = expr.replace(/X/g, 'x').replace(/Y/g, 'y').replace(/([0-9.]+)\s*!/g, 'factorial($1)').replace(/([xy])\s*!/g, 'factorial($1)').replace(/\^/g, '**').replace(/\b(csc|sec|cot)\b/gi, function(match) { return 'customMath.' + match.toLowerCase(); })
+                .replace(/\b(sin|cos|tan|asin|acos|atan|sinh|cosh|tanh|log10|log2|log|ln|exp|sqrt|abs)\b/gi, function(match) { 
+                    let m = match.toLowerCase(); 
+                    if (m === 'ln') return 'Math.log'; 
+                    if (m === 'log10') return 'Math.log10';
+                    if (m === 'log2') return 'Math.log2';
+                    return 'Math.' + m; 
+                }).replace(/\b(pi|PI)\b/g, 'Math.PI').replace(/\b(e|E)\b/g, 'Math.E').replace(/(\d)([a-zA-Z(])/g, '$1*$2'); 
+            let fn = new Function('x', 'y', 'Math', 'customMath', 'factorial', 'return ' + cleanExpr);
+            let val = fn(x, y, Math, func_customMath, func_factorial); return typeof val === 'number' ? val : NaN;
+        } catch (e) { return NaN; }
+    }
+
+    function func_isImplicitFunc(f) { return f.type === 'custom' && (f.expr.includes('=') || f.expr.toLowerCase().includes('y')); }
+    function func_evaluateImplicit(f, x, y) {
+        let parts = f.expr.split('=');
+        if (parts.length === 2) return func_evaluateCustomExpr(parts[0], x, y) - func_evaluateCustomExpr(parts[1], x, y);
+        else return func_evaluateCustomExpr(f.expr, x, y); 
+    }
+
+    function func_evaluateFunction(f, x) {
+        if (f.type === 'custom') { return func_evaluateCustomExpr(f.expr, x, 0); } 
+        return NaN;
+    }
+
+    function func_evaluateDerivative(f, x) {
+        const h = 1e-5; let y1 = func_evaluateFunction(f, x - h), y2 = func_evaluateFunction(f, x + h);
+        if (isNaN(y1)) { y1 = func_evaluateFunction(f, x); y2 = func_evaluateFunction(f, x + h); return (y2 - y1) / h; }
+        if (isNaN(y2)) { y1 = func_evaluateFunction(f, x - h); y2 = func_evaluateFunction(f, x); return (y2 - y1) / h; }
+        return (y2 - y1) / (2 * h);
+    }
+    
+    function func_evaluateImplicitDerivative(f, x, y) {
+        const h = 1e-5; let Fx = (func_evaluateImplicit(f, x + h, y) - func_evaluateImplicit(f, x - h, y)) / (2 * h); let Fy = (func_evaluateImplicit(f, x, y + h) - func_evaluateImplicit(f, x, y - h)) / (2 * h);
+        if (Math.abs(Fy) < 1e-8) return NaN; return -Fx / Fy;
+    }
+
+    function func_bisectionRoot(fn, a, b, maxIter = 15) {
+        let fa = fn(a), fb = fn(b); if (isNaN(fa) || isNaN(fb) || fa * fb > 0) return NaN;
+        let mid = (a + b) / 2;
+        for (let i = 0; i < maxIter; i++) {
+            mid = (a + b) / 2; let fmid = fn(mid);
+            if (Math.abs(fmid) < 1e-7 || Math.abs(b - a) < 1e-6) break;
+            if (fa * fmid <= 0) { b = mid; fb = fmid; } else { a = mid; fa = fmid; }
+        }
+        return mid;
+    }
+
+    function func_updateIntersectionPanel(panelData) {
+        const xDiv = document.getElementById('panel-x-axis'); const yDiv = document.getElementById('panel-y-axis'); const fDiv = document.getElementById('panel-intersections');
+        if(!xDiv || !yDiv || !fDiv) return;
+        let xHTML = '', yHTML = '', fHTML = '';
+        if (panelData.xInt.length === 0) xHTML = '<div class="empty-msg">교점이 없습니다.</div>'; else panelData.xInt.forEach(p => xHTML += `<div class="coord-item" style="border-left-color: ${p.color};"><span style="color:${p.color}">${p.name}</span> : (${p.x.toFixed(2)}, 0.00)</div>`);
+        if (panelData.yInt.length === 0) yHTML = '<div class="empty-msg">교점이 없습니다.</div>'; else panelData.yInt.forEach(p => yHTML += `<div class="coord-item" style="border-left-color: ${p.color};"><span style="color:${p.color}">${p.name}</span> : (0.00, ${p.y.toFixed(2)})</div>`);
+        if (panelData.funcInt.length === 0) fHTML = '<div class="empty-msg">두 함수의 교점이 없습니다.</div>'; else panelData.funcInt.forEach(p => fHTML += `<div class="coord-item"><span style="color:${p.c1}">■</span> <span style="color:${p.c2}">■</span> : (${p.x.toFixed(2)}, ${p.y.toFixed(2)})</div>`);
+        xDiv.innerHTML = xHTML; yDiv.innerHTML = yHTML; fDiv.innerHTML = fHTML;
+    }
+
+    function func_generateTraces(rangeX, rangeY, skipHeavy) {
+        const spanX = rangeX[1] - rangeX[0], spanY = rangeY[1] - rangeY[0];
+        const minX = rangeX[0] - spanX, maxX = rangeX[1] + spanX;
+        const minY = rangeY[0] - spanY, maxY = rangeY[1] + spanY;
+        const step = Math.max((maxX - minX) / 1500, 0.005);
+        
+        const traces = []; const visibleFunctions = func_functionsList.filter(f => f.visible);
+        const xVal = []; for (let x = minX; x <= maxX; x += step) xVal.push(x);
+        
+        const yDataCollection = []; const axisIntX = [], axisIntY = [], axisIntText = [];
+        const panelData = { yInt: [], xInt: [], funcInt: [] }; let hasInverse = false;
+
+        visibleFunctions.forEach((f) => {
+            let sameTypeFuncs = func_functionsList.filter(x => x.type === f.type); let typeIndex = sameTypeFuncs.indexOf(f) + 1;
+            let fName = `함수 ${typeIndex}`; let isSelected = (f.id === func_selectedFuncId);
+
+            if (func_isImplicitFunc(f)) {
+                let steps = skipHeavy ? 60 : 160; let dx = (maxX - minX) / steps, dy = (maxY - minY) / steps;
+                let xGrid = [], yGrid = [];
+                for(let i=0; i<=steps; i++) xGrid.push(minX + i*dx); for(let i=0; i<=steps; i++) yGrid.push(minY + i*dy);
+                let zGrid = [];
+                for(let j=0; j<=steps; j++) {
+                    let row = []; for(let i=0; i<=steps; i++) row.push(func_evaluateImplicit(f, xGrid[i], yGrid[j])); zGrid.push(row);
+                }
+                traces.push({ x: xGrid, y: yGrid, z: zGrid, type: 'contour', contours: {start: 0, end: 0, size: 1, coloring: 'none'}, line: {color: f.color, width: isSelected ? 7 : 3}, showscale: false, name: fName, hoverinfo: 'none', customdata: Array(zGrid.length).fill(f.id) });
+                yDataCollection.push(null);
+
+                if (!skipHeavy) {
+                    for (let k = 0; k < xVal.length - 1; k++) {
+                        let root = func_bisectionRoot(x => func_evaluateImplicit(f, x, 0), xVal[k], xVal[k+1]);
+                        if (!isNaN(root)) {
+                            if (!panelData.xInt.some(p => p.name === fName && Math.abs(p.x - root) < 0.05)) {
+                                panelData.xInt.push({ name: fName, color: f.color, x: root, y: 0 }); axisIntX.push(root); axisIntY.push(0); axisIntText.push(`(${root.toFixed(2)}, 0.00)`);
+                            }
+                        }
+                    }
+                    let ySteps = []; for (let y = minY; y <= maxY; y += step) ySteps.push(y);
+                    for (let k = 0; k < ySteps.length - 1; k++) {
+                        let rootY = func_bisectionRoot(y => func_evaluateImplicit(f, 0, y), ySteps[k], ySteps[k+1]);
+                        if (!isNaN(rootY)) {
+                            if (!panelData.yInt.some(p => p.name === fName && Math.abs(p.y - rootY) < 0.05)) {
+                                panelData.yInt.push({ name: fName, color: f.color, x: 0, y: rootY }); axisIntX.push(0); axisIntY.push(rootY); axisIntText.push(`(0.00, ${rootY.toFixed(2)})`);
+                            }
+                        }
+                    }
+                }
+                return; 
+            }
+
+            const yVal = [];
+            for (let i = 0; i < xVal.length; i++) { let y = func_evaluateFunction(f, xVal[i]); if (!isFinite(y) || Math.abs(y) > 1e6) y = NaN; yVal.push(y); }
+            yDataCollection.push(yVal);
+
+            if (!skipHeavy) {
+                let y_at_0 = func_evaluateFunction(f, 0);
+                if (isFinite(y_at_0) && Math.abs(y_at_0) < 1e6) {
+                    panelData.yInt.push({ name: fName, color: f.color, x: 0, y: y_at_0 });
+                    if (Math.abs(y_at_0) < 1e-4) panelData.xInt.push({ name: fName, color: f.color, x: 0, y: 0 });
+                    if (!axisIntX.some(x => Math.abs(x - 0) < 1e-4 && Math.abs(axisIntY[axisIntX.indexOf(x)] - y_at_0) < 1e-4)) { axisIntX.push(0); axisIntY.push(y_at_0); axisIntText.push(`(0.00, ${y_at_0.toFixed(2)})`); }
+                }
+
+                for (let k = 0; k < xVal.length - 1; k++) {
+                    let y1 = yVal[k], y2 = yVal[k+1]; if (isNaN(y1) || isNaN(y2)) continue;
+                    if (Math.abs(y2 - y1) > (spanY * 2)) continue;
+                    if (y1 * y2 <= 0 && (y1 !== 0 || y2 !== 0)) {
+                        let root = func_bisectionRoot(x => func_evaluateFunction(f, x), xVal[k], xVal[k+1]); let ix = !isNaN(root) ? root : (xVal[k] + (y1 / (y1 - y2)) * (xVal[k+1] - xVal[k]));
+                        if (!panelData.xInt.some(p => p.name === fName && Math.abs(p.x - ix) < 0.05)) { panelData.xInt.push({ name: fName, color: f.color, x: ix, y: 0 }); axisIntX.push(ix); axisIntY.push(0); axisIntText.push(`(${ix.toFixed(2)}, 0.00)`); }
+                    }
+                }
+            }
+
+            traces.push({ x: xVal, y: yVal, mode: 'lines', name: fName, line: { color: f.color, width: isSelected ? 7 : 3 }, customdata: Array(xVal.length).fill(f.id), hovertemplate: '(%{x:.2f}, %{y:.2f})<extra></extra>' });
+            if (f.showInverse && f.type === 'custom') { hasInverse = true; traces.push({ x: yVal, y: xVal, mode: 'lines', name: `${fName} 역함수`, line: { color: f.color, width: 2, dash: 'dot' }, customdata: Array(xVal.length).fill('inv_' + f.id), hovertemplate: '(%{x:.2f}, %{y:.2f})<extra></extra>' }); }
+        });
+
+        if (hasInverse) traces.push({ x: [-10000, 10000], y: [-10000, 10000], mode: 'lines', name: 'y = x 대칭축', line: { color: '#adb5bd', width: 2, dash: 'dash' }, hoverinfo: 'none' });
+
+        if (!skipHeavy) {
+            const intersectX = [], intersectY = [], intersectText = [];
+            for (let i = 0; i < visibleFunctions.length; i++) {
+                for (let j = i + 1; j < visibleFunctions.length; j++) {
+                    const f1 = visibleFunctions[i], f2 = visibleFunctions[j]; const isImp1 = func_isImplicitFunc(f1), isImp2 = func_isImplicitFunc(f2);
+                    if (!isImp1 && !isImp2) {
+                        const y1 = yDataCollection[i], y2 = yDataCollection[j];
+                        for (let k = 0; k < xVal.length - 1; k++) {
+                            if (isNaN(y1[k]) || isNaN(y2[k]) || isNaN(y1[k+1]) || isNaN(y2[k+1])) continue;
+                            if (Math.abs(y1[k+1] - y1[k]) > (spanY * 2) || Math.abs(y2[k+1] - y2[k]) > (spanY * 2)) continue;
+                            let diff1 = y1[k] - y2[k], diff2 = y1[k+1] - y2[k+1];
+                            if (diff1 * diff2 <= 0 && (diff1 !== 0 || diff2 !== 0)) {
+                                let rootX = func_bisectionRoot(x => func_evaluateFunction(f1, x) - func_evaluateFunction(f2, x), xVal[k], xVal[k+1]);
+                                let ix = !isNaN(rootX) ? rootX : (xVal[k] + (diff1 / (diff1 - diff2)) * (xVal[k+1] - xVal[k])); let iy = func_evaluateFunction(f1, ix);
+                                if (!intersectX.some(x => Math.abs(x - ix) < 0.08 && Math.abs(intersectY[intersectX.indexOf(x)] - iy) < 0.08)) {
+                                    intersectX.push(ix); intersectY.push(iy); intersectText.push(`(${ix.toFixed(2)}, ${iy.toFixed(2)})`); panelData.funcInt.push({ c1: f1.color, c2: f2.color, x: ix, y: iy });
+                                }
+                            }
+                        }
+                    } else if (isImp1 !== isImp2) {
+                        const impF = isImp1 ? f1 : f2, expF = isImp1 ? f2 : f1;
+                        for (let k = 0; k < xVal.length - 1; k++) {
+                            let xA = xVal[k], xB = xVal[k+1]; let yA = func_evaluateFunction(expF, xA), yB = func_evaluateFunction(expF, xB);
+                            if (isNaN(yA) || isNaN(yB)) continue;
+                            let vA = func_evaluateImplicit(impF, xA, yA), vB = func_evaluateImplicit(impF, xB, yB);
+                            if (isNaN(vA) || isNaN(vB)) continue;
+                            if (vA * vB <= 0 && (vA !== 0 || vB !== 0)) {
+                                let rootX = func_bisectionRoot(x => { let y = func_evaluateFunction(expF, x); return isNaN(y) ? NaN : func_evaluateImplicit(impF, x, y); }, xA, xB);
+                                if (!isNaN(rootX)) {
+                                    let rootY = func_evaluateFunction(expF, rootX);
+                                    if (!intersectX.some(x => Math.abs(x - rootX) < 0.08 && Math.abs(intersectY[intersectX.indexOf(x)] - rootY) < 0.08)) {
+                                        intersectX.push(rootX); intersectY.push(rootY); intersectText.push(`(${rootX.toFixed(2)}, ${rootY.toFixed(2)})`); panelData.funcInt.push({ c1: f1.color, c2: f2.color, x: rootX, y: rootY });
+                                    }
+                                }
+                            }
+                        }
+                    } else {
+                        let steps = 70; let dx = (maxX - minX) / steps, dy = (maxY - minY) / steps;
+                        for (let xi = minX; xi < maxX; xi += dx) {
+                            for (let yj = minY; yj < maxY; yj += dy) {
+                                let fA1 = func_evaluateImplicit(f1, xi, yj), fA2 = func_evaluateImplicit(f2, xi, yj);
+                                if (Math.abs(fA1) < 0.25 && Math.abs(fA2) < 0.25) {
+                                    let mx = xi + dx/2, my = yj + dy/2;
+                                    if (!intersectX.some(x => Math.abs(x - mx) < (dx * 1.5) && Math.abs(intersectY[intersectX.indexOf(x)] - my) < (dy * 1.5))) {
+                                        intersectX.push(mx); intersectY.push(my); intersectText.push(`(${mx.toFixed(2)}, ${my.toFixed(2)})`); panelData.funcInt.push({ c1: f1.color, c2: f2.color, x: mx, y: my });
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            if (axisIntX.length > 0) traces.push({ x: axisIntX, y: axisIntY, mode: 'markers+text', name: '축 교점', marker: { size: 10, color: '#fd7e14', symbol: 'diamond' }, text: axisIntText, textposition: 'bottom right', textfont: { size: 13, weight: 'bold', color: '#fd7e14' }, hoverinfo: 'text' });
+            if (intersectX.length > 0) traces.push({ x: intersectX, y: intersectY, mode: 'markers+text', name: '함수 교점', marker: { size: 10, color: '#212529', symbol: 'circle' }, text: intersectText, textposition: 'top left', textfont: { size: 13, weight: 'bold', color: '#212529' }, hoverinfo: 'text' });
+            func_updateIntersectionPanel(panelData);
+        }
+        if (traces.length === 0) traces.push({ x: [], y: [], name: '활성화 없음' });
+        return traces;
+    }
+
+    function func_getDynamicTick(range) { return (!range || range.length < 2) ? 0.5 : (Math.abs(range[1] - range[0]) <= 20 ? 0.5 : undefined); }
+    function func_clearTangentShape() { Plotly.relayout('graphPlot', { shapes: [], annotations: [] }); }
+
+    function func_floatXAxis() {
+        const graphDiv = document.getElementById('graphPlot'); if (!graphDiv) return;
+        const xAxisLayers = graphDiv.querySelectorAll('.xaxislayer-above');
+        const rect = graphDiv.getBoundingClientRect(); const bottomHidden = rect.bottom - window.innerHeight;
+        xAxisLayers.forEach(layer => { layer.style.transform = bottomHidden > 0 ? `translateY(-${bottomHidden}px)` : `translateY(0px)`; });
+    }
+
+    function func_updateAll(skipHeavy = false) {
+        if (!skipHeavy) func_renderLatex();
+        const graphDiv = document.getElementById('graphPlot'); if (!graphDiv || !graphDiv.layout) return;
+        const currentXRange = graphDiv.layout.xaxis.range, currentYRange = graphDiv.layout.yaxis.range;
+        const newTraces = func_generateTraces(currentXRange, currentYRange, skipHeavy);
+        if (typeof Plotly !== 'undefined') {
+            Plotly.react('graphPlot', newTraces, graphDiv.layout);
+            Plotly.relayout('graphPlot', { 'xaxis.dtick': func_getDynamicTick(currentXRange), 'yaxis.dtick': func_getDynamicTick(graphDiv.layout.yaxis.range), 'yaxis.scaleanchor': 'x', 'yaxis.scaleratio': 1 });
+        }
+    }
+
+    window.func_deselectGraph = function() {
+        func_selectedFuncId = null; func_renderUI(); func_updateAll();
+        const sb = document.getElementById('statusBoard'); sb.className = 'status-board';
+        sb.innerHTML = `<div style="font-weight: bold; color:#212529;">- 그래프 이동 선택 -</div><div style="margin-top: 5px;">[모바일] 1초 이상 터치 &nbsp;&nbsp;|&nbsp;&nbsp; [데스크탑] 마우스 좌측 버튼 클릭</div>`;
+        document.getElementById('deselectBtn').style.display = 'none'; Plotly.relayout('graphPlot', {dragmode: 'pan'});
+    };
+
+    function func_selectGraph(funcId) {
+        func_selectedFuncId = funcId; func_renderUI(); func_updateAll();
+        const sb = document.getElementById('statusBoard'); const f = func_functionsList.find(x => x.id === funcId); if (!f) return;
+        let sameTypeFuncs = func_functionsList.filter(x => x.type === f.type); let typeName = f.type === 'custom' ? '함수' : '함수';
+        sb.className = 'status-board active'; sb.innerHTML = `✅ <span style="color:${f.color}">선택됨 (${typeName} ${sameTypeFuncs.indexOf(f)+1})</span> - 화면을 <strong>드래그</strong>하면 평행이동합니다.`;
+        document.getElementById('deselectBtn').style.display = 'flex'; Plotly.relayout('graphPlot', {dragmode: false});
+    }
+
+    function func_drawTangentFromObj(f, px, py, isInverse) {
+        let m = 0; let isImplicit = func_isImplicitFunc(f);
+        if (isImplicit) { m = func_evaluateImplicitDerivative(f, px, py); } 
+        else if (isInverse) { const origM = func_evaluateDerivative(f, py); if (Math.abs(origM) < 1e-8 || isNaN(origM)) return; m = 1 / origM; } 
+        else { m = func_evaluateDerivative(f, px); }
+        if (isNaN(m)) return;
+        const shape = { type: 'line', x0: px - 10, y0: py - m * 10, x1: px + 10, y1: py + m * 10, line: { color: f.color, width: 2, dash: 'dot' } };
+        const annotation = { x: px, y: py, text: `<b>기울기(m) = ${m.toFixed(3)}</b>`, showarrow: true, arrowhead: 2, ax: 0, ay: -40, font: { size: 14, color: '#fff' }, bgcolor: '#212529', bordercolor: f.color, borderpad: 4, borderwidth: 2 };
+        Plotly.relayout('graphPlot', { shapes: [shape], annotations: [annotation] });
+    }
+
+    function func_findClosestFunction(px, py) {
+        let closest = null; let minDist = Infinity;
+        const graphDiv = document.getElementById('graphPlot'); if (!graphDiv || !graphDiv.layout) return null;
+        let threshold = Math.abs(graphDiv.layout.yaxis.range[1] - graphDiv.layout.yaxis.range[0]) * 0.08; 
+        func_functionsList.forEach(f => {
+            if (!f.visible) return;
+            if (func_isImplicitFunc(f)) {
+                let eps = threshold * 0.5;
+                let v00 = func_evaluateImplicit(f, px - eps, py - eps), v01 = func_evaluateImplicit(f, px - eps, py + eps);
+                let v10 = func_evaluateImplicit(f, px + eps, py - eps), v11 = func_evaluateImplicit(f, px + eps, py + eps);
+                let minV = Math.min(v00, v01, v10, v11), maxV = Math.max(v00, v01, v10, v11);
+                if (minV <= 0 && maxV >= 0) { let dist = Math.abs((minV + maxV)/2); if (dist < minDist) { minDist = dist; closest = { f: f, isInverse: false, px: px, py: py }; } }
+                return;
+            }
+            let y = func_evaluateFunction(f, px); if (!isNaN(y)) { let dist = Math.abs(y - py); if (dist < minDist && dist < threshold) { minDist = dist; closest = { f: f, isInverse: false, px: px, py: y }; } }
+            if (f.showInverse && f.type === 'custom') { let invX = func_evaluateFunction(f, py); if (!isNaN(invX)) { let dist = Math.abs(invX - px); if (dist < minDist && dist < threshold) { minDist = dist; closest = { f: f, isInverse: true, px: invX, py: py }; } } }
+        });
+        return closest;
+    }
+
+    function initFuncGraph() {
+        if (typeof Plotly === 'undefined') { setTimeout(initFuncGraph, 100); return; }
+        const layout = { dragmode: 'pan', hovermode: 'closest', xaxis: { range: [-5, 5], dtick: 0.5, zeroline: true, zerolinecolor: '#343a40', zerolinewidth: 2, gridcolor: '#e9ecef', showticklabels: true, tickfont: { size: 14, color: '#212529', weight: 'bold' } }, yaxis: { range: [-5, 5], dtick: 0.5, zeroline: true, zerolinecolor: '#343a40', zerolinewidth: 2, gridcolor: '#e9ecef', scaleanchor: 'x', scaleratio: 1, showticklabels: true, tickfont: { size: 14, color: '#212529', weight: 'bold' } }, margin: { l: 60, r: 40, t: 50, b: 60 }, legend: { orientation: 'h', yanchor: 'bottom', y: 1.02, xanchor: 'left', x: 0 } };
+        Plotly.newPlot('graphPlot', [], layout, { responsive: true, scrollZoom: true, displayModeBar: false, doubleClick: false });
+        const graphDiv = document.getElementById('graphPlot');
+
+        graphDiv.on('plotly_afterplot', func_floatXAxis);
+
+        graphDiv.addEventListener('mousemove', function(e) {
+            if (func_isTouchInteraction || func_isDraggingTrace || !func_isTangentMode || func_selectedFuncId) return;
+            const bgRect = graphDiv.querySelector('.gridlayer').getBoundingClientRect();
+            if (e.clientX < bgRect.left || e.clientX > bgRect.right || e.clientY < bgRect.top || e.clientY > bgRect.bottom) return;
+            let px = graphDiv._fullLayout.xaxis.p2d(e.clientX - bgRect.left); let py = graphDiv._fullLayout.yaxis.p2d(e.clientY - bgRect.top);
+            let closest = func_findClosestFunction(px, py);
+            if (closest) func_drawTangentFromObj(closest.f, closest.px, closest.py, closest.isInverse); else func_clearTangentShape();
+        });
+
+        graphDiv.addEventListener('mouseleave', function() { if (func_isTangentMode && !func_selectedFuncId) func_clearTangentShape(); });
+
+        let func_mouseStartClientX = 0, func_mouseStartClientY = 0;
+        let func_touchTimer = null; let func_touchStartClientX = 0, func_touchStartClientY = 0; let func_touchTargetObj = null;
+
+        function getClientCoords(e) { return (e.touches && e.touches.length > 0) ? { clientX: e.touches[0].clientX, clientY: e.touches[0].clientY } : { clientX: e.clientX, clientY: e.clientY }; }
+
+        graphDiv.addEventListener('touchstart', function(e) {
+            if (e.touches.length > 1) { if (func_touchTimer) { clearTimeout(func_touchTimer); func_touchTimer = null; } return; }
+            func_isTouchInteraction = true; if (func_touchIgnoreTimeout) clearTimeout(func_touchIgnoreTimeout);
+            const coords = getClientCoords(e); func_touchStartClientX = coords.clientX; func_touchStartClientY = coords.clientY;
+            const bgRect = graphDiv.querySelector('.gridlayer').getBoundingClientRect();
+            if (coords.clientX < bgRect.left || coords.clientX > bgRect.right || coords.clientY < bgRect.top || coords.clientY > bgRect.bottom) return;
+            let px = graphDiv._fullLayout.xaxis.p2d(coords.clientX - bgRect.left), py = graphDiv._fullLayout.yaxis.p2d(coords.clientY - bgRect.top);
+            func_touchTargetObj = func_findClosestFunction(px, py);
+            if (func_touchTimer) clearTimeout(func_touchTimer);
+            if (func_touchTargetObj && !func_selectedFuncId) {
+                func_touchTimer = setTimeout(() => { func_selectGraph(func_touchTargetObj.f.id); func_touchTargetObj = null; if(navigator.vibrate) navigator.vibrate(50); }, 1000); 
+            }
+            if (func_selectedFuncId) func_handleDragStart(coords.clientX, coords.clientY);
+            if (func_isTangentMode && func_touchTargetObj && !func_selectedFuncId) func_drawTangentFromObj(func_touchTargetObj.f, func_touchTargetObj.px, func_touchTargetObj.py, func_touchTargetObj.isInverse);
+        }, { passive: false });
+
+        graphDiv.addEventListener('touchmove', function(e) {
+            if (e.touches.length > 1) { if (func_touchTimer) { clearTimeout(func_touchTimer); func_touchTimer = null; } return; }
+            const coords = getClientCoords(e);
+            if (func_touchTimer) {
+                let dx = coords.clientX - func_touchStartClientX, dy = coords.clientY - func_touchStartClientY;
+                if (Math.sqrt(dx*dx + dy*dy) > 10) { clearTimeout(func_touchTimer); func_touchTimer = null; }
+            }
+            if (func_isDraggingTrace && func_selectedFuncId) { func_handleDragMove(coords.clientX, coords.clientY); if(e.cancelable) e.preventDefault(); return; }
+            if (func_isTangentMode && !func_selectedFuncId && func_isTouchInteraction) {
+                const bgRect = graphDiv.querySelector('.gridlayer').getBoundingClientRect();
+                let px = graphDiv._fullLayout.xaxis.p2d(coords.clientX - bgRect.left), py = graphDiv._fullLayout.yaxis.p2d(coords.clientY - bgRect.top);
+                func_touchTargetObj = func_findClosestFunction(px, py);
+                if (func_touchTargetObj) { func_drawTangentFromObj(func_touchTargetObj.f, func_touchTargetObj.px, func_touchTargetObj.py, func_touchTargetObj.isInverse); if(e.cancelable) e.preventDefault(); } 
+                else func_clearTangentShape();
+            }
+        }, { passive: false });
+
+        window.addEventListener('touchend', function() {
+            if (func_touchTimer) { clearTimeout(func_touchTimer); func_touchTimer = null; }
+            if (func_isDraggingTrace) func_handleDragEnd();
+            func_touchIgnoreTimeout = setTimeout(() => { func_isTouchInteraction = false; }, 1000);
+            if (func_isTangentMode && !func_selectedFuncId) setTimeout(() => { if (!func_isDraggingTrace) func_clearTangentShape(); }, 1000);
+        });
+        
+        function func_handleDragStart(clientX, clientY) {
+            if (!func_selectedFuncId) return;
+            func_clearTangentShape(); const bgRect = graphDiv.querySelector('.gridlayer').getBoundingClientRect();
+            if (clientX < bgRect.left || clientX > bgRect.right || clientY < bgRect.top || clientY > bgRect.bottom) return;
+            func_isDraggingTrace = true; func_startDataX = graphDiv._fullLayout.xaxis.p2d(clientX - bgRect.left); func_startDataY = graphDiv._fullLayout.yaxis.p2d(clientY - bgRect.top);
+            func_startFuncState = JSON.parse(JSON.stringify(func_functionsList.find(f => f.id === func_selectedFuncId)));
+        }
+
+        function func_handleDragMove(clientX, clientY) {
+            if (!func_isDraggingTrace || !func_selectedFuncId) return;
+            const bgRect = graphDiv.querySelector('.gridlayer').getBoundingClientRect();
+            let currDataX = graphDiv._fullLayout.xaxis.p2d(clientX - bgRect.left), currDataY = graphDiv._fullLayout.yaxis.p2d(clientY - bgRect.top);
+            let dx = currDataX - func_startDataX, dy = currDataY - func_startDataY;
+            let targetFunc = func_functionsList.find(f => f.id === func_selectedFuncId);
+            
+            if (targetFunc.type === 'custom') {
+                targetFunc.H = (func_startFuncState.H || 0) + dx; targetFunc.K = (func_startFuncState.K || 0) + dy;
+                targetFunc.expr = func_buildShiftedExpression(targetFunc.baseExpr || func_startFuncState.expr, targetFunc.H, targetFunc.K);
+            }
+            func_syncInputValues(targetFunc); func_updateAll(true); 
+        }
+
+        function func_handleDragEnd() {
+            if (func_isDraggingTrace) { func_isDraggingTrace = false; let targetFunc = func_functionsList.find(f => f.id === func_selectedFuncId); if (targetFunc) func_syncInputValues(targetFunc); func_updateAll(false); }
+        }
+
+        graphDiv.addEventListener('mousedown', function(e) { func_mouseStartClientX = e.clientX; func_mouseStartClientY = e.clientY; func_handleDragStart(e.clientX, e.clientY); });
+        window.addEventListener('mousemove', function(e) { func_handleDragMove(e.clientX, e.clientY); });
+        window.addEventListener('mouseup', function(e) {
+            let dx = e.clientX - func_mouseStartClientX; let dy = e.clientY - func_mouseStartClientY;
+            if (Math.sqrt(dx*dx + dy*dy) < 5 && !func_isTouchInteraction && !func_selectedFuncId) {
+                const bgRect = graphDiv.querySelector('.gridlayer').getBoundingClientRect();
+                if (e.clientX >= bgRect.left && e.clientX <= bgRect.right && e.clientY >= bgRect.top && e.clientY <= bgRect.bottom) {
+                    let px = graphDiv._fullLayout.xaxis.p2d(e.clientX - bgRect.left), py = graphDiv._fullLayout.yaxis.p2d(e.clientY - bgRect.top);
+                    let closest = func_findClosestFunction(px, py); if (closest) func_selectGraph(closest.f.id);
+                }
+            }
+            func_handleDragEnd(); 
+        });
+
+        let func_relayoutDebounceTimer = null;
+        graphDiv.on('plotly_relayout', function(eventData) {
+            if (eventData['shapes'] !== undefined || eventData['annotations'] !== undefined || eventData['hovermode'] !== undefined) return;
+            if (eventData['xaxis.dtick'] !== undefined || eventData['yaxis.dtick'] !== undefined || eventData['yaxis.scaleanchor'] !== undefined) return;
+            if (func_relayoutDebounceTimer) clearTimeout(func_relayoutDebounceTimer);
+            func_relayoutDebounceTimer = setTimeout(() => { func_updateAll(false); }, 250); 
+        });
+
+        window.func_addFunction(); 
+    }
+
+    /* =========================================================================
+       2. 수학 물리 시뮬레이터 (Physics Simulation) 네임스페이스 로직
+       ========================================================================= */
+    const phys_dt = 1/60; 
+    const phys_PIXELS_PER_METER = 15; 
+    const phys_WALL_POS_M = 100;
+    let phys_globalMass = 1000;
+    let phys_animationFrameId = null;
+
+    const phys_kState = { t: 0, x: 0, v: 0, a: 0, inputAcc: 0, history: [] };
+    const phys_dState = { phase: 'ready', t: 0, x: 0, v: 0, a: 0, p: 0, F: 0, J: 0, inputAcc: 0, v0: 20, matKey: 'concrete', crashTime: 0, p_impact: 0, chartData: [] };
+
+    const phys_materials = {
+        'concrete': { name: '콘크리트', T: 0.1, color: '#ef4444', renderColor: '#475569', width: 2 },
+        'water':    { name: '물통', T: 0.25, color: '#f59e0b', renderColor: '#3b82f6', width: 4 },
+        'airbag':   { name: '에어백', T: 0.5, color: '#8b5cf6', renderColor: '#a855f7', width: 6 },
+        'sponge':   { name: '스펀지', T: 1.0, color: '#3b82f6', renderColor: '#fcd34d', width: 10 }
+    };
+
+    const phys_charts = {
+        pos1: { id: 'chart-pos1', wrapId: 'wrapper-pos1', zoom: 1, collapsed: false, selT: -1, yKey: 'x', color: '#60a5fa', ylabel: 'x (m)', winH: 256, offsetX: 0, offsetY: 0 },
+        vel1: { id: 'chart-vel1', wrapId: 'wrapper-vel1', zoom: 1, collapsed: false, selT: -1, yKey: 'v', color: '#4ade80', ylabel: 'v (m/s)', winH: 256, offsetX: 0, offsetY: 0 },
+        spd1: { id: 'chart-spd1', wrapId: 'wrapper-spd1', zoom: 1, collapsed: false, selT: -1, yKey: 'speed', color: '#14b8a6', ylabel: '|v| (m/s)', winH: 256, offsetX: 0, offsetY: 0 },
+        acc1: { id: 'chart-acc1', wrapId: 'wrapper-acc1', zoom: 1, collapsed: false, selT: -1, yKey: 'a', color: '#fb923c', ylabel: 'a (m/s²)', winH: 256, offsetX: 0, offsetY: 0 },
+        force2: { id: 'chart-force2', wrapId: 'wrapper-force2', zoom: 1, collapsed: false, selT: -1, yKey: 'F', ylabel: 'F (N)', winH: 300, offsetX: 0, offsetY: 0 },
+        mom2: { id: 'chart-mom2', wrapId: 'wrapper-mom2', zoom: 1, collapsed: false, selT: -1, yKey: 'p', ylabel: 'p (kg·m/s)', winH: 300, offsetX: 0, offsetY: 0 }
+    };
+
+    let phys_audioCtx, phys_engineOsc, phys_engineGain;
+    function phys_initAudio() {
+        if (phys_audioCtx) { if (phys_audioCtx.state === 'suspended') phys_audioCtx.resume(); return; }
+        phys_audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        phys_engineOsc = phys_audioCtx.createOscillator(); phys_engineOsc.type = 'sawtooth'; 
+        phys_engineGain = phys_audioCtx.createGain(); phys_engineGain.gain.value = 0; 
+        const filter = phys_audioCtx.createBiquadFilter(); filter.type = 'lowpass'; filter.frequency.value = 250; 
+        const dist = phys_audioCtx.createWaveShaper();
+        let k = 100, n = 44100, curve = new Float32Array(n), deg = Math.PI/180;
+        for (let i = 0; i < n; ++i ) { let x = i*2/n-1; curve[i] = (3+k)*x*20*deg/(Math.PI+k*Math.abs(x)); }
+        dist.curve = curve; dist.oversample = '4x';
+        phys_engineOsc.connect(dist); dist.connect(filter); filter.connect(phys_engineGain); phys_engineGain.connect(phys_audioCtx.destination);
+        phys_engineOsc.start();
+    }
+
+    function phys_playCrashSound(duration) {
+        if (!phys_audioCtx) phys_initAudio();
+        const bufSize = phys_audioCtx.sampleRate; const buffer = phys_audioCtx.createBuffer(1, bufSize, phys_audioCtx.sampleRate);
+        const data = buffer.getChannelData(0); for (let i=0; i<bufSize; i++) data[i] = Math.random()*2-1; 
+        const noise = phys_audioCtx.createBufferSource(); noise.buffer = buffer;
+        const gain = phys_audioCtx.createGain(); const filter = phys_audioCtx.createBiquadFilter();
+        noise.connect(filter); filter.connect(gain); gain.connect(phys_audioCtx.destination);
+        const now = phys_audioCtx.currentTime; gain.gain.setValueAtTime(0, now);
+        
+        if (duration < 0.2) { 
+            filter.type = 'highpass'; filter.frequency.value = 600;
+            gain.gain.linearRampToValueAtTime(1.0, now+0.01); gain.gain.exponentialRampToValueAtTime(0.01, now+duration*1.5); 
+        } else { 
+            filter.type = 'lowpass'; filter.frequency.value = Math.max(100, 500-(duration*200));
+            gain.gain.linearRampToValueAtTime(0.8, now+duration*0.2); gain.gain.exponentialRampToValueAtTime(0.01, now+duration*1.5); 
+        }
+        noise.start(now); noise.stop(now+duration*3);
+    }
+
+    function phys_resetDynamics() {
+        phys_dState.phase = 'ready'; phys_dState.t = 0; phys_dState.x = 0; phys_dState.v = 0; phys_dState.a = 0; phys_dState.p = 0; phys_dState.F = 0; phys_dState.J = 0; phys_dState.inputAcc = 0;
+        let sm = document.getElementById('status-msg'); if(sm) { sm.innerText = "대기 중 (Ready)"; sm.style.display = 'block'; sm.style.color = '#f8fafc'; sm.style.borderColor = '#64748b'; }
+        
+        let bg = document.getElementById('t2-btn-gas'); 
+        if(bg) { bg.disabled = true; bg.classList.add('opacity-50', 'cursor-not-allowed'); bg.classList.remove('ring-4', 'ring-white', 'scale-95'); }
+        let bb = document.getElementById('t2-btn-brake'); 
+        if(bb) { bb.disabled = true; bb.classList.add('opacity-50', 'cursor-not-allowed'); bb.classList.remove('ring-4', 'ring-white', 'scale-95'); }
+        
+        Object.keys(phys_charts).forEach(k => { phys_charts[k].selT = -1; phys_charts[k].offsetX = 0; phys_charts[k].offsetY = 0; });
+    }
+
+    function phys_startDynamicsTest() {
+        phys_resetDynamics(); phys_dState.phase = 'running'; phys_dState.v = phys_dState.v0; 
+        let sm = document.getElementById('status-msg'); if(sm) sm.style.display = 'none';
+        let bg = document.getElementById('t2-btn-gas'); if(bg) { bg.disabled = false; bg.classList.remove('opacity-50', 'cursor-not-allowed'); }
+        let bb = document.getElementById('t2-btn-brake'); if(bb) { bb.disabled = false; bb.classList.remove('opacity-50', 'cursor-not-allowed'); }
+        const mat = phys_materials[phys_dState.matKey];
+        phys_dState.chartData.push({ name: mat.name, mass: phys_globalMass, color: mat.color, data: [] });
+        if(phys_dState.chartData.length > 5) phys_dState.chartData.shift(); 
+    }
+
+    window.phys_zoomChart = function(key, amt) { phys_charts[key].zoom = Math.max(0.2, Math.min(10, phys_charts[key].zoom + amt)); };
+    window.phys_resizeChartWindow = function(key, dir) {
+        const chart = phys_charts[key]; if (chart.collapsed) return; 
+        chart.winH = Math.max(150, Math.min(800, chart.winH + dir * 100));
+        document.getElementById(`body-${key}`).style.height = chart.winH + 'px';
+        if (key !== 'force2' && key !== 'mom2') {
+            const wrapper = document.getElementById(chart.wrapId);
+            if (chart.winH > 300) { wrapper.classList.remove('lg:col-span-1'); wrapper.classList.add('lg:col-span-2'); }
+            else { wrapper.classList.remove('lg:col-span-2'); wrapper.classList.add('lg:col-span-1'); }
+        }
+    };
+    window.phys_toggleChart = function(key) {
+        const chart = phys_charts[key]; chart.collapsed = !chart.collapsed;
+        const body = document.getElementById(`body-${key}`); const btn = document.getElementById(`btn-tg-${key}`);
+        if (chart.collapsed) { body.style.height = '0px'; body.style.opacity = '0'; btn.innerText = '□'; } 
+        else { body.style.height = chart.winH + 'px'; body.style.opacity = '1'; btn.innerText = '_'; }
+    };
+
+    const phys_drawTree = (ctx, x, y, scale = 1) => {
+        ctx.save(); ctx.translate(x, y); ctx.scale(scale, scale);
+        ctx.fillStyle = '#451a03'; ctx.fillRect(-8, -50, 16, 50); ctx.fillStyle = '#064e3b'; ctx.beginPath(); ctx.arc(0, -60, 25, 0, Math.PI*2); ctx.fill();
+        ctx.fillStyle = '#047857'; ctx.beginPath(); ctx.arc(-15, -45, 20, 0, Math.PI*2); ctx.fill(); ctx.beginPath(); ctx.arc(15, -45, 20, 0, Math.PI*2); ctx.fill();
+        ctx.fillStyle = '#34d399'; ctx.beginPath(); ctx.arc(-5, -70, 10, 0, Math.PI*2); ctx.fill(); ctx.restore();
+    };
+
+    const phys_drawEnv = (ctx, w, h, camPosM) => {
+        const roadY = h - 40; ctx.fillStyle = '#22c55e'; ctx.fillRect(0, roadY - 10, w, h - roadY + 10);
+        const tSpace = 30 * phys_PIXELS_PER_METER; const camOff = camPosM * phys_PIXELS_PER_METER; 
+        const startX = -(((camOff % tSpace) + tSpace) % tSpace); 
+        for(let i = startX - tSpace; i < w + tSpace; i += tSpace) {
+            const idx = Math.floor((camOff + i) / tSpace); const s = 1 + (Math.abs(idx) % 3) * 0.2; phys_drawTree(ctx, i, roadY - 10, s);
+        }
+        ctx.fillStyle = '#1e293b'; ctx.fillRect(0, roadY, w, 40); ctx.strokeStyle = '#cbd5e1'; ctx.lineWidth = 4; ctx.setLineDash([20, 30]);
+        ctx.beginPath(); ctx.moveTo(startX, roadY + 20); ctx.lineTo(w, roadY + 20); ctx.stroke(); ctx.setLineDash([]);
+    };
+
+    const phys_drawCar = (ctx, x, y, scale = 1) => {
+        ctx.save(); ctx.translate(x, y); ctx.scale(scale, scale);
+        ctx.fillStyle = 'rgba(0,0,0,0.4)'; ctx.beginPath(); ctx.ellipse(0, 12, 35, 6, 0, 0, Math.PI*2); ctx.fill();
+        ctx.fillStyle = '#ef4444'; ctx.beginPath(); ctx.roundRect(-25, -12, 50, 18, 5); ctx.fill();
+        ctx.fillStyle = '#991b1b'; ctx.beginPath(); ctx.roundRect(-12, -25, 24, 15, 4); ctx.fill();
+        ctx.fillStyle = '#bae6fd'; ctx.fillRect(-9, -21, 8, 9); ctx.fillRect(2, -21, 7, 9);
+        ctx.fillStyle = '#0f172a'; ctx.beginPath(); ctx.arc(-15, 6, 8, 0, Math.PI*2); ctx.fill(); ctx.beginPath(); ctx.arc(15, 6, 8, 0, Math.PI*2); ctx.fill();
+        ctx.fillStyle = '#cbd5e1'; ctx.beginPath(); ctx.arc(-15, 6, 3, 0, Math.PI*2); ctx.fill(); ctx.beginPath(); ctx.arc(15, 6, 3, 0, Math.PI*2); ctx.fill();
+        ctx.fillStyle = '#fde047'; ctx.fillRect(22, -8, 4, 6); ctx.fillStyle = '#f87171'; ctx.fillRect(-26, -10, 2, 6); ctx.restore();
+    };
+
+    function phys_drawAxes(ctx, w, h, pad, xMin, xMax, yMin, yMax, xLabel, yLabel) {
+        const {L, R, T, B} = pad; const gw = w - L - R, gh = h - T - B;
+        const rangeY = (yMax - yMin) === 0 ? 1 : (yMax - yMin); const rangeX = (xMax - xMin) === 0 ? 1 : (xMax - xMin);
+        const yZeroPx = T + gh - (0 - yMin) / rangeY * gh;
+        const tZeroPx = L + (0 - xMin) / rangeX * gw;
+
+        ctx.strokeStyle = '#334155'; ctx.lineWidth = 1; ctx.fillStyle = '#94a3b8'; ctx.font = '11px Inter'; ctx.textAlign = 'center'; ctx.textBaseline = 'top';
+        for(let i=0; i<=5; i++) {
+            let val = xMin + rangeX * (i / 5); let px = L + (val - xMin) / rangeX * gw;
+            ctx.beginPath(); ctx.moveTo(px, T); ctx.lineTo(px, h - B); ctx.stroke(); ctx.fillText(val.toFixed(1), px, h - B + 5);
+        }
+        ctx.textAlign = 'right'; ctx.textBaseline = 'middle';
+        for(let i=0; i<=4; i++) {
+            let val = yMin + rangeY * (i / 4); let py = T + gh - (val - yMin) / rangeY * gh;
+            ctx.beginPath(); ctx.moveTo(L, py); ctx.lineTo(w - R, py); ctx.stroke(); 
+            let valStr = Math.abs(val) >= 1000 ? (val/1000).toFixed(1) + 'k' : (Math.abs(val) < 10 && val !== 0 ? val.toFixed(1) : val.toFixed(0));
+            ctx.fillText(valStr, L - 8, py);
+        }
+        
+        ctx.strokeStyle = '#475569'; ctx.lineWidth = 2; ctx.beginPath(); ctx.rect(L, T, gw, gh); ctx.stroke();
+        
+        if(yMin <= 0 && yMax >= 0) {
+            ctx.strokeStyle = '#cbd5e1'; ctx.lineWidth = 3; 
+            ctx.beginPath(); ctx.moveTo(L, yZeroPx); ctx.lineTo(w - R, yZeroPx); ctx.stroke();
+        }
+        if(xMin <= 0 && xMax >= 0) {
+            ctx.strokeStyle = '#cbd5e1'; ctx.lineWidth = 3; 
+            ctx.beginPath(); ctx.moveTo(tZeroPx, T); ctx.lineTo(tZeroPx, h - B); ctx.stroke();
+        }
+        if(xMin <= 0 && xMax >= 0 && yMin <= 0 && yMax >= 0) {
+            ctx.fillStyle = '#ffffff'; 
+            ctx.beginPath(); ctx.arc(tZeroPx, yZeroPx, 4, 0, Math.PI*2); ctx.fill();
+        }
+
+        ctx.fillStyle = '#f8fafc'; ctx.font = 'bold 12px Inter'; ctx.textAlign = 'right'; ctx.textBaseline = 'bottom';
+        ctx.fillText(xLabel, w - R, h - B - 8); ctx.save(); ctx.translate(15, T + 20); ctx.rotate(-Math.PI/2); ctx.textAlign = 'right'; ctx.fillText(yLabel, 0, 0); ctx.restore();
+    }
+
+    function phys_drawTan(ctx, mapX, mapY, pt, slope, color, ylabel) {
+        const px = mapX(pt.t), py = mapY(pt.y);
+        const t1 = pt.t - 0.5, y1 = pt.y - slope * 0.5; const t2 = pt.t + 0.5, y2 = pt.y + slope * 0.5;
+        ctx.strokeStyle = '#fcd34d'; ctx.lineWidth = 2; ctx.setLineDash([5, 5]); ctx.beginPath(); ctx.moveTo(mapX(t1), mapY(y1)); ctx.lineTo(mapX(t2), mapY(y2)); ctx.stroke(); ctx.setLineDash([]);
+        ctx.fillStyle = 'white'; ctx.beginPath(); ctx.arc(px, py, 5, 0, Math.PI*2); ctx.fill(); ctx.strokeStyle = color; ctx.lineWidth = 2; ctx.stroke();
+        ctx.fillStyle = 'rgba(15, 23, 42, 0.9)'; ctx.strokeStyle = '#475569'; ctx.beginPath(); ctx.roundRect(px + 10, py - 40, 160, 45, 5); ctx.fill(); ctx.stroke();
+        ctx.fillStyle = '#f8fafc'; ctx.font = '11px JetBrains Mono'; ctx.textAlign = 'left'; ctx.textBaseline = 'top';
+        ctx.fillText(`t=${pt.t.toFixed(2)}s, ${ylabel.split(' ')[0]}=${Math.round(pt.y)}`, px + 15, py - 35);
+        ctx.fillStyle = '#fcd34d'; ctx.fillText(`기울기(접선)=${Math.round(slope)}`, px + 15, py - 20);
+    }
+
+    function phys_calcSlope(dataArr, idx, yKey) {
+        if (!dataArr || dataArr.length < 2 || idx < 0 || idx >= dataArr.length) return 0;
+        if (idx === 0) return (dataArr[1][yKey] - dataArr[0][yKey]) / (dataArr[1].t - dataArr[0].t);
+        if (idx === dataArr.length - 1) return (dataArr[idx][yKey] - dataArr[idx-1][yKey]) / (dataArr[idx].t - dataArr[idx-1].t);
+        return (dataArr[idx+1][yKey] - dataArr[idx-1][yKey]) / (dataArr[idx+1].t - dataArr[idx-1].t);
+    }
+
+    function phys_renderKineCharts() {
+        const hData = phys_kState.history; if (hData.length === 0) return;
+        const baseTMin = hData[0].t; const baseTMax = Math.max(baseTMin + 1, hData[hData.length-1].t); 
+
+        ['pos1', 'vel1', 'spd1', 'acc1'].forEach(key => {
+            const chart = phys_charts[key]; if(chart.collapsed) return;
+            const canvas = document.getElementById(chart.id); if(!canvas || canvas.width <= 1) return;
+            const ctx = canvas.getContext('2d'); const w = canvas.width, h = canvas.height;
+            const pad = {L: 50, R: 20, T: 20, B: 30};
+            
+            let yMin = -1, yMax = 1;
+            if(key === 'pos1') { yMin = hData[0].x - 1; yMax = Math.max(10, hData[hData.length-1].x + 5); }
+            if(key === 'vel1') { yMin = -5; yMax = 40; }
+            if(key === 'spd1') { yMin = -5; yMax = 40; } 
+            if(key === 'acc1') { yMin = -15; yMax = 15; }
+
+            const yCenter = (yMax + yMin) / 2; const baseRange = (yMax - yMin);
+            const yRangeZoomed = baseRange / chart.zoom;
+            yMin = yCenter - yRangeZoomed / 2 + chart.offsetY; 
+            yMax = yCenter + yRangeZoomed / 2 + chart.offsetY;
+
+            let tMin = baseTMin + chart.offsetX; let tMax = baseTMax + chart.offsetX;
+            chart.currentTRange = tMax - tMin; chart.currentYRange = yMax - yMin; chart.currentTMin = tMin;
+
+            ctx.clearRect(0,0,w,h);
+            phys_drawAxes(ctx, w, h, pad, tMin, tMax, yMin, yMax, 't (s)', chart.ylabel);
+            const mapX = (t) => pad.L + (w - pad.L - pad.R) * (t - tMin) / (tMax - tMin || 1);
+            const mapY = (v) => pad.T + (h - pad.T - pad.B) - (h - pad.T - pad.B) * (v - yMin) / (yMax - yMin || 1);
+
+            if (key === 'vel1' || key === 'spd1') {
+                ctx.fillStyle = chart.color.replace(')', ', 0.2)').replace('rgb', 'rgba'); ctx.beginPath(); 
+                const y0 = Math.min(Math.max(mapY(0), pad.T), pad.T + (h - pad.T - pad.B));
+                ctx.moveTo(mapX(hData[0].t), y0); 
+                hData.forEach(pt => ctx.lineTo(mapX(pt.t), mapY(pt[chart.yKey])));
+                ctx.lineTo(mapX(hData[hData.length-1].t), y0); ctx.fill();
+            }
+
+            ctx.strokeStyle = chart.color; ctx.lineWidth = 3; ctx.lineJoin = 'round'; ctx.beginPath();
+            hData.forEach((pt, i) => i===0 ? ctx.moveTo(mapX(pt.t), mapY(pt[chart.yKey])) : ctx.lineTo(mapX(pt.t), mapY(pt[chart.yKey]))); ctx.stroke();
+
+            const selT = chart.selT;
+            if (selT >= 0) {
+                let closestIdx = 0; let minD = Infinity;
+                hData.forEach((pt, i) => { const d = Math.abs(pt.t - selT); if(d < minD) { minD = d; closestIdx = i; } });
+                if (minD < 1.0) {
+                    const pt = hData[closestIdx]; const slope = phys_calcSlope(hData, closestIdx, chart.yKey);
+                    phys_drawTan(ctx, mapX, mapY, {t: pt.t, y: pt[chart.yKey]}, slope, chart.color, chart.ylabel);
+                }
+            }
+        });
+    }
+
+    function phys_renderDynCharts() {
+        ['mom2', 'force2'].forEach(key => {
+            const chart = phys_charts[key]; if (chart.collapsed) return;
+            const canvas = document.getElementById(chart.id); if(!canvas || canvas.width <= 1) return;
+            const ctx = canvas.getContext('2d'); const w = canvas.width, h = canvas.height;
+            const pad = {L: 60, R: 20, T: 20, B: 30};
+            
+            let fMaxBase = Math.ceil(((phys_globalMass * 50 * Math.PI) / (2 * 0.1)) / 10000) * 10000;
+            let pMaxBase = phys_globalMass * 50 * 1.1; 
+            
+            const baseTMin = 0; const baseTMax = 1.2;
+            const baseYMax = key === 'force2' ? fMaxBase : pMaxBase;
+            const yRangeZoomed = baseYMax / chart.zoom;
+            let yMin = chart.offsetY; let yMax = yRangeZoomed + chart.offsetY;
+            let tMin = baseTMin + chart.offsetX; let tMax = baseTMax + chart.offsetX;
+
+            chart.currentTRange = tMax - tMin; chart.currentYRange = yMax - yMin; chart.currentTMin = tMin;
+
+            ctx.clearRect(0,0,w,h);
+            phys_drawAxes(ctx, w, h, pad, tMin, tMax, yMin, yMax, 't (s)', chart.ylabel);
+            const mapX = (t) => pad.L + (w - pad.L - pad.R) * (t - tMin) / (tMax - tMin || 1);
+            const mapY = (val) => pad.T + (h - pad.T - pad.B) - (h - pad.T - pad.B) * (val - yMin) / (yMax - yMin || 1);
+
+            phys_dState.chartData.forEach(series => {
+                if (!series.data || series.data.length === 0) return;
+                if (key === 'force2') {
+                    ctx.fillStyle = series.color + '30'; ctx.beginPath(); ctx.moveTo(mapX(0), mapY(0));
+                    series.data.forEach(pt => ctx.lineTo(mapX(pt.t), mapY(pt[chart.yKey])));
+                    ctx.lineTo(mapX(series.data[series.data.length-1].t), mapY(0)); ctx.fill();
+                }
+                ctx.strokeStyle = series.color; ctx.lineWidth = 3; ctx.lineJoin = 'round'; ctx.beginPath();
+                series.data.forEach((pt, i) => i === 0 ? ctx.moveTo(mapX(pt.t), mapY(pt[chart.yKey])) : ctx.lineTo(mapX(pt.t), mapY(pt[chart.yKey]))); ctx.stroke();
+            });
+            
+            if (phys_dState.chartData.length > 0) {
+                const lastSeries = phys_dState.chartData[phys_dState.chartData.length - 1];
+                const selT = chart.selT;
+                if (selT >= 0 && lastSeries.data && lastSeries.data.length >= 2) {
+                    let closestIdx = -1; let minD = Infinity;
+                    lastSeries.data.forEach((pt, i) => { const d = Math.abs(pt.t - selT); if(d < minD) { minD = d; closestIdx = i; } });
+                    if (closestIdx >= 0 && minD < 0.2) {
+                        const pt = lastSeries.data[closestIdx]; const slope = phys_calcSlope(lastSeries.data, closestIdx, chart.yKey); 
+                        phys_drawTan(ctx, mapX, mapY, {t: pt.t, y: pt[chart.yKey]}, slope, lastSeries.color, chart.ylabel);
+                    }
+                }
+            }
+
+            let lgY = pad.T + 10;
+            [...phys_dState.chartData].reverse().forEach(series => {
+                ctx.fillStyle = series.color; ctx.fillRect(pad.L + 15, lgY, 12, 12);
+                ctx.fillStyle = 'white'; ctx.font = '11px Inter'; ctx.textAlign = 'left'; ctx.textBaseline = 'middle'; 
+                ctx.fillText(`${series.name} (m=${series.mass})`, pad.L + 35, lgY + 6); lgY += 18;
+            });
+        });
+
+        let calJ = 0;
+        if (phys_dState.chartData.length > 0) {
+            const last = phys_dState.chartData[phys_dState.chartData.length - 1];
+            if (last && last.data && last.data.length > 1) {
+                for (let i = 1; i < last.data.length; i++) calJ += last.data[i].F * (last.data[i].t - last.data[i-1].t);
+            }
+        }
+        const iEl = document.getElementById('integral-val'); if (iEl) iEl.innerText = Math.round(calJ).toLocaleString();
+    }
+
+    window.phys_attachPanZoomDrag = function(key) {
+        const canvas = document.getElementById(phys_charts[key].id); if(!canvas) return;
+        let isDrag = false, lastX = 0, lastY = 0, hasMoved = false;
+
+        const down = (e) => { 
+            isDrag = true; hasMoved = false; 
+            const pt = e.touches ? e.touches[0] : e; lastX = pt.clientX; lastY = pt.clientY; 
+        };
+        const move = (e) => {
+            if (!isDrag) return; 
+            if (e.cancelable && e.touches) e.preventDefault(); 
+            hasMoved = true; 
+            const pt = e.touches ? e.touches[0] : e;
+            const dx = pt.clientX - lastX, dy = pt.clientY - lastY; 
+            lastX = pt.clientX; lastY = pt.clientY;
+            const c = phys_charts[key]; const padL = (key==='force2' || key==='mom2') ? 60 : 50;
+            const gridW = canvas.width - padL - 20, gridH = canvas.height - 50;
+            const tR = c.currentTRange || 1, yR = c.currentYRange || 1;
+            c.offsetX -= (dx / gridW) * tR; c.offsetY += (dy / gridH) * yR;
+        };
+        const up = (e) => {
+            if(!isDrag) return;
+            isDrag = false;
+            if (!hasMoved) {
+                const rect = canvas.getBoundingClientRect(); const pt = e.changedTouches ? e.changedTouches[0] : e;
+                const x = pt.clientX - rect.left; const padL = (key==='force2' || key==='mom2') ? 60 : 50; const gw = canvas.width - padL - 20;
+                if (x >= padL && x <= canvas.width - 20) {
+                    phys_charts[key].selT = (phys_charts[key].currentTMin || 0) + ((x - padL) / gw) * (phys_charts[key].currentTRange || 1);
+                }
+            }
+        };
+
+        canvas.addEventListener('mousedown', down); window.addEventListener('mousemove', move, {passive: false}); window.addEventListener('mouseup', up);
+        canvas.addEventListener('touchstart', down, {passive: false}); window.addEventListener('touchmove', move, {passive: false}); window.addEventListener('touchend', up);
+    };
+
+    function initPhysicsSim() {
+        const btnToggleGlossary = document.getElementById('btn-toggle-glossary');
+        if(btnToggleGlossary) {
+            btnToggleGlossary.addEventListener('click', () => {
+                const glossaryWrapper = document.getElementById('glossary-wrapper');
+                if (glossaryWrapper.classList.contains('glossary-collapsed')) {
+                    glossaryWrapper.classList.remove('glossary-collapsed'); glossaryWrapper.classList.add('glossary-expanded');
+                    btnToggleGlossary.innerText = '▲ 물리 기호 및 용어 해설 닫기';
+                } else {
+                    glossaryWrapper.classList.remove('glossary-expanded'); glossaryWrapper.classList.add('glossary-collapsed');
+                    btnToggleGlossary.innerText = '▼ 물리 기호 및 용어 해설 열기';
+                }
+            });
+        }
+        
+        let glFontSize = 16;
+        const glossaryContent = document.getElementById('glossary-content');
+        const btnGlIn = document.getElementById('btn-gl-in');
+        const btnGlOut = document.getElementById('btn-gl-out');
+        if(btnGlIn) btnGlIn.addEventListener('click', () => { glFontSize = Math.min(32, glFontSize + 2); glossaryContent.style.fontSize = glFontSize + 'px'; });
+        if(btnGlOut) btnGlOut.addEventListener('click', () => { glFontSize = Math.max(10, glFontSize - 2); glossaryContent.style.fontSize = glFontSize + 'px'; });
+
+        const tabs = ['tab1', 'tab2']; let activePhysicsTab = 'tab1';
+        tabs.forEach(tab => {
+            const tabBtn = document.getElementById(`${tab}-btn`);
+            if(tabBtn) {
+                tabBtn.addEventListener('click', () => {
+                    activePhysicsTab = tab;
+                    tabs.forEach(t => {
+                        document.getElementById(`${t}-btn`).classList.toggle('active', t === tab);
+                        document.getElementById(`${t}-content`).classList.toggle('hide', t !== tab);
+                    });
+                });
+            }
+        });
+
+        const massInp = document.getElementById('mass-input');
+        if(massInp) massInp.addEventListener('input', (e) => { let val = parseInt(e.target.value); if (!isNaN(val) && val > 0) phys_globalMass = val; });
+        
+        const v0Sld = document.getElementById('v0-slider');
+        if(v0Sld) v0Sld.addEventListener('input', (e) => { phys_dState.v0 = parseFloat(e.target.value); document.getElementById('v0-display').innerText = `${phys_dState.v0} m/s`; if (phys_dState.phase === 'ready' || phys_dState.phase === 'done') phys_resetDynamics(); });
+        
+        const matSel = document.getElementById('material-select');
+        if(matSel) matSel.addEventListener('change', (e) => { phys_dState.matKey = e.target.value; });
+
+        function bindToggle(id, otherId, stateObj, val) {
+            const btn = document.getElementById(id);
+            if(!btn) return;
+            btn.addEventListener('click', (e) => {
+                e.preventDefault();
+                if(btn.disabled) return;
+                
+                if(stateObj.inputAcc === val) {
+                    stateObj.inputAcc = 0; 
+                    btn.classList.remove('ring-4', 'ring-white', 'scale-95');
+                } else {
+                    stateObj.inputAcc = val; 
+                    btn.classList.add('ring-4', 'ring-white', 'scale-95');
+                    const otherBtn = document.getElementById(otherId);
+                    if(otherBtn) otherBtn.classList.remove('ring-4', 'ring-white', 'scale-95');
+                }
+            });
+        }
+        
+        bindToggle('t1-btn-gas', 't1-btn-brake', phys_kState, 6.0);
+        bindToggle('t1-btn-brake', 't1-btn-gas', phys_kState, -8.0);
+        bindToggle('t2-btn-gas', 't2-btn-brake', phys_dState, 5.0);
+        bindToggle('t2-btn-brake', 't2-btn-gas', phys_dState, -10.0);
+
+        const btnStartTest = document.getElementById('btn-start-test');
+        if(btnStartTest) btnStartTest.addEventListener('click', () => { if (phys_dState.phase === 'running' || phys_dState.phase === 'crashing') phys_resetDynamics(); else phys_startDynamicsTest(); });
+        
+        const btnClearChart = document.getElementById('btn-clear-chart');
+        if(btnClearChart) btnClearChart.addEventListener('click', () => { phys_dState.chartData = []; phys_charts['force2'].selT = -1; phys_charts['mom2'].selT = -1; });
+
+        ['pos1', 'vel1', 'spd1', 'acc1', 'force2', 'mom2'].forEach(window.phys_attachPanZoomDrag);
+    }
+
+    function phys_updatePhysicsLoop() {
+        if (currentGlobalApp === 'func') {
+            if (phys_audioCtx && phys_audioCtx.state === 'running') phys_engineGain.gain.setTargetAtTime(0, phys_audioCtx.currentTime, 0.1);
+            phys_animationFrameId = requestAnimationFrame(phys_updatePhysicsLoop); return;
+        }
+        try {
+            const tab1Content = document.getElementById('tab1-content');
+            const activePhysicsTab = (tab1Content && tab1Content.classList.contains('hide')) ? 'tab2' : 'tab1';
+            
+            if (activePhysicsTab === 'tab1') {
+                const drag = -0.05 * phys_kState.v; phys_kState.a = phys_kState.inputAcc + drag;
+                if (Math.abs(phys_kState.v) < 0.1 && phys_kState.inputAcc === 0) { phys_kState.a = 0; phys_kState.v = 0; }
+                phys_kState.v += phys_kState.a * phys_dt;
+                phys_kState.x += phys_kState.v * phys_dt;
+                phys_kState.t += phys_dt;
+
+                phys_kState.history.push({t: phys_kState.t, x: phys_kState.x, v: phys_kState.v, speed: Math.abs(phys_kState.v), a: phys_kState.a});
+                if (phys_kState.history.length > 400) phys_kState.history.shift(); 
+                
+                let elP = document.getElementById('h1-pos'); if(elP) elP.innerText = `${phys_kState.x.toFixed(2)} m`;
+                let elV = document.getElementById('h1-vel'); if(elV) elV.innerText = `${phys_kState.v.toFixed(2)} m/s`;
+                let elS = document.getElementById('h1-spd'); if(elS) elS.innerText = `${Math.abs(phys_kState.v).toFixed(2)} m/s`;
+                let elA = document.getElementById('h1-acc'); if(elA) elA.innerText = `${phys_kState.a.toFixed(2)} m/s²`;
+
+                const cvs = document.getElementById('sim-canvas-t1');
+                if(cvs) {
+                    let pWidth = cvs.parentElement.clientWidth, pHeight = cvs.parentElement.clientHeight;
+                    if(pWidth > 0 && pHeight > 0) {
+                        cvs.width = pWidth; cvs.height = pHeight; const ctx = cvs.getContext('2d');
+                        ctx.fillStyle = '#87CEEB'; ctx.fillRect(0, 0, cvs.width, cvs.height);
+                        phys_drawEnv(ctx, cvs.width, cvs.height, phys_kState.x); phys_drawCar(ctx, cvs.width * 0.25, cvs.height - 45, 1.4);
+                    }
+                }
+                
+                ['pos1', 'vel1', 'spd1', 'acc1'].forEach(key => {
+                    const canvas = document.getElementById(phys_charts[key].id); 
+                    if(canvas && canvas.parentElement.clientWidth > 0) { canvas.width = canvas.parentElement.clientWidth; canvas.height = canvas.parentElement.clientHeight; }
+                });
+                phys_renderKineCharts();
+
+            } else {
+                if (phys_dState.phase === 'running') {
+                    const drag = -0.05 * phys_dState.v; phys_dState.a = phys_dState.inputAcc + drag; phys_dState.v += phys_dState.a * phys_dt;
+                    if (phys_dState.v < 0) phys_dState.v = 0; phys_dState.x += phys_dState.v * phys_dt; phys_dState.p = phys_dState.v * phys_globalMass;
+                    
+                    if (phys_dState.x >= phys_WALL_POS_M - 2) { 
+                        phys_dState.x = phys_WALL_POS_M - 2;
+                        if (phys_dState.v > 0.5) {
+                            phys_dState.phase = 'crashing'; phys_dState.crashTime = 0; phys_dState.p_impact = phys_dState.v * phys_globalMass; 
+                            
+                            phys_dState.inputAcc = 0;
+                            
+                            const mat = phys_materials[phys_dState.matKey];
+                            const currentSeries = phys_dState.chartData[phys_dState.chartData.length - 1];
+                            if(currentSeries) currentSeries.data.push({ t: 0, F: 0, p: phys_dState.p_impact });
+
+                            let bg = document.getElementById('t2-btn-gas'); if(bg) { bg.disabled = true; bg.classList.add('opacity-50', 'cursor-not-allowed'); bg.classList.remove('ring-4', 'ring-white', 'scale-95'); }
+                            let bb = document.getElementById('t2-btn-brake'); if(bb) { bb.disabled = true; bb.classList.add('opacity-50', 'cursor-not-allowed'); bb.classList.remove('ring-4', 'ring-white', 'scale-95'); }
+                            let sm = document.getElementById('status-msg'); if(sm) { sm.innerText = "충돌! (Impact)"; sm.style.display = 'block'; sm.style.color = '#ef4444'; sm.style.borderColor = '#7f1d1d'; }
+                            phys_playCrashSound(mat.T);
+                        } else {
+                            phys_dState.phase = 'done'; phys_dState.v = 0; phys_dState.a = 0; phys_dState.F = 0;
+                            let sm = document.getElementById('status-msg'); if(sm) { sm.innerText = "안전 정지"; sm.style.display = 'block'; sm.style.color = '#4ade80'; sm.style.borderColor = '#14532d'; }
+                        }
+                    }
+                } else if (phys_dState.phase === 'crashing') {
+                    const mat = phys_materials[phys_dState.matKey]; phys_dState.crashTime += phys_dt;
+                    if (phys_dState.crashTime <= mat.T) {
+                        const F_max = (phys_dState.p_impact * Math.PI) / (2 * mat.T);
+                        phys_dState.F = F_max * Math.sin(Math.PI * (phys_dState.crashTime / mat.T));
+                        phys_dState.J = F_max * (mat.T / Math.PI) * (1 - Math.cos(Math.PI * phys_dState.crashTime / mat.T));
+                        phys_dState.a = -phys_dState.F / phys_globalMass; phys_dState.v = Math.max(0, (phys_dState.p_impact - phys_dState.J) / phys_globalMass); phys_dState.p = phys_dState.v * phys_globalMass;
+                        const currentSeries = phys_dState.chartData[phys_dState.chartData.length - 1]; if(currentSeries) currentSeries.data.push({ t: phys_dState.crashTime, F: phys_dState.F, p: phys_dState.p });
+                    } else {
+                        phys_dState.F = 0; phys_dState.a = 0; phys_dState.v = 0; phys_dState.p = 0; phys_dState.J = phys_dState.p_impact; phys_dState.phase = 'done';
+                        const currentSeries = phys_dState.chartData[phys_dState.chartData.length - 1]; if(currentSeries) currentSeries.data.push({ t: mat.T, F: 0, p: 0 });
+                        let sm = document.getElementById('status-msg'); if(sm) { sm.innerText = "테스트 완료"; sm.style.color = '#f8fafc'; sm.style.borderColor = '#64748b'; }
+                    }
+                }
+                phys_dState.t += phys_dt;
+
+                let h2p=document.getElementById('h2-pos'); if(h2p) h2p.innerText = `${phys_dState.x.toFixed(2)} m (meter)`; 
+                let h2v=document.getElementById('h2-vel'); if(h2v) h2v.innerText = `${phys_dState.v.toFixed(2)} m/s`;
+                let h2a=document.getElementById('h2-acc'); if(h2a) h2a.innerText = `${phys_dState.a.toFixed(2)} m/s²`; 
+                let h2m=document.getElementById('h2-mom'); if(h2m) h2m.innerText = `${Math.round(phys_dState.p).toLocaleString()} kg·m/s`;
+                let h2f=document.getElementById('h2-force'); if(h2f) h2f.innerText = `${Math.round(phys_dState.F).toLocaleString()} N`; 
+                let h2i=document.getElementById('h2-impulse'); if(h2i) h2i.innerText = `${Math.round(phys_dState.J).toLocaleString()} N·s`;
+
+                const cvs = document.getElementById('sim-canvas-t2'); 
+                if(cvs) {
+                    let pWidth = cvs.parentElement.clientWidth, pHeight = cvs.parentElement.clientHeight;
+                    if(pWidth > 0 && pHeight > 0) {
+                        cvs.width = pWidth; cvs.height = pHeight; const ctx = cvs.getContext('2d');
+                        ctx.fillStyle = '#87CEEB'; ctx.fillRect(0, 0, cvs.width, cvs.height);
+                        let camPos = phys_dState.x - (cvs.width * 0.2 / phys_PIXELS_PER_METER);
+                        if (phys_WALL_POS_M - camPos < (cvs.width * 0.8 / phys_PIXELS_PER_METER)) camPos = phys_WALL_POS_M - (cvs.width * 0.8 / phys_PIXELS_PER_METER);
+                        if(camPos < 0) camPos = 0;
+                        
+                        phys_drawEnv(ctx, cvs.width, cvs.height, camPos);
+                        const roadY = cvs.height - 40; const wallScreenX = (phys_WALL_POS_M - camPos) * phys_PIXELS_PER_METER; const carScreenX = (phys_dState.x - camPos) * phys_PIXELS_PER_METER;
+                        const mat = phys_materials[phys_dState.matKey]; const cWidth = mat.width * phys_PIXELS_PER_METER;
+                        
+                        ctx.fillStyle = mat.renderColor; ctx.beginPath(); ctx.roundRect(wallScreenX - cWidth, roadY - 70, cWidth, 70, 4); ctx.fill();
+                        ctx.fillStyle = '#334155'; ctx.fillRect(wallScreenX, roadY - 90, 30, 90); phys_drawCar(ctx, carScreenX, roadY - 15, 1.4);
+                        
+                        if (phys_dState.phase === 'crashing' && phys_dState.F > 2000) {
+                            ctx.fillStyle = `rgba(239, 68, 68, ${Math.min(1, phys_dState.F / (phys_globalMass * 100))})`; ctx.beginPath(); ctx.arc(wallScreenX - cWidth/2, roadY - 30, phys_dState.F / 8000, 0, Math.PI * 2); ctx.fill();
+                        }
+                    }
+                }
+
+                ['mom2', 'force2'].forEach(key => {
+                    const canvas = document.getElementById(phys_charts[key].id); 
+                    if(canvas && canvas.parentElement.clientWidth > 0) { canvas.width = canvas.parentElement.clientWidth; canvas.height = canvas.parentElement.clientHeight; }
+                });
+                phys_renderDynCharts();
+            }
+            
+            if(phys_audioCtx && phys_audioCtx.state === 'running') {
+                const activePhysicsTab = (document.getElementById('tab1-content') && document.getElementById('tab1-content').classList.contains('hide')) ? 'tab2' : 'tab1';
+                const currentVel = (activePhysicsTab === 'tab1') ? phys_kState.v : phys_dState.v;
+                const isGas = (activePhysicsTab === 'tab1') ? (phys_kState.inputAcc > 0) : (phys_dState.inputAcc > 0 && phys_dState.phase === 'running');
+                const tFreq = 60 + Math.abs(currentVel) * 2;
+                phys_engineOsc.frequency.setTargetAtTime(tFreq, phys_audioCtx.currentTime, 0.1);
+                phys_engineGain.gain.setTargetAtTime((Math.abs(currentVel)>0.5 || isGas) ? 0.2 : 0, phys_audioCtx.currentTime, 0.1);
+            }
+        } catch (error) { console.error(error); }
+        phys_animationFrameId = requestAnimationFrame(phys_updatePhysicsLoop);
+    }
+
+    // === 전역 부트스트랩 ===
+    window.onload = function() {
+        try {
+            initFuncGraph();
+            initPhysicsSim();
+            phys_resetDynamics();
+            if (phys_animationFrameId) cancelAnimationFrame(phys_animationFrameId);
+            phys_animationFrameId = requestAnimationFrame(phys_updatePhysicsLoop);
+        } catch(e) { console.error("Initialize Error: ", e); }
+    };
+</script>
+</body>
 </html>
