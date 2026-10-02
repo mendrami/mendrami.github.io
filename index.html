@@ -256,9 +256,11 @@
                 <div class="glass-panel rounded-2xl p-4 shadow-xl border-blue-900/50">
                     <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-4 gap-4">
                         <div><h2 class="text-xl font-bold text-blue-200">주행 시뮬레이터 (무한 궤도)</h2></div>
-                        <div class="flex gap-3 w-full md:w-auto">
-                            <button id="t1-btn-gas" class="flex-1 md:flex-none px-8 py-4 bg-green-600 hover:bg-green-500 text-white rounded-xl font-bold shadow-lg shadow-green-900/50 text-lg transition-all">가속 (토글)</button>
-                            <button id="t1-btn-brake" class="flex-1 md:flex-none px-8 py-4 bg-red-600 hover:bg-red-500 text-white rounded-xl font-bold shadow-lg shadow-red-900/50 text-lg transition-all">감속 (토글)</button>
+                        <div class="flex flex-wrap gap-3 w-full md:w-auto">
+                            <button id="t1-btn-gas" class="flex-1 md:flex-none px-6 py-3 bg-green-600 hover:bg-green-500 text-white rounded-xl font-bold shadow-lg shadow-green-900/50 text-base md:text-lg transition-all">가속 (토글)</button>
+                            <button id="t1-btn-brake" class="flex-1 md:flex-none px-6 py-3 bg-red-600 hover:bg-red-500 text-white rounded-xl font-bold shadow-lg shadow-red-900/50 text-base md:text-lg transition-all">감속 (토글)</button>
+                            <!-- [신규 추가] 급브레이크 버튼 -->
+                            <button id="t1-btn-ebrake" class="flex-1 md:flex-none px-6 py-3 bg-amber-500 hover:bg-amber-400 active:scale-95 text-slate-900 rounded-xl font-black shadow-lg shadow-amber-900/50 text-base md:text-lg transition-all border-2 border-amber-300">🚨 급브레이크</button>
                         </div>
                     </div>
                     
@@ -365,7 +367,7 @@
                         </div>
                         <div id="body-acc1" class="w-full bg-slate-900 relative graph-body" style="height: 256px;">
                             <canvas id="chart-acc1"></canvas>
-                            <div class="absolute bottom-2 left-2 text-[10px] text-slate-400 pointer-events-none">드래그시 스크롤(이동)</div>
+                            <div class="absolute bottom-2 left-2 text-[10px] text-slate-400 pointer-events-none">급브레이크시 순간적인 가속도 급감 반영</div>
                         </div>
                     </div>
                 </div>
@@ -631,7 +633,7 @@
         func_renderUI(); func_updateAll();
     };
 
-    // 모드 전환 및 복소수 입력 추가
+    // 모드 전환 및 복소수 입력 추가 (버튼 명칭 매칭)
     window.func_addComplexMode = function() {
         let hasReal = func_functionsList.some(f => f.type === 'custom');
         if (hasReal) {
@@ -1286,7 +1288,8 @@
     let phys_globalMass = 1000;
     let phys_animationFrameId = null;
 
-    const phys_kState = { t: 0, x: 0, v: 0, a: 0, inputAcc: 0, history: [] };
+    // [핵심] isEmergencyBraking 플래그 추가
+    const phys_kState = { t: 0, x: 0, v: 0, a: 0, inputAcc: 0, isEmergencyBraking: false, history: [] };
     const phys_dState = { phase: 'ready', t: 0, x: 0, v: 0, a: 0, p: 0, F: 0, J: 0, inputAcc: 0, v0: 20, matKey: 'concrete', crashTime: 0, p_impact: 0, chartData: [] };
 
     const phys_materials = {
@@ -1478,7 +1481,7 @@
             if(key === 'pos1') { yMin = hData[0].x - 1; yMax = Math.max(10, hData[hData.length-1].x + 5); }
             if(key === 'vel1') { yMin = -5; yMax = 40; }
             if(key === 'spd1') { yMin = -5; yMax = 40; } 
-            if(key === 'acc1') { yMin = -15; yMax = 15; }
+            if(key === 'acc1') { yMin = -55; yMax = 20; } // 급브레이크 시 가속도 스파이크 수용
 
             const yCenter = (yMax + yMin) / 2; const baseRange = (yMax - yMin);
             const yRangeZoomed = baseRange / chart.zoom;
@@ -1640,12 +1643,11 @@
         if(btnGlIn) btnGlIn.addEventListener('click', () => { glFontSize = Math.min(32, glFontSize + 2); glossaryContent.style.fontSize = glFontSize + 'px'; });
         if(btnGlOut) btnGlOut.addEventListener('click', () => { glFontSize = Math.max(10, glFontSize - 2); glossaryContent.style.fontSize = glFontSize + 'px'; });
 
-        const tabs = ['tab1', 'tab2']; let activePhysicsTab = 'tab1';
+        const tabs = ['tab1', 'tab2'];
         tabs.forEach(tab => {
             const tabBtn = document.getElementById(`${tab}-btn`);
             if(tabBtn) {
                 tabBtn.addEventListener('click', () => {
-                    activePhysicsTab = tab;
                     tabs.forEach(t => {
                         document.getElementById(`${t}-btn`).classList.toggle('active', t === tab);
                         document.getElementById(`${t}-content`).classList.toggle('hide', t !== tab);
@@ -1670,6 +1672,11 @@
                 e.preventDefault();
                 if(btn.disabled) return;
                 
+                // 급브레이크 상태였다면 해제
+                if (stateObj.isEmergencyBraking !== undefined) {
+                    stateObj.isEmergencyBraking = false;
+                }
+
                 if(stateObj.inputAcc === val) {
                     stateObj.inputAcc = 0; 
                     btn.classList.remove('ring-4', 'ring-white', 'scale-95');
@@ -1686,6 +1693,20 @@
         bindToggle('t1-btn-brake', 't1-btn-gas', phys_kState, -8.0);
         bindToggle('t2-btn-gas', 't2-btn-brake', phys_dState, 5.0);
         bindToggle('t2-btn-brake', 't2-btn-gas', phys_dState, -10.0);
+
+        // [핵심] 급브레이크 이벤트 바인딩
+        const eBrakeBtn = document.getElementById('t1-btn-ebrake');
+        if (eBrakeBtn) {
+            eBrakeBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                // 가속, 감속 토글 해제
+                phys_kState.inputAcc = 0;
+                document.getElementById('t1-btn-gas').classList.remove('ring-4', 'ring-white', 'scale-95');
+                document.getElementById('t1-btn-brake').classList.remove('ring-4', 'ring-white', 'scale-95');
+                // 긴급 제동 모드 활성화
+                phys_kState.isEmergencyBraking = true;
+            });
+        }
 
         const btnStartTest = document.getElementById('btn-start-test');
         if(btnStartTest) btnStartTest.addEventListener('click', () => { if (phys_dState.phase === 'running' || phys_dState.phase === 'crashing') phys_resetDynamics(); else phys_startDynamicsTest(); });
@@ -1706,9 +1727,35 @@
             const activePhysicsTab = (t1 && t1.classList.contains('hide')) ? 'tab2' : 'tab1';
             
             if (activePhysicsTab === 'tab1') {
-                const drag = -0.05 * phys_kState.v; phys_kState.a = phys_kState.inputAcc + drag;
-                if (Math.abs(phys_kState.v) < 0.1 && phys_kState.inputAcc === 0) { phys_kState.a = 0; phys_kState.v = 0; }
-                phys_kState.v += phys_kState.a * phys_dt;
+                const drag = -0.05 * phys_kState.v;
+                
+                // [핵심] 급브레이크 물리 연산 로직
+                if (phys_kState.isEmergencyBraking) {
+                    if (Math.abs(phys_kState.v) > 0.3) {
+                        const sign = phys_kState.v > 0 ? -1 : 1;
+                        phys_kState.a = sign * 45.0; // 강력한 제동 가속도 (45 m/s²)
+                        phys_kState.v += phys_kState.a * phys_dt;
+                        // 0 통과 시 즉시 정지
+                        if ((sign === -1 && phys_kState.v <= 0) || (sign === 1 && phys_kState.v >= 0)) {
+                            phys_kState.v = 0;
+                            phys_kState.a = 0;
+                            phys_kState.isEmergencyBraking = false;
+                        }
+                    } else {
+                        phys_kState.v = 0;
+                        phys_kState.a = 0;
+                        phys_kState.isEmergencyBraking = false;
+                    }
+                } else {
+                    phys_kState.a = phys_kState.inputAcc + drag;
+                    if (Math.abs(phys_kState.v) < 0.1 && phys_kState.inputAcc === 0) { 
+                        phys_kState.a = 0; 
+                        phys_kState.v = 0; 
+                    } else {
+                        phys_kState.v += phys_kState.a * phys_dt;
+                    }
+                }
+
                 phys_kState.x += phys_kState.v * phys_dt;
                 phys_kState.t += phys_dt;
 
