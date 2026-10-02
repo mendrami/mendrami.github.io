@@ -86,7 +86,7 @@
         .zoom-controls button:hover { background: rgba(255, 255, 255, 0.95); color: #0d6efd; transform: scale(1.05); }
         .zoom-btn-icon { width: 36px; font-size: 1.2rem; }
         .zoom-btn-text { padding: 0 12px; font-size: 0.9rem; display: none; background: rgba(33, 37, 41, 0.7) !important; color: white !important; border-color: rgba(33, 37, 41, 0.7) !important; }
-        .zoom-btn-text:hover { background: rgba(73, 80, 87, 0.9) !important; color: white !important; }
+        .zoom-btn-text:hover { background: rgba(73, 80, 87, 0.9) !important; border-color: rgba(73, 80, 87, 0.9) !important; color: white !important; }
 
         .floating-origin-btn { position: fixed; bottom: 25px; right: 25px; width: 48px; height: 48px; border-radius: 50%; border: 1px solid rgba(255,255,255,0.4); background: rgba(13, 110, 253, 0.65); color: #ffffff; font-size: 1.4rem; font-weight: bold; cursor: pointer; z-index: 9999; backdrop-filter: blur(6px); transition: all 0.2s; display: flex; justify-content: center; align-items: center; box-shadow: 0 4px 15px rgba(0,0,0,0.25); }
         .floating-origin-btn:hover { background: rgba(13, 110, 253, 0.95); transform: scale(1.08); }
@@ -602,7 +602,6 @@
         }
     }
 
-    // [핵심] 일원화된 자유 입력 전용 추가 함수
     window.func_addFunction = function() {
         const newFunc = { 
             id: 'f_' + Date.now(), 
@@ -645,7 +644,6 @@
         }
     }
 
-    // [핵심] 일원화된 UI 렌더링
     function func_renderUI() {
         const grid = document.getElementById('functionsGrid'); if(!grid) return; grid.innerHTML = '';
         func_functionsList.forEach((func, idx) => {
@@ -663,7 +661,6 @@
                     </div>
                 </div>
             `;
-            // 자유 입력 전용 UI 블록
             if (func.type === 'custom') {
                 innerHTML += `
                     <div class="custom-expr-row">
@@ -685,27 +682,44 @@
         });
     }
 
+    // [핵심] 역함수 표기 오류 완벽 교정 함수
     function func_renderLatex() {
         let tex = ''; const visibleFunctions = func_functionsList.filter(f => f.visible);
         if (visibleFunctions.length === 0) tex = '\\text{활성화된 함수가 없습니다.}';
         else {
             visibleFunctions.forEach(f => {
-                let rhs = '';
-                if (f.type === 'custom') {
-                    // [핵심 추가] 거듭제곱(지수) 분수형식 LaTeX 자동 변환 처리
-                    let cleanExpr = f.expr.replace(/\*/g, '\\cdot ').replace(/÷/g, '/');
-                    // 1) 분수 지수: x^(1/2) -> x^{\frac{1}{2}}
-                    cleanExpr = cleanExpr.replace(/\^\(\s*([^/)]+?)\s*\/\s*([^)]+?)\s*\)/g, '^{\\frac{$1}{$2}}');
-                    // 2) 일반 괄호 지수: x^(n) -> x^{n}
-                    cleanExpr = cleanExpr.replace(/\^\(([^)]+)\)/g, '^{$1}');
-                    // 3) 소수점 연속 지수: x^2.5 -> x^{2.5}
-                    cleanExpr = cleanExpr.replace(/\^([0-9.]+)/g, '^{$1}');
+                let clean = f.expr.trim().replace(/\*/g, '\\cdot ').replace(/÷/g, '/');
+                
+                // 분수 및 괄호 지수 예쁜 첨자로 변환
+                clean = clean.replace(/\^\(\s*([^/)]+?)\s*\/\s*([^)]+?)\s*\)/g, '^{\\frac{$1}{$2}}');
+                clean = clean.replace(/\^\(([^)]+)\)/g, '^{$1}');
+                clean = clean.replace(/\^([0-9.]+)/g, '^{$1}');
 
-                    if (cleanExpr.includes('=')) { rhs = cleanExpr; } else if (cleanExpr.toLowerCase().includes('y')) { rhs = cleanExpr + ' = 0'; } else { rhs = `y = ${cleanExpr}`; }
+                let origEq = '';
+                let invEq = '';
+
+                if (clean.includes('=')) {
+                    origEq = clean;
+                    // 음함수나 방정식 형태의 역함수: x와 y를 상호 교환
+                    invEq = clean.replace(/\bx\b/g, '__TEMP_X__').replace(/\by\b/g, 'x').replace(/__TEMP_X__/g, 'y');
+                } else if (clean.toLowerCase().includes('y')) {
+                    origEq = clean + ' = 0';
+                    invEq = clean.replace(/\bx\b/g, '__TEMP_X__').replace(/\by\b/g, 'x').replace(/__TEMP_X__/g, 'y') + ' = 0';
+                } else {
+                    // 순수 함수 형태: y = f(x)
+                    origEq = `y = ${clean}`;
+                    // 역함수는 x = f(y) 이므로 우변의 x만 y로 교체!
+                    let rhsInv = clean.replace(/\bx\b/g, 'y');
+                    invEq = `x = ${rhsInv}`;
                 }
-                let eqStr = (f.type === 'custom') ? rhs : `y = ${rhs}`;
-                if (f.id === func_selectedFuncId) tex += `\\color{${f.color}}{\\boxed{${eqStr}}} \\\\ `; else tex += `\\color{${f.color}}{${eqStr}} \\\\ `;
-                if (f.showInverse && f.type === 'custom') { let rhsInv = rhs.replace(/x/g, 'y'); tex += `\\color{${f.color}}{x = ${rhsInv} \\quad \\text{(역함수)}} \\\\ `; }
+
+                if (f.id === func_selectedFuncId) tex += `\\color{${f.color}}{\\boxed{${origEq}}} \\\\ `; 
+                else tex += `\\color{${f.color}}{${origEq}} \\\\ `;
+
+                // 역함수 체크박스가 활성화된 경우
+                if (f.showInverse) {
+                    tex += `\\color{${f.color}}{${invEq} \\quad \\text{(역함수)}} \\\\ `;
+                }
             });
         }
         const display = document.getElementById('math-display'); if(display) display.innerHTML = `$$ \\begin{align*} ${tex} \\end{align*} $$`;
@@ -729,7 +743,6 @@
     function func_evaluateCustomExpr(expr, rawX, rawY) {
         try {
             let x = rawX; let y = rawY !== undefined ? rawY : 0;
-            // [핵심] log10, log2 및 ÷ 기호 완벽 인식 지원
             let cleanExpr = expr.replace(/X/g, 'x').replace(/Y/g, 'y').replace(/÷/g, '/')
                 .replace(/(^|[^a-zA-Z0-9_])(\d+(?:\.\d+)?)\s*([a-zA-Z(])/g, '$1$2*$3')
                 .replace(/([0-9.]+)\s*!/g, 'factorial($1)')
@@ -868,7 +881,12 @@
             }
 
             traces.push({ x: xVal, y: yVal, mode: 'lines', name: fName, line: { color: f.color, width: isSelected ? 7 : 3 }, customdata: Array(xVal.length).fill(f.id), hovertemplate: '(%{x:.2f}, %{y:.2f})<extra></extra>' });
-            if (f.showInverse && f.type === 'custom') { hasInverse = true; traces.push({ x: yVal, y: xVal, mode: 'lines', name: `${fName} 역함수`, line: { color: f.color, width: 2, dash: 'dot' }, customdata: Array(xVal.length).fill('inv_' + f.id), hovertemplate: '(%{x:.2f}, %{y:.2f})<extra></extra>' }); }
+            
+            // [핵심] 역함수 곡선 대칭 렌더링
+            if (f.showInverse && !func_isImplicitFunc(f)) { 
+                hasInverse = true; 
+                traces.push({ x: yVal, y: xVal, mode: 'lines', name: `${fName} 역함수`, line: { color: f.color, width: 2, dash: 'dot' }, customdata: Array(xVal.length).fill('inv_' + f.id), hovertemplate: '(%{x:.2f}, %{y:.2f})<extra></extra>' }); 
+            }
         });
 
         if (hasInverse) traces.push({ x: [-10000, 10000], y: [-10000, 10000], mode: 'lines', name: 'y = x 대칭축', line: { color: '#adb5bd', width: 2, dash: 'dash' }, hoverinfo: 'none' });
@@ -995,7 +1013,7 @@
                 return;
             }
             let y = func_evaluateFunction(f, px); if (!isNaN(y)) { let dist = Math.abs(y - py); if (dist < minDist && dist < threshold) { minDist = dist; closest = { f: f, isInverse: false, px: px, py: y }; } }
-            if (f.showInverse && f.type === 'custom') { let invX = func_evaluateFunction(f, py); if (!isNaN(invX)) { let dist = Math.abs(invX - px); if (dist < minDist && dist < threshold) { minDist = dist; closest = { f: f, isInverse: true, px: invX, py: py }; } } }
+            if (f.showInverse && f.type !== 'custom') { let invX = func_evaluateFunction(f, py); if (!isNaN(invX)) { let dist = Math.abs(invX - px); if (dist < minDist && dist < threshold) { minDist = dist; closest = { f: f, isInverse: true, px: invX, py: py }; } } }
         });
         return closest;
     }
