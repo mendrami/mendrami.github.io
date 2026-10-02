@@ -37,6 +37,7 @@
         .status-board.active { background: #fff3cd; color: #856404; border: 2px dashed #ffe8a1; flex-direction: row; font-weight: bold; }
         
         .add-controls { display: flex; justify-content: center; align-items: center; gap: 10px; margin-bottom: 20px; background: #fff; padding: 12px; border-radius: 8px; border: 1px solid #dee2e6; flex-wrap: wrap; }
+        .add-controls input[type="text"], .func-card input[type="number"] { padding: 6px 10px; font-size: 1rem; border-radius: 5px; border: 1px solid #ced4da; background-color: white; color: #212529; }
         .add-controls button { padding: 8px 16px; font-size: 1rem; cursor: pointer; border: none; border-radius: 5px; background-color: #0d6efd; color: white; font-weight: bold; transition: background 0.2s; }
         .add-controls button:hover { background-color: #0b5ed7; }
         
@@ -439,8 +440,8 @@
                                                 <button onclick="window.phys_zoomChart('mom2', 0.2)" class="px-2 py-0.5 bg-slate-700 hover:bg-slate-500 text-white text-xs rounded font-bold">+</button>
                                             </div>
                                             <div class="flex items-center gap-1 bg-slate-900 px-2 py-1 rounded border border-slate-600">
-                                                <button onclick="window.phys_resizeChartWindow('mom2', -1)" class="px-2 py-0.5 bg-slate-700 hover:bg-slate-500 text-white text-xs rounded font-bold">창 축소(-)</button>
-                                                <button onclick="window.phys_resizeChartWindow('mom2', 1)" class="px-2 py-0.5 bg-slate-700 hover:bg-slate-500 text-white text-xs rounded font-bold">창 확대(+)</button>
+                                                <button onclick="window.phys_resizeChartWindow('mom2', -1)" class="px-2 py-0.5 bg-slate-700 hover:bg-slate-500 text-white text-xs rounded font-bold">축소(-)</button>
+                                                <button onclick="window.phys_resizeChartWindow('mom2', 1)" class="px-2 py-0.5 bg-slate-700 hover:bg-slate-500 text-white text-xs rounded font-bold">확대(+)</button>
                                             </div>
                                             <button onclick="window.phys_toggleChart('mom2')" id="btn-tg-mom2" class="w-7 h-7 bg-slate-700 hover:bg-slate-500 rounded text-white font-bold ml-1">_</button>
                                         </div>
@@ -465,7 +466,7 @@
                                             </div>
                                             <div class="flex items-center gap-1 bg-slate-900 px-2 py-1 rounded border border-slate-600">
                                                 <button onclick="window.phys_resizeChartWindow('force2', -1)" class="px-2 py-0.5 bg-slate-700 hover:bg-slate-500 text-white text-xs rounded font-bold">창 축소(-)</button>
-                                                <button onclick="window.phys_resizeChartWindow('force2', 1)" class="px-2 py-0.5 bg-slate-700 hover:bg-slate-500 text-white text-xs rounded font-bold">창 확대(+)</button>
+                                                <button onclick="window.phys_resizeChartWindow('force2', 1)" class="px-2 py-0.5 bg-slate-700 hover:bg-slate-500 text-white text-xs rounded font-bold">확대(+)</button>
                                             </div>
                                             <button onclick="window.phys_toggleChart('force2')" id="btn-tg-force2" class="w-7 h-7 bg-slate-700 hover:bg-slate-500 rounded text-white font-bold ml-1">_</button>
                                         </div>
@@ -597,6 +598,7 @@
         }
     }
 
+    // [핵심] 일원화된 자유 입력 전용 추가 함수
     window.func_addFunction = function() {
         const newFunc = { 
             id: 'f_' + Date.now(), 
@@ -636,6 +638,7 @@
         }
     }
 
+    // [핵심] H, K 필드가 제거된 깔끔한 UI 렌더링
     function func_renderUI() {
         const grid = document.getElementById('functionsGrid'); if(!grid) return; grid.innerHTML = '';
         func_functionsList.forEach((func, idx) => {
@@ -668,6 +671,7 @@
         });
     }
 
+    // [핵심] 역함수 및 logN(x) 수식 깔끔한 LaTeX 렌더링
     function func_renderLatex() {
         let tex = ''; const visibleFunctions = func_functionsList.filter(f => f.visible);
         if (visibleFunctions.length === 0) tex = '\\text{활성화된 함수가 없습니다.}';
@@ -675,7 +679,6 @@
             visibleFunctions.forEach(f => {
                 let clean = f.expr.trim().replace(/\*/g, '\\cdot ').replace(/÷/g, '/');
                 
-                // [핵심] logN(x) 또는 log(x) 렌더링
                 clean = clean.replace(/\blog([0-9.]+)\s*\(([^)]+)\)/gi, '\\log_{$1}\\left($2\\right)');
                 clean = clean.replace(/\blog\s*\(([^)]+)\)/gi, '\\log_{10}\\left($1\\right)');
                 clean = clean.replace(/\^\(\s*([^/)]+?)\s*\/\s*([^)]+?)\s*\)/g, '^{\\frac{$1}{$2}}');
@@ -1402,8 +1405,7 @@
                     ctx.lineTo(mapX(series.data[series.data.length-1].t), mapY(0)); ctx.fill();
                 }
                 ctx.strokeStyle = series.color; ctx.lineWidth = 3; ctx.lineJoin = 'round'; ctx.beginPath();
-                series.data.forEach((pt, i) => i === 0 ? ctx.moveTo(mapX(pt.t), mapY(pt[chart.yKey])) : ctx.lineTo(mapX(pt.t), mapY(pt[chart.yKey])));
-                ctx.stroke();
+                series.data.forEach((pt, i) => i === 0 ? ctx.moveTo(mapX(pt.t), mapY(pt[chart.yKey])) : ctx.lineTo(mapX(pt.t), mapY(pt[chart.yKey]))); ctx.stroke();
             });
             
             if (phys_dState.chartData.length > 0) {
