@@ -259,8 +259,7 @@
                         <div class="flex flex-wrap gap-3 w-full md:w-auto">
                             <button id="t1-btn-gas" class="flex-1 md:flex-none px-6 py-3 bg-green-600 hover:bg-green-500 text-white rounded-xl font-bold shadow-lg shadow-green-900/50 text-base md:text-lg transition-all">가속 (토글)</button>
                             <button id="t1-btn-brake" class="flex-1 md:flex-none px-6 py-3 bg-red-600 hover:bg-red-500 text-white rounded-xl font-bold shadow-lg shadow-red-900/50 text-base md:text-lg transition-all">감속 (토글)</button>
-                            <!-- [신규 추가] 급브레이크 버튼 -->
-                            <button id="t1-btn-ebrake" class="flex-1 md:flex-none px-6 py-3 bg-amber-500 hover:bg-amber-400 active:scale-95 text-slate-900 rounded-xl font-black shadow-lg shadow-amber-900/50 text-base md:text-lg transition-all border-2 border-amber-300">🚨 급브레이크</button>
+                            <button id="t1-btn-ebrake" class="flex-1 md:flex-none px-6 py-3 bg-amber-500 hover:bg-amber-400 active:scale-95 text-slate-900 rounded-xl font-black shadow-lg shadow-amber-900/50 text-base md:text-lg transition-all border border-amber-300">브레이크 (급정지)</button>
                         </div>
                     </div>
                     
@@ -367,7 +366,7 @@
                         </div>
                         <div id="body-acc1" class="w-full bg-slate-900 relative graph-body" style="height: 256px;">
                             <canvas id="chart-acc1"></canvas>
-                            <div class="absolute bottom-2 left-2 text-[10px] text-slate-400 pointer-events-none">급브레이크시 순간적인 가속도 급감 반영</div>
+                            <div class="absolute bottom-2 left-2 text-[10px] text-slate-400 pointer-events-none">드래그시 스크롤(이동)</div>
                         </div>
                     </div>
                 </div>
@@ -497,7 +496,7 @@
 
 <script>
     /* =========================================================================
-       0. 전역 클래스 및 엔진 선언 (메모리 누수 및 문법 오류 방지)
+       0. 전역 클래스 선언
        ========================================================================= */
     class ComplexNum {
         constructor(re = 0, im = 0) { this.re = re; this.im = im; }
@@ -633,7 +632,7 @@
         func_renderUI(); func_updateAll();
     };
 
-    // 모드 전환 및 복소수 입력 추가 (버튼 명칭 매칭)
+    // 모드 전환 및 복소수 입력 추가
     window.func_addComplexMode = function() {
         let hasReal = func_functionsList.some(f => f.type === 'custom');
         if (hasReal) {
@@ -782,7 +781,7 @@
                 innerHTML += `
                     <div class="custom-expr-row">
                         <label><strong>복소수 식 입력:</strong></label>
-                        <input type="text" inputmode="text" autocorrect="off" autocapitalize="none" spellcheck="false" id="input_${func.id}_expr" value="${func.expr}" oninput="window.func_updateState('${func.id}', 'expr', this.value)" placeholder="예: 3 + 2i, 1 * i">
+                        <input type="text" inputmode="text" autocorrect="off" autocapitalize="none" spellcheck="false" id="input_${func.id}_expr" value="${func.expr}" onchange="window.func_updateState('${func.id}', 'expr', this.value)" placeholder="예: 3 + 2i, 1 * i">
                         <div style="font-size:0.75rem; color:#6c757d; margin-top:4px;">
                             * 예: <code>3 + 2i</code>, <code>1 * i</code> (90° 회전), <code>(2 + 3i) * (1 - i)</code>
                         </div>
@@ -801,6 +800,10 @@
             }
             card.innerHTML = innerHTML; grid.appendChild(card);
         });
+    }
+
+    function func_renderLatex() {
+        // 상단 수식 안내창 미사용
     }
 
     const func_customMath = {
@@ -989,7 +992,7 @@
                     if (Math.abs(y2 - y1) > (spanY * 2)) continue;
                     if (y1 * y2 <= 0 && (y1 !== 0 || y2 !== 0)) {
                         let root = func_bisectionRoot(x => func_evaluateFunction(f, x), xVal[k], xVal[k+1]); let ix = !isNaN(root) ? root : (xVal[k] + (y1 / (y1 - y2)) * (xVal[k+1] - xVal[k]));
-                        if (!panelData.xInt.some(p => p.name === fName && Math.abs(p.x - root) < 0.05)) { panelData.xInt.push({ name: fName, color: f.color, x: ix, y: 0 }); axisIntX.push(ix); axisIntY.push(0); axisIntText.push(`(${ix.toFixed(2)}, 0.00)`); }
+                        if (!panelData.xInt.some(p => p.name === fName && Math.abs(p.x - ix) < 0.05)) { panelData.xInt.push({ name: fName, color: f.color, x: ix, y: 0 }); axisIntX.push(ix); axisIntY.push(0); axisIntText.push(`(${ix.toFixed(2)}, 0.00)`); }
                     }
                 }
             }
@@ -1042,19 +1045,6 @@
                                 }
                             }
                         }
-                    } else {
-                        let steps = 70; let dx = (maxX - minX) / steps, dy = (maxY - minY) / steps;
-                        for (let xi = minX; xi < maxX; xi += dx) {
-                            for (let yj = minY; yj < maxY; yj += dy) {
-                                let fA1 = func_evaluateImplicit(f1, xi, yj), fA2 = func_evaluateImplicit(f2, xi, yj);
-                                if (Math.abs(fA1) < 0.25 && Math.abs(fA2) < 0.25) {
-                                    let mx = xi + dx/2, my = yj + dy/2;
-                                    if (!intersectX.some(x => Math.abs(x - mx) < (dx * 1.5) && Math.abs(intersectY[intersectX.indexOf(x)] - my) < (dy * 1.5))) {
-                                        intersectX.push(mx); intersectY.push(my); intersectText.push(`(${mx.toFixed(2)}, ${my.toFixed(2)})`); panelData.funcInt.push({ c1: f1.color, c2: f2.color, x: mx, y: my });
-                                    }
-                                }
-                            }
-                        }
                     }
                 }
             }
@@ -1076,6 +1066,7 @@
     }
 
     function func_updateAll(skipHeavy = false) {
+        if (!skipHeavy) func_renderLatex();
         const graphDiv = document.getElementById('graphPlot'); if (!graphDiv || !graphDiv.layout) return;
         const currentXRange = graphDiv.layout.xaxis.range, currentYRange = graphDiv.layout.yaxis.range;
         const newTraces = func_generateTraces(currentXRange, currentYRange, skipHeavy);
@@ -1288,8 +1279,8 @@
     let phys_globalMass = 1000;
     let phys_animationFrameId = null;
 
-    // [핵심] isEmergencyBraking 플래그 추가
-    const phys_kState = { t: 0, x: 0, v: 0, a: 0, inputAcc: 0, isEmergencyBraking: false, history: [] };
+    // isStopped 상태 플래그 추가 (속도 0 도달 시 시간 축 정지용)
+    const phys_kState = { t: 0, x: 0, v: 0, a: 0, inputAcc: 0, isEbrake: false, isStopped: false, history: [] };
     const phys_dState = { phase: 'ready', t: 0, x: 0, v: 0, a: 0, p: 0, F: 0, J: 0, inputAcc: 0, v0: 20, matKey: 'concrete', crashTime: 0, p_impact: 0, chartData: [] };
 
     const phys_materials = {
@@ -1481,7 +1472,7 @@
             if(key === 'pos1') { yMin = hData[0].x - 1; yMax = Math.max(10, hData[hData.length-1].x + 5); }
             if(key === 'vel1') { yMin = -5; yMax = 40; }
             if(key === 'spd1') { yMin = -5; yMax = 40; } 
-            if(key === 'acc1') { yMin = -55; yMax = 20; } // 급브레이크 시 가속도 스파이크 수용
+            if(key === 'acc1') { yMin = -70; yMax = 70; }
 
             const yCenter = (yMax + yMin) / 2; const baseRange = (yMax - yMin);
             const yRangeZoomed = baseRange / chart.zoom;
@@ -1643,11 +1634,12 @@
         if(btnGlIn) btnGlIn.addEventListener('click', () => { glFontSize = Math.min(32, glFontSize + 2); glossaryContent.style.fontSize = glFontSize + 'px'; });
         if(btnGlOut) btnGlOut.addEventListener('click', () => { glFontSize = Math.max(10, glFontSize - 2); glossaryContent.style.fontSize = glFontSize + 'px'; });
 
-        const tabs = ['tab1', 'tab2'];
+        const tabs = ['tab1', 'tab2']; let activePhysicsTab = 'tab1';
         tabs.forEach(tab => {
             const tabBtn = document.getElementById(`${tab}-btn`);
             if(tabBtn) {
                 tabBtn.addEventListener('click', () => {
+                    activePhysicsTab = tab;
                     tabs.forEach(t => {
                         document.getElementById(`${t}-btn`).classList.toggle('active', t === tab);
                         document.getElementById(`${t}-content`).classList.toggle('hide', t !== tab);
@@ -1672,11 +1664,10 @@
                 e.preventDefault();
                 if(btn.disabled) return;
                 
-                // 급브레이크 상태였다면 해제
-                if (stateObj.isEmergencyBraking !== undefined) {
-                    stateObj.isEmergencyBraking = false;
-                }
-
+                // 가속/감속 조작 시 정지 상태 해제 및 시간 진행 복원
+                stateObj.isEbrake = false; 
+                stateObj.isStopped = false;
+                
                 if(stateObj.inputAcc === val) {
                     stateObj.inputAcc = 0; 
                     btn.classList.remove('ring-4', 'ring-white', 'scale-95');
@@ -1694,17 +1685,18 @@
         bindToggle('t2-btn-gas', 't2-btn-brake', phys_dState, 5.0);
         bindToggle('t2-btn-brake', 't2-btn-gas', phys_dState, -10.0);
 
-        // [핵심] 급브레이크 이벤트 바인딩
-        const eBrakeBtn = document.getElementById('t1-btn-ebrake');
-        if (eBrakeBtn) {
-            eBrakeBtn.addEventListener('click', (e) => {
+        // 급브레이크 리스너 바인딩
+        const btnEbrake = document.getElementById('t1-btn-ebrake');
+        if(btnEbrake) {
+            btnEbrake.addEventListener('click', (e) => {
                 e.preventDefault();
-                // 가속, 감속 토글 해제
                 phys_kState.inputAcc = 0;
-                document.getElementById('t1-btn-gas').classList.remove('ring-4', 'ring-white', 'scale-95');
-                document.getElementById('t1-btn-brake').classList.remove('ring-4', 'ring-white', 'scale-95');
-                // 긴급 제동 모드 활성화
-                phys_kState.isEmergencyBraking = true;
+                phys_kState.isEbrake = true;
+                phys_kState.isStopped = false;
+                const gBtn = document.getElementById('t1-btn-gas');
+                const bBtn = document.getElementById('t1-btn-brake');
+                if(gBtn) gBtn.classList.remove('ring-4', 'ring-white', 'scale-95');
+                if(bBtn) bBtn.classList.remove('ring-4', 'ring-white', 'scale-95');
             });
         }
 
@@ -1727,40 +1719,43 @@
             const activePhysicsTab = (t1 && t1.classList.contains('hide')) ? 'tab2' : 'tab1';
             
             if (activePhysicsTab === 'tab1') {
-                const drag = -0.05 * phys_kState.v;
-                
-                // [핵심] 급브레이크 물리 연산 로직
-                if (phys_kState.isEmergencyBraking) {
-                    if (Math.abs(phys_kState.v) > 0.3) {
-                        const sign = phys_kState.v > 0 ? -1 : 1;
-                        phys_kState.a = sign * 45.0; // 강력한 제동 가속도 (45 m/s²)
-                        phys_kState.v += phys_kState.a * phys_dt;
-                        // 0 통과 시 즉시 정지
-                        if ((sign === -1 && phys_kState.v <= 0) || (sign === 1 && phys_kState.v >= 0)) {
+                if (phys_kState.isEbrake) {
+                    const brakeForceMag = 60.0; // 강력 급제동 가속도 (m/s^2)
+                    if (Math.abs(phys_kState.v) > 0.05) {
+                        const sgn = Math.sign(phys_kState.v);
+                        phys_kState.a = -sgn * brakeForceMag;
+                        const nextV = phys_kState.v + phys_kState.a * phys_dt;
+                        if (Math.sign(nextV) !== sgn) {
                             phys_kState.v = 0;
                             phys_kState.a = 0;
-                            phys_kState.isEmergencyBraking = false;
+                            phys_kState.isEbrake = false;
+                            phys_kState.isStopped = true; // [핵심] 속도 0 도달 즉시 정지 상태로 고정
+                        } else {
+                            phys_kState.v = nextV;
                         }
                     } else {
                         phys_kState.v = 0;
                         phys_kState.a = 0;
-                        phys_kState.isEmergencyBraking = false;
+                        phys_kState.isEbrake = false;
+                        phys_kState.isStopped = true; // [핵심] 속도 0 도달 즉시 정지 상태로 고정
                     }
-                } else {
+                } else if (!phys_kState.isStopped) {
+                    const drag = -0.05 * phys_kState.v; 
                     phys_kState.a = phys_kState.inputAcc + drag;
                     if (Math.abs(phys_kState.v) < 0.1 && phys_kState.inputAcc === 0) { 
                         phys_kState.a = 0; 
                         phys_kState.v = 0; 
-                    } else {
-                        phys_kState.v += phys_kState.a * phys_dt;
                     }
+                    phys_kState.v += phys_kState.a * phys_dt;
                 }
 
-                phys_kState.x += phys_kState.v * phys_dt;
-                phys_kState.t += phys_dt;
-
-                phys_kState.history.push({t: phys_kState.t, x: phys_kState.x, v: phys_kState.v, speed: Math.abs(phys_kState.v), a: phys_kState.a});
-                if (phys_kState.history.length > 400) phys_kState.history.shift(); 
+                // [핵심] 완전히 정지한 경우 시간 증가와 그래프 밀어내기를 동결
+                if (!phys_kState.isStopped) {
+                    phys_kState.x += phys_kState.v * phys_dt;
+                    phys_kState.t += phys_dt;
+                    phys_kState.history.push({t: phys_kState.t, x: phys_kState.x, v: phys_kState.v, speed: Math.abs(phys_kState.v), a: phys_kState.a});
+                    if (phys_kState.history.length > 400) phys_kState.history.shift(); 
+                }
                 
                 let elP = document.getElementById('h1-pos'); if(elP) elP.innerText = `${phys_kState.x.toFixed(2)} m`;
                 let elV = document.getElementById('h1-vel'); if(elV) elV.innerText = `${phys_kState.v.toFixed(2)} m/s`;
@@ -1773,7 +1768,8 @@
                     if(pWidth > 0 && pHeight > 0) {
                         cvs.width = pWidth; cvs.height = pHeight; const ctx = cvs.getContext('2d');
                         ctx.fillStyle = '#87CEEB'; ctx.fillRect(0, 0, cvs.width, cvs.height);
-                        phys_drawEnv(ctx, cvs.width, cvs.height, phys_kState.x); phys_drawCar(ctx, cvs.width * 0.25, cvs.height - 45, 1.4);
+                        phys_drawEnv(ctx, cvs.width, cvs.height, phys_kState.x); 
+                        phys_drawCar(ctx, cvs.width * 0.25, cvs.height - 45, 1.4);
                     }
                 }
                 
@@ -1792,7 +1788,6 @@
                         phys_dState.x = phys_WALL_POS_M - 2;
                         if (phys_dState.v > 0.5) {
                             phys_dState.phase = 'crashing'; phys_dState.crashTime = 0; phys_dState.p_impact = phys_dState.v * phys_globalMass; 
-                            
                             phys_dState.inputAcc = 0;
                             
                             const mat = phys_materials[phys_dState.matKey];
