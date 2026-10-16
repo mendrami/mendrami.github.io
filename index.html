@@ -260,7 +260,6 @@
                             <button id="t1-btn-gas" class="flex-1 md:flex-none px-6 py-3 bg-green-600 hover:bg-green-500 text-white rounded-xl font-bold shadow-lg shadow-green-900/50 text-base md:text-lg transition-all">가속 (토글)</button>
                             <button id="t1-btn-brake" class="flex-1 md:flex-none px-6 py-3 bg-red-600 hover:bg-red-500 text-white rounded-xl font-bold shadow-lg shadow-red-900/50 text-base md:text-lg transition-all">감속 (토글)</button>
                             <button id="t1-btn-ebrake" class="flex-1 md:flex-none px-6 py-3 bg-amber-500 hover:bg-amber-400 active:scale-95 text-slate-900 rounded-xl font-black shadow-lg shadow-amber-900/50 text-base md:text-lg transition-all border border-amber-300">브레이크 (급정지)</button>
-                            <!-- [핵심] 완전 초기화 리셋 버튼 -->
                             <button id="t1-btn-reset" class="flex-1 md:flex-none px-6 py-3 bg-rose-700 hover:bg-rose-600 active:scale-95 text-white rounded-xl font-black shadow-lg shadow-rose-950/50 text-base md:text-lg transition-all border border-rose-400">초기화</button>
                         </div>
                     </div>
@@ -783,7 +782,7 @@
                 innerHTML += `
                     <div class="custom-expr-row">
                         <label><strong>복소수 식 입력:</strong></label>
-                        <input type="text" inputmode="text" autocorrect="off" autocapitalize="none" spellcheck="false" id="input_${func.id}_expr" value="${func.expr}" oninput="window.func_updateState('${func.id}', 'expr', this.value)" placeholder="예: 3 + 2i, 1 * i">
+                        <input type="text" inputmode="text" autocorrect="off" autocapitalize="none" spellcheck="false" id="input_${func.id}_expr" value="${func.expr}" onchange="window.func_updateState('${func.id}', 'expr', this.value)" placeholder="예: 3 + 2i, 1 * i">
                         <div style="font-size:0.75rem; color:#6c757d; margin-top:4px;">
                             * 예: <code>3 + 2i</code>, <code>1 * i</code> (90° 회전), <code>(2 + 3i) * (1 - i)</code>
                         </div>
@@ -814,31 +813,40 @@
         }
     };
 
+    // [핵심] 암시적 곱셈 및 수식 안전 변환 엔진
     function func_evaluateCustomExpr(expr, rawX, rawY) {
         try {
-            let x = rawX; let y = rawY !== undefined ? rawY : 0;
+            let x = rawX; 
+            let y = rawY !== undefined ? rawY : 0;
             let cleanExpr = expr.replace(/X/g, 'x').replace(/Y/g, 'y').replace(/÷/g, '/');
 
             cleanExpr = cleanExpr.replace(/\blog([0-9.]+)\s*\(([^)]+)\)/gi, 'customMath.customLog($1, $2)');
             cleanExpr = cleanExpr.replace(/\blog\s*\(([^)]+)\)/gi, 'customMath.customLog(10, $1)');
             cleanExpr = cleanExpr.replace(/\bln\s*\(([^)]+)\)/gi, '((($1) > 0) ? Math.log($1) : NaN)');
 
-            // [핵심] 암시적 곱셈 처리 확장: 숫자 뒤 문자뿐 아니라 닫는 괄호 뒤 문자/괄호도 곱셈(*) 자동 삽입
-            cleanExpr = cleanExpr
-                .replace(/\)\s*([a-zA-Z(])/g, ')*$1')
-                .replace(/(^|[^a-zA-Z0-9_])(\d+(?:\.\d+)?)\s*([a-zA-Z(])/g, '$1$2*$3')
-                .replace(/\^/g, '**')
-                .replace(/\b(csc|sec|cot)\b/gi, function(match) { return 'customMath.' + match.toLowerCase(); })
-                .replace(/\b(sin|cos|tan|asin|acos|atan|sinh|cosh|tanh|exp|sqrt|abs)\b/gi, function(match) { 
-                    return 'Math.' + match.toLowerCase(); 
-                })
-                .replace(/\b(pi|PI)\b/g, 'Math.PI')
-                .replace(/\b(e|E)\b/g, 'Math.E');
+            // 1단계: 닫는 괄호 ) 뒤에 문자나 여는 괄호가 올 때 곱셈(*) 삽입 (예: (1/2)x -> (1/2)*x)
+            cleanExpr = cleanExpr.replace(/\)\s*([a-zA-Z(])/g, ')*$1');
+
+            // 2단계: 숫자 뒤에 문자나 여는 괄호가 올 때 곱셈(*) 삽입 (예: 3x -> 3*x, 3(x) -> 3*(x))
+            cleanExpr = cleanExpr.replace(/(^|[^a-zA-Z0-9_])(\d+(?:\.\d+)?)\s*([a-zA-Z(])/g, '$1$2*$3');
+
+            // 3단계: 거듭제곱 치환
+            cleanExpr = cleanExpr.replace(/\^/g, '**');
+
+            // 4단계: 수학 함수 치환 (중복 치환 방지)
+            cleanExpr = cleanExpr.replace(/\b(csc|sec|cot)\b/gi, function(match) { return 'customMath.' + match.toLowerCase(); });
+            cleanExpr = cleanExpr.replace(/\b(sin|cos|tan|asin|acos|atan|sinh|cosh|tanh|exp|sqrt|abs)\b/gi, function(match) { 
+                return 'Math.' + match.toLowerCase(); 
+            });
+            cleanExpr = cleanExpr.replace(/\b(pi|PI)\b/g, 'Math.PI');
+            cleanExpr = cleanExpr.replace(/\b(e|E)\b/g, 'Math.E');
                 
             let fn = new Function('x', 'y', 'Math', 'customMath', 'return ' + cleanExpr);
             let val = fn(x, y, Math, func_customMath); 
             return (typeof val === 'number' && isFinite(val)) ? val : NaN;
-        } catch (e) { return NaN; }
+        } catch (e) { 
+            return NaN; 
+        }
     }
 
     function func_isImplicitFunc(f) {
@@ -1157,484 +1165,4 @@
         graphDiv.on('plotly_afterplot', func_floatXAxis);
 
         graphDiv.addEventListener('mousemove', function(e) {
-            if (func_isTouchInteraction || isDraggingTrace || !func_isTangentMode || func_selectedFuncId) return;
-            const bgRect = graphDiv.querySelector('.gridlayer').getBoundingClientRect();
-            if (e.clientX < bgRect.left || e.clientX > bgRect.right || e.clientY < bgRect.top || e.clientY > bgRect.bottom) return;
-            let px = graphDiv._fullLayout.xaxis.p2d(e.clientX - bgRect.left); let py = graphDiv._fullLayout.yaxis.p2d(e.clientY - bgRect.top);
-            let closest = func_findClosestFunction(px, py);
-            if (closest) func_drawTangentFromObj(closest.f, closest.px, closest.py, closest.isInverse); else func_clearTangentShape();
-        });
-
-        graphDiv.addEventListener('mouseleave', function() { if (func_isTangentMode && !func_selectedFuncId) func_clearTangentShape(); });
-
-        let func_mouseStartClientX = 0, func_mouseStartClientY = 0;
-        let func_touchTimer = null; let func_touchStartClientX = 0, func_touchStartClientY = 0; let func_touchTargetObj = null;
-
-        function getClientCoords(e) { return (e.touches && e.touches.length > 0) ? { clientX: e.touches[0].clientX, clientY: e.touches[0].clientY } : { clientX: e.clientX, clientY: e.clientY }; }
-
-        graphDiv.addEventListener('touchstart', function(e) {
-            if (e.touches.length > 1) { if (func_touchTimer) { clearTimeout(func_touchTimer); func_touchTimer = null; } return; }
-            func_isTouchInteraction = true; if (func_touchIgnoreTimeout) clearTimeout(func_touchIgnoreTimeout);
-            const coords = getClientCoords(e); func_touchStartClientX = coords.clientX; func_touchStartClientY = coords.clientY;
-            const bgRect = graphDiv.querySelector('.gridlayer').getBoundingClientRect();
-            if (coords.clientX < bgRect.left || coords.clientX > bgRect.right || coords.clientY < bgRect.top || coords.clientY > bgRect.bottom) return;
-            let px = graphDiv._fullLayout.xaxis.p2d(coords.clientX - bgRect.left), py = graphDiv._fullLayout.yaxis.p2d(coords.clientY - bgRect.top);
-            func_touchTargetObj = func_findClosestFunction(px, py);
-            if (func_touchTimer) clearTimeout(func_touchTimer);
-            if (func_touchTargetObj && !func_selectedFuncId) {
-                func_touchTimer = setTimeout(() => { func_selectGraph(func_touchTargetObj.f.id); func_touchTargetObj = null; if(navigator.vibrate) navigator.vibrate(50); }, 1000); 
-            }
-            if (func_selectedFuncId) func_handleDragStart(coords.clientX, coords.clientY);
-            if (func_isTangentMode && func_touchTargetObj && !func_selectedFuncId) func_drawTangentFromObj(func_touchTargetObj.f, func_touchTargetObj.px, func_touchTargetObj.py, func_touchTargetObj.isInverse);
-        }, { passive: false });
-
-        graphDiv.addEventListener('touchmove', function(e) {
-            if (e.touches.length > 1) { if (func_touchTimer) { clearTimeout(func_touchTimer); func_touchTimer = null; } return; }
-            const coords = getClientCoords(e);
-            if (func_touchTimer) {
-                let dx = coords.clientX - func_touchStartClientX, dy = coords.clientY - func_touchStartClientY;
-                if (Math.sqrt(dx*dx + dy*dy) > 10) { clearTimeout(func_touchTimer); func_touchTimer = null; }
-            }
-            if (isDraggingTrace && func_selectedFuncId) { func_handleDragMove(coords.clientX, coords.clientY); if(e.cancelable) e.preventDefault(); return; }
-            if (func_isTangentMode && !func_selectedFuncId && func_isTouchInteraction) {
-                const bgRect = graphDiv.querySelector('.gridlayer').getBoundingClientRect();
-                let px = graphDiv._fullLayout.xaxis.p2d(coords.clientX - bgRect.left), py = graphDiv._fullLayout.yaxis.p2d(coords.clientY - bgRect.top);
-                func_touchTargetObj = func_findClosestFunction(px, py);
-                if (func_touchTargetObj) { func_drawTangentFromObj(func_touchTargetObj.f, func_touchTargetObj.px, func_touchTargetObj.py, func_touchTargetObj.isInverse); if(e.cancelable) e.preventDefault(); } 
-                else func_clearTangentShape();
-            }
-        }, { passive: false });
-
-        window.addEventListener('touchend', function() {
-            if (func_touchTimer) { clearTimeout(func_touchTimer); func_touchTimer = null; }
-            if (isDraggingTrace) func_handleDragEnd();
-            func_touchIgnoreTimeout = setTimeout(() => { func_isTouchInteraction = false; }, 1000);
-            if (func_isTangentMode && !func_selectedFuncId) setTimeout(() => { if (!isDraggingTrace) func_clearTangentShape(); }, 1000);
-        });
-        
-        function func_handleDragStart(clientX, clientY) {
-            if (!func_selectedFuncId) return;
-            func_clearTangentShape(); const bgRect = graphDiv.querySelector('.gridlayer').getBoundingClientRect();
-            if (clientX < bgRect.left || clientX > bgRect.right || clientY < bgRect.top || clientY > bgRect.bottom) return;
-            isDraggingTrace = true; func_startDataX = graphDiv._fullLayout.xaxis.p2d(clientX - bgRect.left); func_startDataY = graphDiv._fullLayout.yaxis.p2d(clientY - bgRect.top);
-            func_startFuncState = JSON.parse(JSON.stringify(func_functionsList.find(f => f.id === func_selectedFuncId)));
-        }
-
-        function func_handleDragMove(clientX, clientY) {
-            if (!isDraggingTrace || !func_selectedFuncId) return;
-            const bgRect = graphDiv.querySelector('.gridlayer').getBoundingClientRect();
-            let currDataX = graphDiv._fullLayout.xaxis.p2d(clientX - bgRect.left), currDataY = graphDiv._fullLayout.yaxis.p2d(clientY - bgRect.top);
-            let dx = currDataX - func_startDataX, dy = currDataY - func_startDataY;
-            let targetFunc = func_functionsList.find(f => f.id === func_selectedFuncId);
-            
-            if (targetFunc.type === 'complex') {
-                let c = evaluateComplexExpression(func_startFuncState.expr);
-                if (!isNaN(c.re) && !isNaN(c.im)) {
-                    let newRe = func_formatNumber(c.re + dx);
-                    let newIm = func_formatNumber(c.im + dy);
-                    targetFunc.expr = `${newRe} ${newIm >= 0 ? '+' : '-'} ${Math.abs(newIm)}i`;
-                }
-            } else if (targetFunc.type === 'custom') {
-                targetFunc.H = (func_startFuncState.H || 0) + dx; targetFunc.K = (func_startFuncState.K || 0) + dy;
-                targetFunc.expr = func_buildShiftedExpression(targetFunc.baseExpr || func_startFuncState.expr, targetFunc.H, targetFunc.K);
-            }
-            func_syncInputValues(targetFunc); func_updateAll(true); 
-        }
-
-        function func_handleDragEnd() {
-            if (isDraggingTrace) { isDraggingTrace = false; let targetFunc = func_functionsList.find(f => f.id === func_selectedFuncId); if (targetFunc) func_syncInputValues(targetFunc); func_updateAll(false); }
-        }
-
-        graphDiv.addEventListener('mousedown', function(e) { func_mouseStartClientX = e.clientX; func_mouseStartClientY = e.clientY; func_handleDragStart(e.clientX, e.clientY); });
-        window.addEventListener('mousemove', function(e) { func_handleDragMove(e.clientX, e.clientY); });
-        window.addEventListener('mouseup', function(e) {
-            let dx = e.clientX - func_mouseStartClientX; let dy = e.clientY - func_mouseStartClientY;
-            if (Math.sqrt(dx*dx + dy*dy) < 5 && !func_isTouchInteraction && !func_selectedFuncId) {
-                const bgRect = graphDiv.querySelector('.gridlayer').getBoundingClientRect();
-                if (e.clientX >= bgRect.left && e.clientX <= bgRect.right && e.clientY >= bgRect.top && e.clientY <= bgRect.bottom) {
-                    let px = graphDiv._fullLayout.xaxis.p2d(e.clientX - bgRect.left), py = graphDiv._fullLayout.yaxis.p2d(e.clientY - bgRect.top);
-                    let closest = func_findClosestFunction(px, py); if (closest) func_selectGraph(closest.f.id);
-                }
-            }
-            func_handleDragEnd(); 
-        });
-
-        let func_relayoutDebounceTimer = null;
-        graphDiv.on('plotly_relayout', function(eventData) {
-            if (eventData['shapes'] !== undefined || eventData['annotations'] !== undefined || eventData['hovermode'] !== undefined) return;
-            if (eventData['xaxis.dtick'] !== undefined || eventData['yaxis.dtick'] !== undefined || eventData['yaxis.scaleanchor'] !== undefined) return;
-            if (func_relayoutDebounceTimer) clearTimeout(func_relayoutDebounceTimer);
-            func_relayoutDebounceTimer = setTimeout(() => { func_updateAll(false); }, 250); 
-        });
-
-        window.func_addRealMode(); 
-    }
-
-    /* =========================================================================
-       3. 수학 물리 시뮬레이터 (Physics Simulation) 네임스페이스 로직
-       ========================================================================= */
-    const phys_dt = 1/60; 
-    const phys_PIXELS_PER_METER = 15; 
-    const phys_WALL_POS_M = 100;
-    let phys_globalMass = 1000;
-    let phys_animationFrameId = null;
-
-    const phys_kState = { t: 0, x: 0, v: 0, a: 0, inputAcc: 0, isEbrake: false, isStopped: false, history: [] };
-    const phys_dState = { phase: 'ready', t: 0, x: 0, v: 0, a: 0, p: 0, F: 0, J: 0, inputAcc: 0, v0: 20, matKey: 'concrete', crashTime: 0, p_impact: 0, chartData: [] };
-
-    const phys_materials = {
-        'concrete': { name: '콘크리트', T: 0.1, color: '#ef4444', renderColor: '#475569', width: 2 },
-        'water':    { name: '물통', T: 0.25, color: '#f59e0b', renderColor: '#3b82f6', width: 4 },
-        'airbag':   { name: '에어백', T: 0.5, color: '#8b5cf6', renderColor: '#a855f7', width: 6 },
-        'sponge':   { name: '스펀지', T: 1.0, color: '#3b82f6', renderColor: '#fcd34d', width: 10 }
-    };
-
-    const phys_charts = {
-        pos1: { id: 'chart-pos1', wrapId: 'wrapper-pos1', zoom: 1, collapsed: false, selT: -1, yKey: 'x', color: '#60a5fa', ylabel: 'x (m)', winH: 256, offsetX: 0, offsetY: 0 },
-        vel1: { id: 'chart-vel1', wrapId: 'wrapper-vel1', zoom: 1, collapsed: false, selT: -1, yKey: 'v', color: '#4ade80', ylabel: 'v (m/s)', winH: 256, offsetX: 0, offsetY: 0 },
-        spd1: { id: 'chart-spd1', wrapId: 'wrapper-spd1', zoom: 1, collapsed: false, selT: -1, yKey: 'speed', color: '#14b8a6', ylabel: '|v| (m/s)', winH: 256, offsetX: 0, offsetY: 0 },
-        acc1: { id: 'chart-acc1', wrapId: 'wrapper-acc1', zoom: 1, collapsed: false, selT: -1, yKey: 'a', color: '#fb923c', ylabel: 'a (m/s²)', winH: 256, offsetX: 0, offsetY: 0 },
-        force2: { id: 'chart-force2', wrapId: 'wrapper-force2', zoom: 1, collapsed: false, selT: -1, yKey: 'F', ylabel: 'F (N)', winH: 300, offsetX: 0, offsetY: 0 },
-        mom2: { id: 'chart-mom2', wrapId: 'wrapper-mom2', zoom: 1, collapsed: false, selT: -1, yKey: 'p', ylabel: 'p (kg·m/s)', winH: 300, offsetX: 0, offsetY: 0 }
-    };
-
-    let phys_audioCtx, phys_engineOsc, phys_engineGain;
-    function phys_initAudio() {
-        if (phys_audioCtx) { if (phys_audioCtx.state === 'suspended') phys_audioCtx.resume(); return; }
-        phys_audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-        phys_engineOsc = phys_audioCtx.createOscillator(); phys_engineOsc.type = 'sawtooth'; 
-        phys_engineGain = phys_audioCtx.createGain(); phys_engineGain.gain.value = 0; 
-        const filter = phys_audioCtx.createBiquadFilter(); filter.type = 'lowpass'; filter.frequency.value = 250; 
-        const dist = phys_audioCtx.createWaveShaper();
-        let k = 100, n = 44100, curve = new Float32Array(n), deg = Math.PI/180;
-        for (let i = 0; i < n; ++i ) { let x = i*2/n-1; curve[i] = (3+k)*x*20*deg/(Math.PI+k*Math.abs(x)); }
-        dist.curve = curve; dist.oversample = '4x';
-        phys_engineOsc.connect(dist); dist.connect(filter); filter.connect(phys_engineGain); phys_engineGain.connect(phys_audioCtx.destination);
-        phys_engineOsc.start();
-    }
-
-    function phys_playCrashSound(duration) {
-        if (!phys_audioCtx) phys_initAudio();
-        const bufSize = phys_audioCtx.sampleRate; const buffer = phys_audioCtx.createBuffer(1, bufSize, phys_audioCtx.sampleRate);
-        const data = buffer.getChannelData(0); for (let i=0; i<bufSize; i++) data[i] = Math.random()*2-1; 
-        const noise = phys_audioCtx.createBufferSource(); noise.buffer = buffer;
-        const gain = phys_audioCtx.createGain(); const filter = phys_audioCtx.createBiquadFilter();
-        noise.connect(filter); filter.connect(gain); gain.connect(phys_audioCtx.destination);
-        const now = phys_audioCtx.currentTime; gain.gain.setValueAtTime(0, now);
-        
-        if (duration < 0.2) { 
-            filter.type = 'highpass'; filter.frequency.value = 600;
-            gain.gain.linearRampToValueAtTime(1.0, now+0.01); gain.gain.exponentialRampToValueAtTime(0.01, now+duration*1.5); 
-        } else { 
-            filter.type = 'lowpass'; filter.frequency.value = Math.max(100, 500-(duration*200));
-            gain.gain.linearRampToValueAtTime(0.8, now+duration*0.2); gain.gain.exponentialRampToValueAtTime(0.01, now+duration*1.5); 
-        }
-        noise.start(now); noise.stop(now+duration*3);
-    }
-
-    // 탭1 위치/속도/가속도 전체 리셋
-    window.phys_resetKinematics = function() {
-        phys_kState.t = 0;
-        phys_kState.x = 0;
-        phys_kState.v = 0;
-        phys_kState.a = 0;
-        phys_kState.inputAcc = 0;
-        phys_kState.isEbrake = false;
-        phys_kState.isStopped = false;
-        phys_kState.history = [];
-
-        const gBtn = document.getElementById('t1-btn-gas');
-        const bBtn = document.getElementById('t1-btn-brake');
-        if(gBtn) gBtn.classList.remove('ring-4', 'ring-white', 'scale-95');
-        if(bBtn) bBtn.classList.remove('ring-4', 'ring-white', 'scale-95');
-
-        let elP = document.getElementById('h1-pos'); if(elP) elP.innerText = `0.00 m`;
-        let elV = document.getElementById('h1-vel'); if(elV) elV.innerText = `0.00 m/s`;
-        let elS = document.getElementById('h1-spd'); if(elS) elS.innerText = `0.00 m/s`;
-        let elA = document.getElementById('h1-acc'); if(elA) elA.innerText = `0.00 m/s²`;
-
-        ['pos1', 'vel1', 'spd1', 'acc1'].forEach(k => {
-            phys_charts[k].selT = -1;
-            phys_charts[k].offsetX = 0;
-            phys_charts[k].offsetY = 0;
-            const cvs = document.getElementById(phys_charts[k].id);
-            if(cvs) {
-                const ctx = cvs.getContext('2d');
-                ctx.clearRect(0, 0, cvs.width, cvs.height);
-            }
-        });
-    };
-
-    function phys_resetDynamics() {
-        phys_dState.phase = 'ready'; phys_dState.t = 0; phys_dState.x = 0; phys_dState.v = 0; phys_dState.a = 0; phys_dState.p = 0; phys_dState.F = 0; phys_dState.J = 0; phys_dState.inputAcc = 0;
-        let sm = document.getElementById('status-msg'); if(sm) { sm.innerText = "대기 중 (Ready)"; sm.style.display = 'block'; sm.style.color = '#f8fafc'; sm.style.borderColor = '#64748b'; }
-        
-        let bg = document.getElementById('t2-btn-gas'); 
-        if(bg) { bg.disabled = true; bg.classList.add('opacity-50', 'cursor-not-allowed'); bg.classList.remove('ring-4', 'ring-white', 'scale-95'); }
-        let bb = document.getElementById('t2-btn-brake'); 
-        if(bb) { bb.disabled = true; bb.classList.add('opacity-50', 'cursor-not-allowed'); bb.classList.remove('ring-4', 'ring-white', 'scale-95'); }
-        
-        Object.keys(phys_charts).forEach(k => { phys_charts[k].selT = -1; phys_charts[k].offsetX = 0; phys_charts[k].offsetY = 0; });
-    }
-
-    function phys_startDynamicsTest() {
-        phys_resetDynamics(); phys_dState.phase = 'running'; phys_dState.v = phys_dState.v0; 
-        let sm = document.getElementById('status-msg'); if(sm) sm.style.display = 'none';
-        let bg = document.getElementById('t2-btn-gas'); if(bg) { bg.disabled = false; bg.classList.remove('opacity-50', 'cursor-not-allowed'); }
-        let bb = document.getElementById('t2-btn-brake'); if(bb) { bb.disabled = false; bb.classList.remove('opacity-50', 'cursor-not-allowed'); }
-        const mat = phys_materials[phys_dState.matKey];
-        phys_dState.chartData.push({ name: mat.name, mass: phys_globalMass, color: mat.color, data: [] });
-        if(phys_dState.chartData.length > 5) phys_dState.chartData.shift(); 
-    }
-
-    window.phys_zoomChart = function(key, amt) { phys_charts[key].zoom = Math.max(0.2, Math.min(10, phys_charts[key].zoom + amt)); };
-    window.phys_resizeChartWindow = function(key, dir) {
-        const chart = phys_charts[key]; if (chart.collapsed) return; 
-        chart.winH = Math.max(150, Math.min(800, chart.winH + dir * 100));
-        document.getElementById(`body-${key}`).style.height = chart.winH + 'px';
-        if (key !== 'force2' && key !== 'mom2') {
-            const wrapper = document.getElementById(chart.wrapId);
-            if (chart.winH > 300) { wrapper.classList.remove('lg:col-span-1'); wrapper.classList.add('lg:col-span-2'); }
-            else { wrapper.classList.remove('lg:col-span-2'); wrapper.classList.add('lg:col-span-1'); }
-        }
-    };
-    window.phys_toggleChart = function(key) {
-        const chart = phys_charts[key]; chart.collapsed = !chart.collapsed;
-        const body = document.getElementById(`body-${key}`); const btn = document.getElementById(`btn-tg-${key}`);
-        if (chart.collapsed) { body.style.height = '0px'; body.style.opacity = '0'; btn.innerText = '□'; } 
-        else { body.style.height = chart.winH + 'px'; body.style.opacity = '1'; btn.innerText = '_'; }
-    };
-
-    const phys_drawTree = (ctx, x, y, scale = 1) => {
-        ctx.save(); ctx.translate(x, y); ctx.scale(scale, scale);
-        ctx.fillStyle = '#451a03'; ctx.fillRect(-8, -50, 16, 50); ctx.fillStyle = '#064e3b'; ctx.beginPath(); ctx.arc(0, -60, 25, 0, Math.PI*2); ctx.fill();
-        ctx.fillStyle = '#047857'; ctx.beginPath(); ctx.arc(-15, -45, 20, 0, Math.PI*2); ctx.fill(); ctx.beginPath(); ctx.arc(15, -45, 20, 0, Math.PI*2); ctx.fill();
-        ctx.fillStyle = '#34d399'; ctx.beginPath(); ctx.arc(-5, -70, 10, 0, Math.PI*2); ctx.fill(); ctx.restore();
-    };
-
-    const phys_drawEnv = (ctx, w, h, camPosM) => {
-        const roadY = h - 40; ctx.fillStyle = '#22c55e'; ctx.fillRect(0, roadY - 10, w, h - roadY + 10);
-        const tSpace = 30 * phys_PIXELS_PER_METER; const camOff = camPosM * phys_PIXELS_PER_METER; 
-        const startX = -(((camOff % tSpace) + tSpace) % tSpace); 
-        for(let i = startX - tSpace; i < w + tSpace; i += tSpace) {
-            const idx = Math.floor((camOff + i) / tSpace); const s = 1 + (Math.abs(idx) % 3) * 0.2; phys_drawTree(ctx, i, roadY - 10, s);
-        }
-        ctx.fillStyle = '#1e293b'; ctx.fillRect(0, roadY, w, 40); ctx.strokeStyle = '#cbd5e1'; ctx.lineWidth = 4; ctx.setLineDash([20, 30]);
-        ctx.beginPath(); ctx.moveTo(startX, roadY + 20); ctx.lineTo(w, roadY + 20); ctx.stroke(); ctx.setLineDash([]);
-    };
-
-    const phys_drawCar = (ctx, x, y, scale = 1) => {
-        ctx.save(); ctx.translate(x, y); ctx.scale(scale, scale);
-        ctx.fillStyle = 'rgba(0,0,0,0.4)'; ctx.beginPath(); ctx.ellipse(0, 12, 35, 6, 0, 0, Math.PI*2); ctx.fill();
-        ctx.fillStyle = '#ef4444'; ctx.beginPath(); ctx.roundRect(-25, -12, 50, 18, 5); ctx.fill();
-        ctx.fillStyle = '#991b1b'; ctx.beginPath(); ctx.roundRect(-12, -25, 24, 15, 4); ctx.fill();
-        ctx.fillStyle = '#bae6fd'; ctx.fillRect(-9, -21, 8, 9); ctx.fillRect(2, -21, 7, 9);
-        ctx.fillStyle = '#0f172a'; ctx.beginPath(); ctx.arc(-15, 6, 8, 0, Math.PI*2); ctx.fill(); ctx.beginPath(); ctx.arc(15, 6, 8, 0, Math.PI*2); ctx.fill();
-        ctx.fillStyle = '#cbd5e1'; ctx.beginPath(); ctx.arc(-15, 6, 3, 0, Math.PI*2); ctx.fill(); ctx.beginPath(); ctx.arc(15, 6, 3, 0, Math.PI*2); ctx.fill();
-        ctx.fillStyle = '#fde047'; ctx.fillRect(22, -8, 4, 6); ctx.fillStyle = '#f87171'; ctx.fillRect(-26, -10, 2, 6); ctx.restore();
-    };
-
-    function phys_drawAxes(ctx, w, h, pad, xMin, xMax, yMin, yMax, xLabel, yLabel) {
-        const {L, R, T, B} = pad; const gw = w - L - R, gh = h - T - B;
-        const rangeY = (yMax - yMin) === 0 ? 1 : (yMax - yMin); const rangeX = (xMax - xMin) === 0 ? 1 : (xMax - xMin);
-        const yZeroPx = T + gh - (0 - yMin) / rangeY * gh;
-        const tZeroPx = L + (0 - xMin) / rangeX * gw;
-
-        ctx.strokeStyle = '#334155'; ctx.lineWidth = 1; ctx.fillStyle = '#94a3b8'; ctx.font = '11px Inter'; ctx.textAlign = 'center'; ctx.textBaseline = 'top';
-        for(let i=0; i<=5; i++) {
-            let val = xMin + rangeX * (i / 5); let px = L + (val - xMin) / rangeX * gw;
-            ctx.beginPath(); ctx.moveTo(px, T); ctx.lineTo(px, h - B); ctx.stroke(); ctx.fillText(val.toFixed(1), px, h - B + 5);
-        }
-        ctx.textAlign = 'right'; ctx.textBaseline = 'middle';
-        for(let i=0; i<=4; i++) {
-            let val = yMin + rangeY * (i / 4); let py = T + gh - (val - yMin) / rangeY * gh;
-            ctx.beginPath(); ctx.moveTo(L, py); ctx.lineTo(w - R, py); ctx.stroke(); 
-            let valStr = Math.abs(val) >= 1000 ? (val/1000).toFixed(1) + 'k' : (Math.abs(val) < 10 && val !== 0 ? val.toFixed(1) : val.toFixed(0));
-            ctx.fillText(valStr, L - 8, py);
-        }
-        
-        ctx.strokeStyle = '#475569'; ctx.lineWidth = 2; ctx.beginPath(); ctx.rect(L, T, gw, gh); ctx.stroke();
-        
-        if(yMin <= 0 && yMax >= 0) {
-            ctx.strokeStyle = '#cbd5e1'; ctx.lineWidth = 3; 
-            ctx.beginPath(); ctx.moveTo(L, yZeroPx); ctx.lineTo(w - R, yZeroPx); ctx.stroke();
-        }
-        if(xMin <= 0 && xMax >= 0) {
-            ctx.strokeStyle = '#cbd5e1'; ctx.lineWidth = 3; 
-            ctx.beginPath(); ctx.moveTo(tZeroPx, T); ctx.lineTo(tZeroPx, h - B); ctx.stroke();
-        }
-        if(xMin <= 0 && xMax >= 0 && yMin <= 0 && yMax >= 0) {
-            ctx.fillStyle = '#ffffff'; 
-            ctx.beginPath(); ctx.arc(tZeroPx, yZeroPx, 4, 0, Math.PI*2); ctx.fill();
-        }
-
-        ctx.fillStyle = '#f8fafc'; ctx.font = 'bold 12px Inter'; ctx.textAlign = 'right'; ctx.textBaseline = 'bottom';
-        ctx.fillText(xLabel, w - R, h - B - 8); ctx.save(); ctx.translate(15, T + 20); ctx.rotate(-Math.PI/2); ctx.textAlign = 'right'; ctx.fillText(yLabel, 0, 0); ctx.restore();
-    }
-
-    function phys_drawTan(ctx, mapX, mapY, pt, slope, color, ylabel) {
-        const px = mapX(pt.t), py = mapY(pt.y);
-        const t1 = pt.t - 0.5, y1 = pt.y - slope * 0.5; const t2 = pt.t + 0.5, y2 = pt.y + slope * 0.5;
-        ctx.strokeStyle = '#fcd34d'; ctx.lineWidth = 2; ctx.setLineDash([5, 5]); ctx.beginPath(); ctx.moveTo(mapX(t1), mapY(y1)); ctx.lineTo(mapX(t2), mapY(y2)); ctx.stroke(); ctx.setLineDash([]);
-        ctx.fillStyle = 'white'; ctx.beginPath(); ctx.arc(px, py, 5, 0, Math.PI*2); ctx.fill(); ctx.strokeStyle = color; ctx.lineWidth = 2; ctx.stroke();
-        ctx.fillStyle = 'rgba(15, 23, 42, 0.9)'; ctx.strokeStyle = '#475569'; ctx.beginPath(); ctx.roundRect(px + 10, py - 40, 160, 45, 5); ctx.fill(); ctx.stroke();
-        ctx.fillStyle = '#f8fafc'; ctx.font = '11px JetBrains Mono'; ctx.textAlign = 'left'; ctx.textBaseline = 'top';
-        ctx.fillText(`t=${pt.t.toFixed(2)}s, ${ylabel.split(' ')[0]}=${Math.round(pt.y)}`, px + 15, py - 35);
-        ctx.fillStyle = '#fcd34d'; ctx.fillText(`기울기(접선)=${Math.round(slope)}`, px + 15, py - 20);
-    }
-
-    function phys_calcSlope(dataArr, idx, yKey) {
-        if (!dataArr || dataArr.length < 2 || idx < 0 || idx >= dataArr.length) return 0;
-        if (idx === 0) return (dataArr[1][yKey] - dataArr[0][yKey]) / (dataArr[1].t - dataArr[0].t);
-        if (idx === dataArr.length - 1) return (dataArr[idx][yKey] - dataArr[idx-1][yKey]) / (dataArr[idx].t - dataArr[idx-1].t);
-        return (dataArr[idx+1][yKey] - dataArr[idx-1][yKey]) / (dataArr[idx+1].t - dataArr[idx-1].t);
-    }
-
-    function phys_renderKineCharts() {
-        const hData = phys_kState.history; if (hData.length === 0) return;
-        const baseTMin = hData[0].t; const baseTMax = Math.max(baseTMin + 1, hData[hData.length-1].t); 
-
-        ['pos1', 'vel1', 'spd1', 'acc1'].forEach(key => {
-            const chart = phys_charts[key]; if(chart.collapsed) return;
-            const canvas = document.getElementById(chart.id); if(!canvas || canvas.width <= 1) return;
-            const ctx = canvas.getContext('2d'); const w = canvas.width, h = canvas.height;
-            const pad = {L: 50, R: 20, T: 20, B: 30};
-            
-            let yMin = -1, yMax = 1;
-            if(key === 'pos1') { yMin = hData[0].x - 1; yMax = Math.max(10, hData[hData.length-1].x + 5); }
-            if(key === 'vel1') { yMin = -5; yMax = 40; }
-            if(key === 'spd1') { yMin = -5; yMax = 40; } 
-            if(key === 'acc1') { yMin = -70; yMax = 70; }
-
-            const yCenter = (yMax + yMin) / 2; const baseRange = (yMax - yMin);
-            const yRangeZoomed = baseRange / chart.zoom;
-            yMin = yCenter - yRangeZoomed / 2 + chart.offsetY; 
-            yMax = yCenter + yRangeZoomed / 2 + chart.offsetY;
-
-            let tMin = baseTMin + chart.offsetX; let tMax = baseTMax + chart.offsetX;
-            chart.currentTRange = tMax - tMin; chart.currentYRange = yMax - yMin; chart.currentTMin = tMin;
-
-            ctx.clearRect(0,0,w,h);
-            phys_drawAxes(ctx, w, h, pad, tMin, tMax, yMin, yMax, 't (s)', chart.ylabel);
-            const mapX = (t) => pad.L + (w - pad.L - pad.R) * (t - tMin) / (tMax - tMin || 1);
-            const mapY = (v) => pad.T + (h - pad.T - pad.B) - (h - pad.T - pad.B) * (v - yMin) / (yMax - yMin || 1);
-
-            if (key === 'vel1' || key === 'spd1') {
-                ctx.fillStyle = chart.color.replace(')', ', 0.2)').replace('rgb', 'rgba'); ctx.beginPath(); 
-                const y0 = Math.min(Math.max(mapY(0), pad.T), pad.T + (h - pad.T - pad.B));
-                ctx.moveTo(mapX(hData[0].t), y0); 
-                hData.forEach(pt => ctx.lineTo(mapX(pt.t), mapY(pt[chart.yKey])));
-                ctx.lineTo(mapX(hData[hData.length-1].t), y0); ctx.fill();
-            }
-
-            ctx.strokeStyle = chart.color; ctx.lineWidth = 3; ctx.lineJoin = 'round'; ctx.beginPath();
-            hData.forEach((pt, i) => i===0 ? ctx.moveTo(mapX(pt.t), mapY(pt[chart.yKey])) : ctx.lineTo(mapX(pt.t), mapY(pt[chart.yKey]))); ctx.stroke();
-
-            const selT = chart.selT;
-            if (selT >= 0) {
-                let closestIdx = 0; let minD = Infinity;
-                hData.forEach((pt, i) => { const d = Math.abs(pt.t - selT); if(d < minD) { minD = d; closestIdx = i; } });
-                if (minD < 1.0) {
-                    const pt = hData[closestIdx]; const slope = phys_calcSlope(hData, closestIdx, chart.yKey);
-                    phys_drawTan(ctx, mapX, mapY, {t: pt.t, y: pt[chart.yKey]}, slope, chart.color, chart.ylabel);
-                }
-            }
-        });
-    }
-
-    function phys_renderDynCharts() {
-        ['mom2', 'force2'].forEach(key => {
-            const chart = phys_charts[key]; if (chart.collapsed) return;
-            const canvas = document.getElementById(chart.id); if(!canvas || canvas.width <= 1) return;
-            const ctx = canvas.getContext('2d'); const w = canvas.width, h = canvas.height;
-            const pad = {L: 60, R: 20, T: 20, B: 30};
-            
-            let fMaxBase = Math.ceil(((phys_globalMass * 50 * Math.PI) / (2 * 0.1)) / 10000) * 10000;
-            let pMaxBase = phys_globalMass * 50 * 1.1; 
-            
-            const baseTMin = 0; const baseTMax = 1.2;
-            const baseYMax = key === 'force2' ? fMaxBase : pMaxBase;
-            const yRangeZoomed = baseYMax / chart.zoom;
-            let yMin = chart.offsetY; let yMax = yRangeZoomed + chart.offsetY;
-            let tMin = baseTMin + chart.offsetX; let tMax = baseTMax + chart.offsetX;
-
-            chart.currentTRange = tMax - tMin; chart.currentYRange = yMax - yMin; chart.currentTMin = tMin;
-
-            ctx.clearRect(0,0,w,h);
-            phys_drawAxes(ctx, w, h, pad, tMin, tMax, yMin, yMax, 't (s)', chart.ylabel);
-            const mapX = (t) => pad.L + (w - pad.L - pad.R) * (t - tMin) / (tMax - tMin || 1);
-            const mapY = (val) => pad.T + (h - pad.T - pad.B) - (h - pad.T - pad.B) * (val - yMin) / (yMax - yMin || 1);
-
-            phys_dState.chartData.forEach(series => {
-                if (!series.data || series.data.length === 0) return;
-                if (key === 'force2') {
-                    ctx.fillStyle = series.color + '30'; ctx.beginPath(); ctx.moveTo(mapX(0), mapY(0));
-                    series.data.forEach(pt => ctx.lineTo(mapX(pt.t), mapY(pt[chart.yKey])));
-                    ctx.lineTo(mapX(series.data[series.data.length-1].t), mapY(0)); ctx.fill();
-                }
-                ctx.strokeStyle = series.color; ctx.lineWidth = 3; ctx.lineJoin = 'round'; ctx.beginPath();
-                series.data.forEach((pt, i) => i === 0 ? ctx.moveTo(mapX(pt.t), mapY(pt[chart.yKey])) : ctx.lineTo(mapX(pt.t), mapY(pt[chart.yKey])));
-                ctx.stroke();
-            });
-            
-            if (phys_dState.chartData.length > 0) {
-                const lastSeries = phys_dState.chartData[phys_dState.chartData.length - 1];
-                const selT = chart.selT;
-                if (selT >= 0 && lastSeries.data && lastSeries.data.length >= 2) {
-                    let closestIdx = -1; let minD = Infinity;
-                    lastSeries.data.forEach((pt, i) => { const d = Math.abs(pt.t - selT); if(d < minD) { minD = d; closestIdx = i; } });
-                    if (closestIdx >= 0 && minD < 0.2) {
-                        const pt = lastSeries.data[closestIdx]; const slope = phys_calcSlope(lastSeries.data, closestIdx, chart.yKey); 
-                        phys_drawTan(ctx, mapX, mapY, {t: pt.t, y: pt[chart.yKey]}, slope, lastSeries.color, chart.ylabel);
-                    }
-                }
-            }
-
-            let lgY = pad.T + 10;
-            [...phys_dState.chartData].reverse().forEach(series => {
-                ctx.fillStyle = series.color; ctx.fillRect(pad.L + 15, lgY, 12, 12);
-                ctx.fillStyle = 'white'; ctx.font = '11px Inter'; ctx.textAlign = 'left'; ctx.textBaseline = 'middle'; 
-                ctx.fillText(`${series.name} (m=${series.mass})`, pad.L + 35, lgY + 6); lgY += 18;
-            });
-        });
-
-        let calJ = 0;
-        if (phys_dState.chartData.length > 0) {
-            const last = phys_dState.chartData[phys_dState.chartData.length - 1];
-            if (last && last.data && last.data.length > 1) {
-                for (let i = 1; i < last.data.length; i++) calJ += last.data[i].F * (last.data[i].t - last.data[i-1].t);
-            }
-        }
-        const iEl = document.getElementById('integral-val'); if (iEl) iEl.innerText = Math.round(calJ).toLocaleString();
-    }
-
-    window.phys_attachPanZoomDrag = function(key) {
-        const canvas = document.getElementById(phys_charts[key].id); if(!canvas) return;
-        let isDrag = false, lastX = 0, lastY = 0, hasMoved = false;
-
-        const down = (e) => { 
-            isDrag = true; hasMoved = false; 
-            const pt = e.touches ? e.touches[0] : e; lastX = pt.clientX; lastY = pt.clientY; 
-        };
-        const move = (e) => {
-            if (!isDrag) return; 
-            if (e.cancelable && e.touches) e.preventDefault(); 
-            hasMoved = true; 
-            const pt = e.touches ? e.touches[0] : e;
-            const dx = pt.clientX - lastX, dy = pt.clientY - lastY; 
-            lastX = pt.clientX; lastY = pt.clientY;
-            const c = phys_charts[key]; const padL = (key==='force2' || key==='mom2') ? 60 : 50;
-            const gridW = canvas.width - padL - 20, gridH = canvas.height - 50;
-            const tR = c.currentTRange || 1, yR = c.currentYRange || 1;
-            c.offsetX -= (dx / gridW) * tR; c.offsetY += (dy / gridH) * yR;
-        };
-        const up = (e) => {
-            if(!isDrag) return;
-            isDrag = false;
-            if (!hasMoved) {
-                const rect = canvas.getBoundingClientRect(); const pt = e.changedTouches ? e.changedTouches[0] : e;
-                const x = pt.clientX - rect.left; const padL = (key==='force2' || key==='mom2') ? 60 : 50; const gw = canvas.width - padL - 20;
-                if (x >= padL && x <= canvas.width - 20) {
-                    phys_charts[key].selT = (phys_charts[key].currentTMin || 0) + ((x - padL) / gw) * (phys_charts[key].currentTRange || 1);
-                }
-            }
+            if (func_
