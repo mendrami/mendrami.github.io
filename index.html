@@ -259,8 +259,8 @@
                         <div class="flex flex-wrap gap-3 w-full md:w-auto">
                             <button id="t1-btn-gas" class="flex-1 md:flex-none px-6 py-3 bg-green-600 hover:bg-green-500 text-white rounded-xl font-bold shadow-lg shadow-green-900/50 text-base md:text-lg transition-all">가속 (토글)</button>
                             <button id="t1-btn-brake" class="flex-1 md:flex-none px-6 py-3 bg-red-600 hover:bg-red-500 text-white rounded-xl font-bold shadow-lg shadow-red-900/50 text-base md:text-lg transition-all">감속 (토글)</button>
-                            <button id="t1-btn-ebrake" class="flex-1 md:flex-none px-6 py-3 bg-amber-500 hover:bg-amber-400 active:scale-95 text-slate-900 rounded-xl font-black shadow-lg shadow-amber-900/50 text-base md:text-lg transition-all border border-amber-300">브레이크 (급정지)</button>
-                            <button id="t1-btn-reset" class="flex-1 md:flex-none px-6 py-3 bg-rose-700 hover:bg-rose-600 active:scale-95 text-white rounded-xl font-black shadow-lg shadow-rose-950/50 text-base md:text-lg transition-all border border-rose-400">초기화</button>
+                            <!-- [신규 추가] 급브레이크 버튼 -->
+                            <button id="t1-btn-ebrake" class="flex-1 md:flex-none px-6 py-3 bg-amber-500 hover:bg-amber-400 active:scale-95 text-slate-900 rounded-xl font-black shadow-lg shadow-amber-900/50 text-base md:text-lg transition-all border-2 border-amber-300">🚨 급브레이크</button>
                         </div>
                     </div>
                     
@@ -367,7 +367,7 @@
                         </div>
                         <div id="body-acc1" class="w-full bg-slate-900 relative graph-body" style="height: 256px;">
                             <canvas id="chart-acc1"></canvas>
-                            <div class="absolute bottom-2 left-2 text-[10px] text-slate-400 pointer-events-none">드래그시 스크롤(이동)</div>
+                            <div class="absolute bottom-2 left-2 text-[10px] text-slate-400 pointer-events-none">급브레이크시 순간적인 가속도 급감 반영</div>
                         </div>
                     </div>
                 </div>
@@ -497,7 +497,7 @@
 
 <script>
     /* =========================================================================
-       0. 전역 클래스 선언
+       0. 전역 클래스 및 엔진 선언 (메모리 누수 및 문법 오류 방지)
        ========================================================================= */
     class ComplexNum {
         constructor(re = 0, im = 0) { this.re = re; this.im = im; }
@@ -633,7 +633,7 @@
         func_renderUI(); func_updateAll();
     };
 
-    // 모드 전환 및 복소수 입력 추가
+    // 모드 전환 및 복소수 입력 추가 (버튼 명칭 매칭)
     window.func_addComplexMode = function() {
         let hasReal = func_functionsList.some(f => f.type === 'custom');
         if (hasReal) {
@@ -792,9 +792,9 @@
                 innerHTML += `
                     <div class="custom-expr-row">
                         <label><strong>수식 직접 입력:</strong></label>
-                        <input type="text" inputmode="text" autocorrect="off" autocapitalize="none" spellcheck="false" id="input_${func.id}_expr" value="${func.expr}" onchange="window.func_updateState('${func.id}', 'expr', this.value)" placeholder="예: x^2 + y^2 = 4, 8^(1/2)x">
+                        <input type="text" inputmode="text" autocorrect="off" autocapitalize="none" spellcheck="false" id="input_${func.id}_expr" value="${func.expr}" onchange="window.func_updateState('${func.id}', 'expr', this.value)" placeholder="예: x^2 + y^2 = 4, log3(x)">
                         <div style="font-size:0.75rem; color:#6c757d; margin-top:4px;">
-                            * 예: <code>8^(1/2)x</code>, <code>2^x</code>, <code>x^(1/2)</code>, <code>log3(x)</code>
+                            * 예: <code>x^2</code>, <code>2^x</code>, <code>x^(1/2)</code>, <code>log3(x)</code>
                         </div>
                     </div>
                 `;
@@ -822,10 +822,7 @@
             cleanExpr = cleanExpr.replace(/\blog\s*\(([^)]+)\)/gi, 'customMath.customLog(10, $1)');
             cleanExpr = cleanExpr.replace(/\bln\s*\(([^)]+)\)/gi, '((($1) > 0) ? Math.log($1) : NaN)');
 
-            // 암시적 곱셈 처리
-            cleanExpr = cleanExpr
-                .replace(/\)\s*([a-zA-Z(])/g, ')*$1')
-                .replace(/(^|[^a-zA-Z0-9_])(\d+(?:\.\d+)?)\s*([a-zA-Z(])/g, '$1$2*$3')
+            cleanExpr = cleanExpr.replace(/(^|[^a-zA-Z0-9_])(\d+(?:\.\d+)?)\s*([a-zA-Z(])/g, '$1$2*$3')
                 .replace(/\^/g, '**')
                 .replace(/\b(csc|sec|cot)\b/gi, function(match) { return 'customMath.' + match.toLowerCase(); })
                 .replace(/\b(sin|cos|tan|asin|acos|atan|sinh|cosh|tanh|exp|sqrt|abs)\b/gi, function(match) { 
@@ -1291,7 +1288,8 @@
     let phys_globalMass = 1000;
     let phys_animationFrameId = null;
 
-    const phys_kState = { t: 0, x: 0, v: 0, a: 0, inputAcc: 0, isEbrake: false, isStopped: false, history: [] };
+    // [핵심] isEmergencyBraking 플래그 추가
+    const phys_kState = { t: 0, x: 0, v: 0, a: 0, inputAcc: 0, isEmergencyBraking: false, history: [] };
     const phys_dState = { phase: 'ready', t: 0, x: 0, v: 0, a: 0, p: 0, F: 0, J: 0, inputAcc: 0, v0: 20, matKey: 'concrete', crashTime: 0, p_impact: 0, chartData: [] };
 
     const phys_materials = {
@@ -1343,39 +1341,6 @@
         }
         noise.start(now); noise.stop(now+duration*3);
     }
-
-    // 탭1 초기화 함수
-    window.phys_resetKinematics = function() {
-        phys_kState.t = 0;
-        phys_kState.x = 0;
-        phys_kState.v = 0;
-        phys_kState.a = 0;
-        phys_kState.inputAcc = 0;
-        phys_kState.isEbrake = false;
-        phys_kState.isStopped = false;
-        phys_kState.history = [];
-
-        const gBtn = document.getElementById('t1-btn-gas');
-        const bBtn = document.getElementById('t1-btn-brake');
-        if(gBtn) gBtn.classList.remove('ring-4', 'ring-white', 'scale-95');
-        if(bBtn) bBtn.classList.remove('ring-4', 'ring-white', 'scale-95');
-
-        let elP = document.getElementById('h1-pos'); if(elP) elP.innerText = `0.00 m`;
-        let elV = document.getElementById('h1-vel'); if(elV) elV.innerText = `0.00 m/s`;
-        let elS = document.getElementById('h1-spd'); if(elS) elS.innerText = `0.00 m/s`;
-        let elA = document.getElementById('h1-acc'); if(elA) elA.innerText = `0.00 m/s²`;
-
-        ['pos1', 'vel1', 'spd1', 'acc1'].forEach(k => {
-            phys_charts[k].selT = -1;
-            phys_charts[k].offsetX = 0;
-            phys_charts[k].offsetY = 0;
-            const cvs = document.getElementById(phys_charts[k].id);
-            if(cvs) {
-                const ctx = cvs.getContext('2d');
-                ctx.clearRect(0, 0, cvs.width, cvs.height);
-            }
-        });
-    };
 
     function phys_resetDynamics() {
         phys_dState.phase = 'ready'; phys_dState.t = 0; phys_dState.x = 0; phys_dState.v = 0; phys_dState.a = 0; phys_dState.p = 0; phys_dState.F = 0; phys_dState.J = 0; phys_dState.inputAcc = 0;
@@ -1516,7 +1481,7 @@
             if(key === 'pos1') { yMin = hData[0].x - 1; yMax = Math.max(10, hData[hData.length-1].x + 5); }
             if(key === 'vel1') { yMin = -5; yMax = 40; }
             if(key === 'spd1') { yMin = -5; yMax = 40; } 
-            if(key === 'acc1') { yMin = -70; yMax = 70; }
+            if(key === 'acc1') { yMin = -55; yMax = 20; } // 급브레이크 시 가속도 스파이크 수용
 
             const yCenter = (yMax + yMin) / 2; const baseRange = (yMax - yMin);
             const yRangeZoomed = baseRange / chart.zoom;
@@ -1676,4 +1641,249 @@
         const btnGlIn = document.getElementById('btn-gl-in');
         const btnGlOut = document.getElementById('btn-gl-out');
         if(btnGlIn) btnGlIn.addEventListener('click', () => { glFontSize = Math.min(32, glFontSize + 2); glossaryContent.style.fontSize = glFontSize + 'px'; });
-        if(btnGlOut) btnGlOut.addEventListener('click
+        if(btnGlOut) btnGlOut.addEventListener('click', () => { glFontSize = Math.max(10, glFontSize - 2); glossaryContent.style.fontSize = glFontSize + 'px'; });
+
+        const tabs = ['tab1', 'tab2'];
+        tabs.forEach(tab => {
+            const tabBtn = document.getElementById(`${tab}-btn`);
+            if(tabBtn) {
+                tabBtn.addEventListener('click', () => {
+                    tabs.forEach(t => {
+                        document.getElementById(`${t}-btn`).classList.toggle('active', t === tab);
+                        document.getElementById(`${t}-content`).classList.toggle('hide', t !== tab);
+                    });
+                });
+            }
+        });
+
+        const massInp = document.getElementById('mass-input');
+        if(massInp) massInp.addEventListener('input', (e) => { let val = parseInt(e.target.value); if (!isNaN(val) && val > 0) phys_globalMass = val; });
+        
+        const v0Sld = document.getElementById('v0-slider');
+        if(v0Sld) v0Sld.addEventListener('input', (e) => { phys_dState.v0 = parseFloat(e.target.value); document.getElementById('v0-display').innerText = `${phys_dState.v0} m/s`; if (phys_dState.phase === 'ready' || phys_dState.phase === 'done') phys_resetDynamics(); });
+        
+        const matSel = document.getElementById('material-select');
+        if(matSel) matSel.addEventListener('change', (e) => { phys_dState.matKey = e.target.value; });
+
+        function bindToggle(id, otherId, stateObj, val) {
+            const btn = document.getElementById(id);
+            if(!btn) return;
+            btn.addEventListener('click', (e) => {
+                e.preventDefault();
+                if(btn.disabled) return;
+                
+                // 급브레이크 상태였다면 해제
+                if (stateObj.isEmergencyBraking !== undefined) {
+                    stateObj.isEmergencyBraking = false;
+                }
+
+                if(stateObj.inputAcc === val) {
+                    stateObj.inputAcc = 0; 
+                    btn.classList.remove('ring-4', 'ring-white', 'scale-95');
+                } else {
+                    stateObj.inputAcc = val; 
+                    btn.classList.add('ring-4', 'ring-white', 'scale-95');
+                    const otherBtn = document.getElementById(otherId);
+                    if(otherBtn) otherBtn.classList.remove('ring-4', 'ring-white', 'scale-95');
+                }
+            });
+        }
+        
+        bindToggle('t1-btn-gas', 't1-btn-brake', phys_kState, 6.0);
+        bindToggle('t1-btn-brake', 't1-btn-gas', phys_kState, -8.0);
+        bindToggle('t2-btn-gas', 't2-btn-brake', phys_dState, 5.0);
+        bindToggle('t2-btn-brake', 't2-btn-gas', phys_dState, -10.0);
+
+        // [핵심] 급브레이크 이벤트 바인딩
+        const eBrakeBtn = document.getElementById('t1-btn-ebrake');
+        if (eBrakeBtn) {
+            eBrakeBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                // 가속, 감속 토글 해제
+                phys_kState.inputAcc = 0;
+                document.getElementById('t1-btn-gas').classList.remove('ring-4', 'ring-white', 'scale-95');
+                document.getElementById('t1-btn-brake').classList.remove('ring-4', 'ring-white', 'scale-95');
+                // 긴급 제동 모드 활성화
+                phys_kState.isEmergencyBraking = true;
+            });
+        }
+
+        const btnStartTest = document.getElementById('btn-start-test');
+        if(btnStartTest) btnStartTest.addEventListener('click', () => { if (phys_dState.phase === 'running' || phys_dState.phase === 'crashing') phys_resetDynamics(); else phys_startDynamicsTest(); });
+        
+        const btnClearChart = document.getElementById('btn-clear-chart');
+        if(btnClearChart) btnClearChart.addEventListener('click', () => { phys_dState.chartData = []; phys_charts['force2'].selT = -1; phys_charts['mom2'].selT = -1; });
+
+        ['pos1', 'vel1', 'spd1', 'acc1', 'force2', 'mom2'].forEach(window.phys_attachPanZoomDrag);
+    }
+
+    function phys_updatePhysicsLoop() {
+        if (currentGlobalApp === 'func') {
+            if (phys_audioCtx && phys_audioCtx.state === 'running') phys_engineGain.gain.setTargetAtTime(0, phys_audioCtx.currentTime, 0.1);
+            phys_animationFrameId = requestAnimationFrame(phys_updatePhysicsLoop); return;
+        }
+        try {
+            const t1 = document.getElementById('tab1-content');
+            const activePhysicsTab = (t1 && t1.classList.contains('hide')) ? 'tab2' : 'tab1';
+            
+            if (activePhysicsTab === 'tab1') {
+                const drag = -0.05 * phys_kState.v;
+                
+                // [핵심] 급브레이크 물리 연산 로직
+                if (phys_kState.isEmergencyBraking) {
+                    if (Math.abs(phys_kState.v) > 0.3) {
+                        const sign = phys_kState.v > 0 ? -1 : 1;
+                        phys_kState.a = sign * 45.0; // 강력한 제동 가속도 (45 m/s²)
+                        phys_kState.v += phys_kState.a * phys_dt;
+                        // 0 통과 시 즉시 정지
+                        if ((sign === -1 && phys_kState.v <= 0) || (sign === 1 && phys_kState.v >= 0)) {
+                            phys_kState.v = 0;
+                            phys_kState.a = 0;
+                            phys_kState.isEmergencyBraking = false;
+                        }
+                    } else {
+                        phys_kState.v = 0;
+                        phys_kState.a = 0;
+                        phys_kState.isEmergencyBraking = false;
+                    }
+                } else {
+                    phys_kState.a = phys_kState.inputAcc + drag;
+                    if (Math.abs(phys_kState.v) < 0.1 && phys_kState.inputAcc === 0) { 
+                        phys_kState.a = 0; 
+                        phys_kState.v = 0; 
+                    } else {
+                        phys_kState.v += phys_kState.a * phys_dt;
+                    }
+                }
+
+                phys_kState.x += phys_kState.v * phys_dt;
+                phys_kState.t += phys_dt;
+
+                phys_kState.history.push({t: phys_kState.t, x: phys_kState.x, v: phys_kState.v, speed: Math.abs(phys_kState.v), a: phys_kState.a});
+                if (phys_kState.history.length > 400) phys_kState.history.shift(); 
+                
+                let elP = document.getElementById('h1-pos'); if(elP) elP.innerText = `${phys_kState.x.toFixed(2)} m`;
+                let elV = document.getElementById('h1-vel'); if(elV) elV.innerText = `${phys_kState.v.toFixed(2)} m/s`;
+                let elS = document.getElementById('h1-spd'); if(elS) elS.innerText = `${Math.abs(phys_kState.v).toFixed(2)} m/s`;
+                let elA = document.getElementById('h1-acc'); if(elA) elA.innerText = `${phys_kState.a.toFixed(2)} m/s²`;
+
+                const cvs = document.getElementById('sim-canvas-t1');
+                if(cvs) {
+                    let pWidth = cvs.parentElement.clientWidth, pHeight = cvs.parentElement.clientHeight;
+                    if(pWidth > 0 && pHeight > 0) {
+                        cvs.width = pWidth; cvs.height = pHeight; const ctx = cvs.getContext('2d');
+                        ctx.fillStyle = '#87CEEB'; ctx.fillRect(0, 0, cvs.width, cvs.height);
+                        phys_drawEnv(ctx, cvs.width, cvs.height, phys_kState.x); phys_drawCar(ctx, cvs.width * 0.25, cvs.height - 45, 1.4);
+                    }
+                }
+                
+                ['pos1', 'vel1', 'spd1', 'acc1'].forEach(key => {
+                    const canvas = document.getElementById(phys_charts[key].id); 
+                    if(canvas && canvas.parentElement.clientWidth > 0) { canvas.width = canvas.parentElement.clientWidth; canvas.height = canvas.parentElement.clientHeight; }
+                });
+                phys_renderKineCharts();
+
+            } else {
+                if (phys_dState.phase === 'running') {
+                    const drag = -0.05 * phys_dState.v; phys_dState.a = phys_dState.inputAcc + drag; phys_dState.v += phys_dState.a * phys_dt;
+                    if (phys_dState.v < 0) phys_dState.v = 0; phys_dState.x += phys_dState.v * phys_dt; phys_dState.p = phys_dState.v * phys_globalMass;
+                    
+                    if (phys_dState.x >= phys_WALL_POS_M - 2) { 
+                        phys_dState.x = phys_WALL_POS_M - 2;
+                        if (phys_dState.v > 0.5) {
+                            phys_dState.phase = 'crashing'; phys_dState.crashTime = 0; phys_dState.p_impact = phys_dState.v * phys_globalMass; 
+                            
+                            phys_dState.inputAcc = 0;
+                            
+                            const mat = phys_materials[phys_dState.matKey];
+                            const currentSeries = phys_dState.chartData[phys_dState.chartData.length - 1];
+                            if(currentSeries) currentSeries.data.push({ t: 0, F: 0, p: phys_dState.p_impact });
+
+                            let bg = document.getElementById('t2-btn-gas'); if(bg) { bg.disabled = true; bg.classList.add('opacity-50', 'cursor-not-allowed'); bg.classList.remove('ring-4', 'ring-white', 'scale-95'); }
+                            let bb = document.getElementById('t2-btn-brake'); if(bb) { bb.disabled = true; bb.classList.add('opacity-50', 'cursor-not-allowed'); bb.classList.remove('ring-4', 'ring-white', 'scale-95'); }
+                            let sm = document.getElementById('status-msg'); if(sm) { sm.innerText = "충돌! (Impact)"; sm.style.display = 'block'; sm.style.color = '#ef4444'; sm.style.borderColor = '#7f1d1d'; }
+                            phys_playCrashSound(mat.T);
+                        } else {
+                            phys_dState.phase = 'done'; phys_dState.v = 0; phys_dState.a = 0; phys_dState.F = 0;
+                            let sm = document.getElementById('status-msg'); if(sm) { sm.innerText = "안전 정지"; sm.style.display = 'block'; sm.style.color = '#4ade80'; sm.style.borderColor = '#14532d'; }
+                        }
+                    }
+                } else if (phys_dState.phase === 'crashing') {
+                    const mat = phys_materials[phys_dState.matKey]; phys_dState.crashTime += phys_dt;
+                    if (phys_dState.crashTime <= mat.T) {
+                        const F_max = (phys_dState.p_impact * Math.PI) / (2 * mat.T);
+                        phys_dState.F = F_max * Math.sin(Math.PI * (phys_dState.crashTime / mat.T));
+                        phys_dState.J = F_max * (mat.T / Math.PI) * (1 - Math.cos(Math.PI * phys_dState.crashTime / mat.T));
+                        phys_dState.a = -phys_dState.F / phys_globalMass; phys_dState.v = Math.max(0, (phys_dState.p_impact - phys_dState.J) / phys_globalMass); phys_dState.p = phys_dState.v * phys_globalMass;
+                        const currentSeries = phys_dState.chartData[phys_dState.chartData.length - 1]; if(currentSeries) currentSeries.data.push({ t: phys_dState.crashTime, F: phys_dState.F, p: phys_dState.p });
+                    } else {
+                        phys_dState.F = 0; phys_dState.a = 0; phys_dState.v = 0; phys_dState.p = 0; phys_dState.J = phys_dState.p_impact; phys_dState.phase = 'done';
+                        const currentSeries = phys_dState.chartData[phys_dState.chartData.length - 1]; if(currentSeries) currentSeries.data.push({ t: mat.T, F: 0, p: 0 });
+                        let sm = document.getElementById('status-msg'); if(sm) { sm.innerText = "테스트 완료"; sm.style.color = '#f8fafc'; sm.style.borderColor = '#64748b'; }
+                    }
+                }
+                phys_dState.t += phys_dt;
+
+                let h2p=document.getElementById('h2-pos'); if(h2p) h2p.innerText = `${phys_dState.x.toFixed(2)} m (meter)`; 
+                let h2v=document.getElementById('h2-vel'); if(h2v) h2v.innerText = `${phys_dState.v.toFixed(2)} m/s`;
+                let h2a=document.getElementById('h2-acc'); if(h2a) h2a.innerText = `${phys_dState.a.toFixed(2)} m/s²`; 
+                let h2m=document.getElementById('h2-mom'); if(h2m) h2m.innerText = `${Math.round(phys_dState.p).toLocaleString()} kg·m/s`;
+                let h2f=document.getElementById('h2-force'); if(h2f) h2f.innerText = `${Math.round(phys_dState.F).toLocaleString()} N`; 
+                let h2i=document.getElementById('h2-impulse'); if(h2i) h2i.innerText = `${Math.round(phys_dState.J).toLocaleString()} N·s`;
+
+                const cvs = document.getElementById('sim-canvas-t2'); 
+                if(cvs) {
+                    let pWidth = cvs.parentElement.clientWidth, pHeight = cvs.parentElement.clientHeight;
+                    if(pWidth > 0 && pHeight > 0) {
+                        cvs.width = pWidth; cvs.height = pHeight; const ctx = cvs.getContext('2d');
+                        ctx.fillStyle = '#87CEEB'; ctx.fillRect(0, 0, cvs.width, cvs.height);
+                        let camPos = phys_dState.x - (cvs.width * 0.2 / phys_PIXELS_PER_METER);
+                        if (phys_WALL_POS_M - camPos < (cvs.width * 0.8 / phys_PIXELS_PER_METER)) camPos = phys_WALL_POS_M - (cvs.width * 0.8 / phys_PIXELS_PER_METER);
+                        if(camPos < 0) camPos = 0;
+                        
+                        phys_drawEnv(ctx, cvs.width, cvs.height, camPos);
+                        const roadY = cvs.height - 40; const wallScreenX = (phys_WALL_POS_M - camPos) * phys_PIXELS_PER_METER; const carScreenX = (phys_dState.x - camPos) * phys_PIXELS_PER_METER;
+                        const mat = phys_materials[phys_dState.matKey]; const cWidth = mat.width * phys_PIXELS_PER_METER;
+                        
+                        ctx.fillStyle = mat.renderColor; ctx.beginPath(); ctx.roundRect(wallScreenX - cWidth, roadY - 70, cWidth, 70, 4); ctx.fill();
+                        ctx.fillStyle = '#334155'; ctx.fillRect(wallScreenX, roadY - 90, 30, 90); phys_drawCar(ctx, carScreenX, roadY - 15, 1.4);
+                        
+                        if (phys_dState.phase === 'crashing' && phys_dState.F > 2000) {
+                            ctx.fillStyle = `rgba(239, 68, 68, ${Math.min(1, phys_dState.F / (phys_globalMass * 100))})`; ctx.beginPath(); ctx.arc(wallScreenX - cWidth/2, roadY - 30, phys_dState.F / 8000, 0, Math.PI * 2); ctx.fill();
+                        }
+                    }
+                }
+
+                ['mom2', 'force2'].forEach(key => {
+                    const canvas = document.getElementById(phys_charts[key].id); 
+                    if(canvas && canvas.parentElement.clientWidth > 0) { canvas.width = canvas.parentElement.clientWidth; canvas.height = canvas.parentElement.clientHeight; }
+                });
+                phys_renderDynCharts();
+            }
+            
+            if(phys_audioCtx && phys_audioCtx.state === 'running') {
+                const t1 = document.getElementById('tab1-content');
+                const activePhysicsTab = (t1 && t1.classList.contains('hide')) ? 'tab2' : 'tab1';
+                const currentVel = (activePhysicsTab === 'tab1') ? phys_kState.v : phys_dState.v;
+                const isGas = (activePhysicsTab === 'tab1') ? (phys_kState.inputAcc > 0) : (phys_dState.inputAcc > 0 && phys_dState.phase === 'running');
+                const tFreq = 60 + Math.abs(currentVel) * 2;
+                phys_engineOsc.frequency.setTargetAtTime(tFreq, phys_audioCtx.currentTime, 0.1);
+                phys_engineGain.gain.setTargetAtTime((Math.abs(currentVel)>0.5 || isGas) ? 0.2 : 0, phys_audioCtx.currentTime, 0.1);
+            }
+        } catch (error) { console.error(error); }
+        phys_animationFrameId = requestAnimationFrame(phys_updatePhysicsLoop);
+    }
+
+    // === 전역 부트스트랩 ===
+    window.onload = function() {
+        try {
+            initFuncGraph();
+            initPhysicsSim();
+            phys_resetDynamics();
+            if (phys_animationFrameId) cancelAnimationFrame(phys_animationFrameId);
+            phys_animationFrameId = requestAnimationFrame(phys_updatePhysicsLoop);
+        } catch(e) { console.error("Initialize Error: ", e); }
+    };
+</script>
+</body>
+</html>
