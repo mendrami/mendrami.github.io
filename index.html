@@ -4082,12 +4082,107 @@ t) 구간만 좌우로 이동하며 지나간 궤적을 살펴보는 방식
 네가 제안한 개선사항을 모두 반영해.
 복소수 편각 표시가 지금은 degree 단위야. 라디안 단위를 더 많이 쓰지 않나? 라디안 단위로 바꾸고, degree 단위는 괄호 안에 병기해줘.
 미적분 물리시뮬레이터의 유저인터페이스에 대한 개선 사항을 제시해줘. 지금은 보기 불편하고, 설명을 읽기도 어려워.
-저는 사용자의 요청을 모든 부분에서 신중하게 검토하고 있습니다!
-저는 제안된 모든 개선 사항을 반영하기 위해 작업을 완료했습니다!
-저는 복소수 편각을 라디안과 각도로 표시하고 물리 시뮬레이션에 운동 에너지와 제동 거리를 추가했습니다.
-저는 이제 미적분 물리 시뮬레이터 UI의 가독성과 레이아웃을 크게 개선했습니다.
-저는 이제 그래프 헤더를 정리하고 가독성을 위해 LaTeX 수식 대비를 개선했습니다.
-Saved previous version of math_physics_lab.html for comparison check
+요청하신 개선 사항(고정 좌표축 위 커서 탐색 유지, 6가지 수학·물리 교육 기능 추가, 복소수 편각의 라디안 우선 표기)과 미적분 물리 시뮬레이터의 가독성 개선 UI를 모두 반영해 업데이트했습니다.
+
+HTML 아이콘
+math_physics_lab
+ HTML 
+1. 반영된 주요 기능 및 수식 표기 업데이트
+복소수 편각(
+θ) 라디안 우선 표기 및 곱셈 시각화: 편각을 라디안 단위로 먼저 표시하고 괄호 안에 각도(
+∘
+ )를 병기했습니다. 특수각은 분수 파이 기호(예: π/4 rad (45.0°), 2π/3 rad (120.0°))로 자동 변환하며, 일반각은 소수 라디안(예: 0.59 rad (33.7°))으로 표시합니다. 또한 복소수 곱셈(
+z 
+1
+​
+ ×z 
+2
+​
+ ) 회전·확대 보조선 버튼을 추가해 두 복소수의 절댓값 곱(
+∣z 
+1
+​
+ ∣∣z 
+2
+​
+ ∣)과 편각의 합(
+θ 
+1
+​
+ +θ 
+2
+​
+ )을 원호로 확인할 수 있습니다.
+
+가우스 함수(
+[x])·절댓값(
+∣x∣) 불연속점 및 극값 표시: [x], |x| 입력을 완벽히 지원하며, 가우스 함수의 정수 경계마다 열린 점(
+∘, 극한값)과 닫힌 점(
+∙, 함숫값)을 자동으로 그려 좌극한과 우극한의 차이를 시각적으로 보여줍니다. 다항·초월함수의 극대·극소(
+f 
+′
+ (x)=0) 지점도 마커와 좌표 패널로 바로 확인할 수 있습니다.
+
+정적분 넓이(
+∫ 
+a
+b
+​
+ f(x)dx) 및 라디안(
+π) 눈금 도구: 구간 [a, b]$를 입력하면 부호 있는 정적분(순변화량)과 절댓값 정적분($\int_a^b \vert{}f(x)\vert{}\,dx, 실제 넓이)을 동시에 계산해 색칠해주며, 삼각함수 학습을 위해 X축 눈금을 π/2, π, 3π/2, 2π 단위로 전환하는 버튼을 추가했습니다.
+
+물리 시뮬레이터 고정 좌표축 탐색 & 교육 도구 확장:
+
+고정 좌표축 위 커서 이동: 그래프를 드래그해도 좌표축이 흔들리지 않고, 곡선 위의 탐색 점과 접선이 매끄럽게 이동합니다.
+
+4개 그래프 시간축(
+t) 동기화: 위치·속도·속력·가속도 중 한 그래프만 드래그해도 나머지 3개 그래프의 동일한 시각(
+t) 위치가 동시에 표시됩니다.
+
+평균 속도(할선) vs 순간 속도(접선) 비교: 위치 
+x(t) 그래프에서 구간 [t_1, t_2]$를 잇는 보라색 할선($\frac{\Delta x}{\Delta t})과 노란색 접선(
+v(t))을 한눈에 비교할 수 있습니다.
+
+운동 에너지(
+E 
+k
+​
+ = 
+2
+1
+​
+ mv 
+2
+ ) 및 제동 거리(
+d∝v 
+2
+ ) 비교: 속도가 2배가 될 때 운동량은 2배(
+p∝v)가 되지만, 운동 에너지와 제동 거리는 4배(
+v 
+2
+ )로 증가하는 원리를 실시간 카드에서 확인할 수 있습니다.
+
+2. 미적분 물리 시뮬레이터 UI 문제점 진단 및 개선안
+기존 화면이 보기 불편하고 설명을 읽기 어려웠던 핵심 원인과 이번 업데이트에 즉시 적용한 개선안, 그리고 추가로 선택하실 수 있는 UI 개편 방향입니다.
+
+기존 UI의 불편 요소	이번 버전에 즉시 적용한 개선 사항	향후 추가 가능한 UI 고도화 제안
+주행 화면 위 반투명 계기판 겹침: 달리는 자동차와 나무 배경 위에 글자 박스가 겹쳐 있어 숫자와 애니메이션 모두 산만했음	상단 독립 디지털 대시보드(6열 카드)로 분리: 주행 캔버스 밖 상단에 변위·이동거리·속도·속력·가속도·운동에너지 카드를 분리 배치하여 주행 화면 시야를 100% 확보함	주행 캔버스 내 벡터 화살표 표시: 자동차 본체에 속도( 
+v
+
+ , 초록 화살표)와 가속도( 
+a
+
+ , 주황 화살표) 벡터를 직접 그려 힘과 운동 방향을 직관화
+그래프 위 작은 플로팅 설명글: 그래프 하단(10~11px)에 설명 박스가 떠 있어 곡선이 가려지고 글씨가 작아 읽기 힘들었음	그래프 하단 전용 수식·해설 캡션 바 신설: 그래프 캔버스 내부에서 플로팅 텍스트를 모두 제거하고, 각 그래프 아래에 큼직한 핵심 공식 배지 + 13px 고대비 해설 바를 별도 영역으로 분리함	단계별 실험 가이드 모드(미션 카드): "① 3초간 가속 후 ② 등속 주행 ③ 역방향 감속해보기"처럼 학생이 따라 할 수 있는 3단계 체크리스트 제공
+용어 해설집의 낮은 가독성: 줄글 위주의 좁은 박스라 수식과 미분·적분 관계를 한눈에 파악하기 어려웠음	수식 배지 + 핵심 요약 카드 디자인: 기본 글자 크기를 키우고(16px, 조절 가능), 각 개념마다 핵심 공식 배지(v=dx/dt, J=∫Fdt)를 상단에 분리 배치함	라이트 모드(밝은 교실 칠판 테마) 전환: 프로젝터나 전자칠판 수업 시 어두운 배경보다 잘 보이도록 물리 실험실에도 밝은 테마 토글 추가
+4개 그래프의 분산된 시선: 위치·속도·가속도 그래프를 따로 읽어야 해서 같은 시각(t)의 연결 고리를 찾기 어려웠음	4개 그래프 시간 커서 동기화 & 색상 통일: 위치(파랑)·속도(초록)·속력(청록)·가속도(주황) 색상을 대시보드 카드와 그래프에 1:1로 매칭하고 커서를 연동함	세로 1열 스택(Stack) 뷰 전환 버튼: 2×2 격자 대신 $x(t) \rightarrow v(t) \rightarrow a(t)$를 위아래 일직선으로 배치해 같은 시간축(t)을 수직 점선 하나로 관통하는 교과서형 레이아웃
+위 추가 제안 중 자동차 위 속도·가속도 벡터 화살표 표시, 교과서형 세로 1열(
+x−v−a 수직 정렬) 레이아웃 전환 버튼, 전자칠판용 라이트 모드 전환 등 더 반영하고 싶은 UI 기능이 있다면 편하게 말씀해 주세요!
+
+위 추가 제안을 모두 반영해.
+그리고 복소수에서 nan 표시는 뭐지? 0으로 해야 하는 것 아닌가? 내말이 맞으면, 그렇게 해
+분석을 시작하여 사용자 요청을 파악하고, 오래된 파일을 조사했습니다.
+Check complex number evaluation and formatting in intermediate HTML
 
 
 
@@ -4106,7 +4201,7 @@ Gemini는 AI이며 인물 등에 관한 정보 제공 시 실수를 할 수 있�
     <!-- Plotly, Tailwind, MathJax, Fonts -->
     <script src="https://cdn.jsdelivr.net/npm/plotly.js-dist-min@2.35.2/plotly.min.js"></script>
     <script src="https://cdn.tailwindcss.com/3.4.17"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
     <script>
         MathJax = { tex: { inlineMath: [['$', '$'], ['\\(', '\\)']] }, startup: { typeset: true } };
     </script>
@@ -4116,12 +4211,12 @@ Gemini는 AI이며 인물 등에 관한 정보 제공 시 실수를 할 수 있�
         /* === 공통 전역 스타일 === */
         body { margin: 0; background-color: #0f172a; -webkit-tap-highlight-color: transparent; font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; }
         
-        .global-nav { position: fixed; top: 0; left: 0; right: 0; z-index: 99999; display: flex; justify-content: center; align-items: center; flex-wrap: wrap; gap: 10px; padding: 10px 14px; background: rgba(15, 23, 42, 0.95); backdrop-filter: blur(10px); border-bottom: 1px solid #334155; box-shadow: 0 4px 15px rgba(0,0,0,0.3); }
+        .global-nav { position: fixed; top: 0; left: 0; right: 0; z-index: 99999; display: flex; justify-content: center; align-items: center; flex-wrap: wrap; gap: 10px; padding: 10px 14px; background: rgba(15, 23, 42, 0.96); backdrop-filter: blur(10px); border-bottom: 1px solid #334155; box-shadow: 0 4px 15px rgba(0,0,0,0.35); }
         .nav-btn { padding: 8px 18px; font-size: 0.95rem; font-weight: 700; border-radius: 999px; cursor: pointer; transition: all 0.2s ease; border: 2px solid #3b82f6; }
         .nav-btn.active { background-color: #3b82f6; color: white; box-shadow: 0 0 15px rgba(59,130,246,0.5); }
-        .nav-btn.inactive { background-color: #1e293b; color: #94a3b8; border-color: #475569; }
+        .nav-btn.inactive { background-color: #1e293b; color: #cbd5e1; border-color: #475569; }
         .nav-btn.inactive:hover { background-color: #334155; color: white; border-color: #64748b; }
-        .sound-btn { padding: 7px 14px; font-size: 0.85rem; font-weight: 700; border-radius: 999px; cursor: pointer; transition: all 0.2s ease; background: #1e293b; color: #cbd5e1; border: 1px solid #475569; }
+        .sound-btn { padding: 7px 14px; font-size: 0.85rem; font-weight: 700; border-radius: 999px; cursor: pointer; transition: all 0.2s ease; background: #1e293b; color: #e2e8f0; border: 1px solid #475569; }
         .sound-btn:hover { background: #334155; color: white; }
 
         .app-view { display: none !important; width: 100%; min-height: 100vh; padding-top: 72px; }
@@ -4133,16 +4228,22 @@ Gemini는 AI이며 인물 등에 관한 정보 제공 시 실수를 할 수 있�
         .func-container { max-width: 1450px; margin: 0 auto; background: white; padding: 18px; border-radius: 14px; box-shadow: 0 4px 16px rgba(0,0,0,0.06); }
         .func-container h1 { color: #0f172a; text-align: center; font-size: 1.65rem; margin-bottom: 12px; font-weight: 800; }
         
-        .status-board { text-align: center; background: #f8fafc; border: 1px solid #e2e8f0; padding: 10px 14px; border-radius: 8px; color: #475569; margin-bottom: 14px; transition: all 0.25s; display: flex; flex-direction: column; justify-content: center; align-items: center; font-size: 0.92rem; line-height: 1.5; }
+        .status-board { text-align: center; background: #f8fafc; border: 1px solid #e2e8f0; padding: 10px 14px; border-radius: 8px; color: #334155; margin-bottom: 14px; transition: all 0.25s; display: flex; flex-direction: column; justify-content: center; align-items: center; font-size: 0.93rem; line-height: 1.5; }
         .status-board.active { background: #fef3c7; color: #92400e; border: 2px dashed #f59e0b; font-weight: 700; }
         
-        .add-controls { display: flex; justify-content: center; align-items: center; gap: 10px; margin-bottom: 12px; background: #fff; padding: 12px; border-radius: 10px; border: 1px solid #e2e8f0; flex-wrap: wrap; }
-        .add-controls button.mode-add-btn { padding: 8px 16px; font-size: 0.95rem; cursor: pointer; border: none; border-radius: 7px; color: white; font-weight: 700; transition: all 0.2s; }
+        .add-controls { display: flex; justify-content: center; align-items: center; gap: 8px; margin-bottom: 12px; background: #fff; padding: 12px; border-radius: 10px; border: 1px solid #e2e8f0; flex-wrap: wrap; }
+        .add-controls button.mode-add-btn { padding: 8px 15px; font-size: 0.92rem; cursor: pointer; border: none; border-radius: 7px; color: white; font-weight: 700; transition: all 0.2s; }
         
-        .toggle-btn { display: flex; align-items: center; gap: 6px; font-weight: 700; padding: 8px 14px; border-radius: 7px; cursor: pointer; transition: all 0.2s; border: 2px solid #2563eb; background: white; color: #2563eb; font-size: 0.92rem; }
+        .toggle-btn { display: flex; align-items: center; gap: 5px; font-weight: 700; padding: 7px 13px; border-radius: 7px; cursor: pointer; transition: all 0.2s; border: 2px solid #2563eb; background: white; color: #2563eb; font-size: 0.88rem; }
         .toggle-btn.active { background: #2563eb; color: white; }
+        .toggle-btn.emerald { border-color: #059669; color: #059669; }
+        .toggle-btn.emerald.active { background: #059669; color: white; }
         .toggle-btn.purple { border-color: #9333ea; color: #9333ea; }
         .toggle-btn.purple.active { background: #9333ea; color: white; }
+
+        .integral-panel { display: none; align-items: center; justify-content: center; gap: 12px; flex-wrap: wrap; background: #ecfdf5; border: 1px solid #a7f3d0; padding: 12px 16px; border-radius: 10px; margin-bottom: 14px; color: #065f46; font-size: 0.9rem; }
+        .integral-panel.visible { display: flex; }
+        .integral-panel input[type="number"], .integral-panel select { padding: 5px 8px; border: 1px solid #6ee7b7; border-radius: 6px; font-family: 'JetBrains Mono', monospace; font-weight: 700; background: white; color: #064e3b; }
 
         .preset-bar { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; background: #f8fafc; padding: 10px 14px; border-radius: 8px; border: 1px solid #e2e8f0; margin-bottom: 15px; }
         .preset-chip { padding: 5px 11px; font-size: 0.82rem; font-weight: 600; border-radius: 999px; background: #ffffff; color: #334155; border: 1px solid #cbd5e1; cursor: pointer; transition: all 0.15s; }
@@ -4171,12 +4272,12 @@ Gemini는 AI이며 인물 등에 관한 정보 제공 시 실수를 할 수 있�
         input:checked + .slider { background-color: #2563eb; }
         input:checked + .slider:before { transform: translateX(16px); }
 
-        .top-info-panel { display: none; background: #fff; border: 1px solid #e2e8f0; border-radius: 10px; padding: 15px; margin-bottom: 16px; box-shadow: 0 2px 6px rgba(0,0,0,0.03); gap: 20px; flex-wrap: wrap; justify-content: space-around; }
+        .top-info-panel { display: none; background: #fff; border: 1px solid #e2e8f0; border-radius: 10px; padding: 15px; margin-bottom: 16px; box-shadow: 0 2px 6px rgba(0,0,0,0.03); gap: 18px; flex-wrap: wrap; justify-content: space-around; }
         .top-info-panel.visible { display: flex; }
-        .top-info-group { flex: 1; min-width: 240px; }
-        .top-info-group h4 { margin: 0 0 8px 0; font-size: 0.92rem; font-weight: 700; color: #334155; display: flex; align-items: center; gap: 6px; border-bottom: 1px solid #f1f5f9; padding-bottom: 6px; }
-        .coord-item { font-family: 'JetBrains Mono', monospace; font-size: 0.86rem; background: #f8fafc; padding: 6px 10px; border-radius: 6px; margin-bottom: 5px; border-left: 4px solid #2563eb; font-weight: 700; color: #0f172a; }
-        .empty-msg { font-size: 0.85rem; color: #94a3b8; font-style: italic; }
+        .top-info-group { flex: 1; min-width: 220px; }
+        .top-info-group h4 { margin: 0 0 8px 0; font-size: 0.9rem; font-weight: 700; color: #334155; display: flex; align-items: center; gap: 6px; border-bottom: 1px solid #f1f5f9; padding-bottom: 6px; }
+        .coord-item { font-family: 'JetBrains Mono', monospace; font-size: 0.84rem; background: #f8fafc; padding: 6px 10px; border-radius: 6px; margin-bottom: 5px; border-left: 4px solid #2563eb; font-weight: 700; color: #0f172a; }
+        .empty-msg { font-size: 0.84rem; color: #94a3b8; font-style: italic; }
 
         .workspace { display: block; }
         .graph-wrapper { position: relative; width: 100%; }
@@ -4189,23 +4290,25 @@ Gemini는 AI이며 인물 등에 관한 정보 제공 시 실수를 할 수 있�
         .zoom-btn-text { padding: 0 12px; font-size: 0.85rem; display: none; background: rgba(15, 23, 42, 0.85) !important; color: white !important; border-color: rgba(15, 23, 42, 0.85) !important; }
         .zoom-btn-text:hover { background: #0f172a !important; color: white !important; }
 
-        .floating-origin-btn { position: fixed; bottom: 25px; right: 25px; width: 48px; height: 48px; border-radius: 50%; border: 1px solid rgba(255,255,255,0.4); background: rgba(37, 99, 235, 0.8); color: #ffffff; font-size: 1.35rem; font-weight: bold; cursor: pointer; z-index: 9999; backdrop-filter: blur(6px); transition: all 0.2s; display: flex; justify-content: center; align-items: center; box-shadow: 0 4px 15px rgba(0,0,0,0.25); }
+        .floating-origin-btn { position: fixed; bottom: 25px; right: 25px; width: 48px; height: 48px; border-radius: 50%; border: 1px solid rgba(255,255,255,0.4); background: rgba(37, 99, 235, 0.85); color: #ffffff; font-size: 1.35rem; font-weight: bold; cursor: pointer; z-index: 9999; backdrop-filter: blur(6px); transition: all 0.2s; display: flex; justify-content: center; align-items: center; box-shadow: 0 4px 15px rgba(0,0,0,0.25); }
         .floating-origin-btn:hover { background: #1d4ed8; transform: scale(1.08); }
         .scroll-notice { text-align: center; color: #64748b; font-size: 0.85rem; margin-top: 12px; font-weight: 600; display: flex; justify-content: center; align-items: center; gap: 10px; flex-wrap: wrap; }
 
-        /* === [수학 물리 시뮬레이터] 전용 스타일 === */
+        /* === [수학 물리 시뮬레이터] 가독성 개선 전용 스타일 === */
         #app-phys { color: #f8fafc; }
         #app-phys canvas { display: block; width: 100%; height: 100%; touch-action: none; cursor: crosshair; }
         .tab-btn { transition: all 0.2s ease; }
-        .tab-btn.active { background-color: #3b82f6; color: white; border-color: #3b82f6; }
-        .glass-panel { background: rgba(30, 41, 59, 0.75); backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.1); }
-        .hud-font { font-family: 'JetBrains Mono', monospace; text-shadow: 1px 1px 2px black; }
+        .tab-btn.active { background-color: #3b82f6; color: white; border-color: #3b82f6; box-shadow: 0 0 14px rgba(59, 130, 246, 0.45); }
+        .glass-panel { background: rgba(30, 41, 59, 0.9); backdrop-filter: blur(10px); border: 1px solid rgba(148, 163, 184, 0.22); }
+        .hud-font { font-family: 'JetBrains Mono', monospace; }
         #app-phys input[type=range] { accent-color: #3b82f6; }
         .hide { display: none !important; }
         #glossary-wrapper { transition: max-height 0.3s ease-out, opacity 0.3s ease-out; overflow: hidden; }
         .glossary-collapsed { max-height: 0; opacity: 0; padding-top: 0 !important; padding-bottom: 0 !important; margin: 0 !important; border: none !important; }
-        .glossary-expanded { max-height: 1400px; opacity: 1; }
+        .glossary-expanded { max-height: 1500px; opacity: 1; }
         .graph-body { transition: height 0.3s ease, opacity 0.3s ease; overflow: hidden; }
+        .telemetry-card { background: #0f172a; border: 1px solid #334155; border-radius: 10px; padding: 8px 12px; display: flex; flex-direction: column; justify-content: space-between; }
+        .chart-footer { background: #1e293b; border-top: 1px solid #334155; padding: 9px 14px; font-size: 0.84rem; color: #e2e8f0; display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 8px; line-height: 1.45; }
     </style>
 </head>
 <body class="bg-slate-900">
@@ -4232,7 +4335,7 @@ Gemini는 AI이며 인물 등에 관한 정보 제공 시 실수를 할 수 있�
 
             <div class="status-board" id="statusBoard">
                 <div style="font-weight: 700; color:#0f172a;">💡 그래프 평행이동 및 특수 함수 입력 안내</div>
-                <div style="margin-top: 3px;">절댓값 <code>|x|</code>, 가우스 함수 <code>[x]</code> 입력을 지원하며, 각 카드의 <b>[✥ 이동]</b> 버튼이나 그래프 선 클릭 후 드래그로 평행이동할 수 있습니다.</div>
+                <div style="margin-top: 3px;">절댓값 <code>|x|</code>, 가우스 함수 <code>[x]</code>(열린 점 ○·닫힌 점 ● 표시)를 지원하며, 각 카드의 <b>[✥ 이동]</b> 버튼이나 그래프 선 클릭 후 드래그로 평행이동할 수 있습니다.</div>
             </div>
 
             <div class="add-controls" id="addControlsSection">
@@ -4242,19 +4345,45 @@ Gemini는 AI이며 인물 등에 관한 정보 제공 시 실수를 할 수 있�
                 
                 <!-- 실평면 전용 도구 -->
                 <button id="intersectToggleBtn" class="toggle-btn" onclick="func_toggleIntersectionPanel()">
-                    <span>📍</span> 교점/절편 좌표
+                    <span>📍</span> 교점·절편·극값 좌표
                 </button>
                 <button id="tangentModeBtn" class="toggle-btn" onclick="func_toggleTangentMode()">
-                    <span style="font-size:1.1rem;">⤡</span> 실시간 접선(미분): OFF
+                    <span style="font-size:1.05rem;">⤡</span> 실시간 접선(미분): OFF
+                </button>
+                <button id="integralModeBtn" class="toggle-btn emerald" onclick="func_toggleIntegralPanel()">
+                    <span>∫</span> 정적분 넓이 도구: OFF
+                </button>
+                <button id="piTickBtn" class="toggle-btn" onclick="func_togglePiTicks()">
+                    <span>π</span> 호도법(π) 눈금: OFF
                 </button>
 
                 <!-- 복소평면 전용 도구 -->
                 <button id="complexSumBtn" class="toggle-btn purple hide" onclick="func_toggleComplexSum()">
-                    <span>📐</span> 복소수 덧셈 평행사변형: OFF
+                    <span>📐</span> 덧셈 평행사변형: OFF
+                </button>
+                <button id="complexMulBtn" class="toggle-btn purple hide" onclick="func_toggleComplexMul()">
+                    <span>🔄</span> 곱셈 회전·확대(z₁×z₂): OFF
                 </button>
                 <button id="unitCircleBtn" class="toggle-btn purple hide" onclick="func_toggleUnitCircle()">
-                    <span>⭕</span> 단위원(|z|=1) 보조선: OFF
+                    <span>⭕</span> 단위원(|z|=1): OFF
                 </button>
+            </div>
+
+            <!-- 정적분 넓이 계산 및 색칠 컨트롤 패널 -->
+            <div id="integralControlPanel" class="integral-panel">
+                <span style="font-weight: 800;">∫ 정적분 구간 설정:</span>
+                <label>대상 함수:
+                    <select id="integralFuncSelect" onchange="func_updateAll()"></select>
+                </label>
+                <label>시작 구간 $a = $
+                    <input type="number" id="integralA" value="0" step="0.5" style="width:72px;" oninput="func_updateAll()">
+                </label>
+                <label>끝 구간 $b = $
+                    <input type="number" id="integralB" value="2" step="0.5" style="width:72px;" oninput="func_updateAll()">
+                </label>
+                <div id="integralResultText" style="background:white; padding:6px 12px; border-radius:6px; border:1px solid #6ee7b7; font-family:'JetBrains Mono', monospace; font-weight:700; color:#065f46;">
+                    정적분 ∫f(x)dx = 0.000 | 넓이 ∫|f(x)|dx = 0.000
+                </div>
             </div>
 
             <!-- 교과과정 단원별 빠른 예제 프리셋 바 -->
@@ -4274,6 +4403,10 @@ Gemini는 AI이며 인물 등에 관한 정보 제공 시 실수를 할 수 있�
                 <div class="top-info-group">
                     <h4><span style="color:#ea580c;">◆</span> Y축 교점 (Y절편, $x=0$ 대입값)</h4>
                     <div id="panel-y-axis"><div class="empty-msg">계산 중...</div></div>
+                </div>
+                <div class="top-info-group">
+                    <h4><span style="color:#16a34a;">▲</span> 극대·극소 및 꼭짓점 ($f'(x)=0$)</h4>
+                    <div id="panel-extrema"><div class="empty-msg">계산 중...</div></div>
                 </div>
             </div>
 
@@ -4297,348 +4430,409 @@ Gemini는 AI이며 인물 등에 관한 정보 제공 시 실수를 할 수 있�
     </div>
 
     <!-- =========================================================
-         2. 수학 물리 시뮬레이터 (Physics Simulator) 영역
+         2. 수학 물리 시뮬레이터 (Physics Simulator) 영역 (UI 전면 개선)
          ========================================================= -->
-    <div id="app-phys" class="app-view p-2 md:p-6 lg:p-8">
-        <header class="w-full max-w-7xl mb-4 mt-2">
-            <div class="text-center mb-4">
-                <h1 class="text-3xl md:text-5xl font-bold mb-2 text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-indigo-400">
-                    미적분과 기초 물리 실험실
-                </h1>
-                <p class="text-slate-400 text-sm md:text-base font-semibold px-4 tracking-wide">
-                    도함수(접선의 기울기)와 정적분(그래프 아래 넓이)으로 이해하는 운동학·동역학 시뮬레이터
-                </p>
+    <div id="app-phys" class="app-view p-3 md:p-6 lg:p-8">
+        <header class="w-full max-w-7xl mb-5 mt-1">
+            <div class="flex flex-col md:flex-row justify-between items-center gap-4 bg-slate-800/90 border border-slate-700 rounded-2xl p-4 md:px-6 shadow-xl">
+                <div>
+                    <h1 class="text-2xl md:text-3xl font-extrabold text-white tracking-tight">
+                        미적분과 기초 물리 실험실
+                    </h1>
+                    <p class="text-slate-300 text-xs md:text-sm font-medium mt-1">
+                        도함수(접선의 기울기)와 정적분(그래프 아래 넓이)으로 직접 실험하는 운동학·동역학 시뮬레이터
+                    </p>
+                </div>
+                <div class="flex flex-wrap items-center gap-2.5">
+                    <button id="tab1-btn" class="tab-btn active px-4 py-2.5 text-xs md:text-sm font-bold rounded-xl border border-slate-600 text-slate-200 hover:bg-slate-700">
+                        1. 위치 · 속도 · 가속도
+                    </button>
+                    <button id="tab2-btn" class="tab-btn px-4 py-2.5 text-xs md:text-sm font-bold rounded-xl border border-slate-600 text-slate-200 hover:bg-slate-700">
+                        2. 운동량과 충격량
+                    </button>
+                    <button id="btn-toggle-glossary" class="px-4 py-2.5 bg-slate-900 hover:bg-slate-700 text-blue-300 rounded-xl border border-blue-500/40 text-xs md:text-sm font-bold transition-colors">
+                        📖 물리 공식·용어 해설 열기
+                    </button>
+                </div>
             </div>
 
-            <div class="flex justify-center mb-4">
-                <button id="btn-toggle-glossary" class="px-5 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-full border border-slate-600 text-sm font-bold shadow-lg transition-colors">
-                    ▼ 물리 기호 및 미적분 연결 해설 열기
-                </button>
-            </div>
-
-            <div id="glossary-wrapper" class="glass-panel rounded-xl mb-4 border-l-4 border-l-blue-500 glossary-collapsed">
-                <div class="p-4">
-                    <div class="flex justify-between items-center mb-4 border-b border-slate-700 pb-2">
-                        <h3 class="text-lg font-bold text-white">물리 기호 및 미적분 핵심 관계</h3>
+            <!-- 물리 기호 및 미적분 핵심 관계 해설 패널 -->
+            <div id="glossary-wrapper" class="glass-panel rounded-2xl mt-3 border-l-4 border-l-blue-500 glossary-collapsed">
+                <div class="p-5">
+                    <div class="flex justify-between items-center mb-4 border-b border-slate-700 pb-3">
+                        <h3 class="text-base md:text-lg font-bold text-white">📘 교과서 물리 기호 및 미적분 공식 한눈에 보기</h3>
                         <div class="flex gap-2 items-center">
-                            <span class="text-xs text-slate-400 mr-2">글자 크기</span>
-                            <button id="btn-gl-out" class="w-8 h-8 flex items-center justify-center bg-slate-700 hover:bg-slate-600 rounded text-xl font-bold" title="축소">-</button>
-                            <button id="btn-gl-in" class="w-8 h-8 flex items-center justify-center bg-slate-700 hover:bg-slate-600 rounded text-xl font-bold" title="확대">+</button>
+                            <span class="text-xs text-slate-300 mr-1">글자 크기</span>
+                            <button id="btn-gl-out" class="w-8 h-8 flex items-center justify-center bg-slate-700 hover:bg-slate-600 rounded text-lg font-bold text-white" title="축소">-</button>
+                            <button id="btn-gl-in" class="w-8 h-8 flex items-center justify-center bg-slate-700 hover:bg-slate-600 rounded text-lg font-bold text-white" title="확대">+</button>
                         </div>
                     </div>
-                    <div id="glossary-content" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4" style="font-size: 16px;">
-                        <div class="bg-slate-800/80 p-3 rounded">
-                            <span class="font-bold text-blue-300">위치 (Position) &amp; 변위</span>
-                            <div class="mt-1 text-slate-200">기호: $x(t)$, 단위: $\text{m}$</div>
-                            <div class="mt-1 text-slate-400 text-sm">기준점($0\text{ m}$)으로부터 방향을 포함한 위치(벡터). 출발점 뒤로 후진하면 음수($-$)가 됩니다.</div>
+                    <div id="glossary-content" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4" style="font-size: 15px;">
+                        <div class="bg-slate-900/90 p-3.5 rounded-xl border border-slate-700">
+                            <span class="font-bold text-blue-400">1. 위치와 변위 (Position)</span>
+                            <div class="mt-1 text-white font-semibold">기호: $x(t)$, 단위: $\text{m}$</div>
+                            <div class="mt-1 text-slate-300 text-sm leading-relaxed">출발점($0\text{ m}$)으로부터 방향을 포함한 위치(벡터). 출발점 뒤로 후진하면 음수($-$) 값을 가집니다.</div>
                         </div>
-                        <div class="bg-slate-800/80 p-3 rounded">
-                            <span class="font-bold text-green-300">속도 (Velocity) = 위치의 미분</span>
-                            <div class="mt-1 text-slate-200">기호: $v(t) = \frac{dx}{dt}$, 단위: $\text{m/s}$</div>
-                            <div class="mt-1 text-slate-400 text-sm">위치-시간 그래프의 <b>접선의 기울기</b>입니다. 속도 그래프의 부호 있는 넓이($\int v\,dt$)는 <b>변위($\Delta x$)</b>가 됩니다.</div>
+                        <div class="bg-slate-900/90 p-3.5 rounded-xl border border-slate-700">
+                            <span class="font-bold text-green-400">2. 속도 (Velocity) = 위치의 미분</span>
+                            <div class="mt-1 text-white font-semibold">$v(t) = \frac{dx}{dt}$, 평균 속도 $= \frac{\Delta x}{\Delta t}$ ($\text{m/s}$)</div>
+                            <div class="mt-1 text-slate-300 text-sm leading-relaxed">위치 그래프의 <b>두 점을 잇는 할선의 기울기는 평균 속도</b>, <b>한 점의 접선의 기울기는 순간 속도</b>입니다.</div>
                         </div>
-                        <div class="bg-slate-800/80 p-3 rounded">
-                            <span class="font-bold text-teal-300">속력 (Speed) = 속도의 절댓값</span>
-                            <div class="mt-1 text-slate-200">기호: $|v(t)|$, 단위: $\text{m/s}$</div>
-                            <div class="mt-1 text-slate-400 text-sm">운동 방향을 제외한 빠르기(스칼라, 항상 $0$ 이상). 속력 그래프 아래의 넓이($\int |v|\,dt$)는 <b>총 이동 거리</b>입니다.</div>
+                        <div class="bg-slate-900/90 p-3.5 rounded-xl border border-slate-700">
+                            <span class="font-bold text-teal-400">3. 속력 (Speed)과 총 이동 거리</span>
+                            <div class="mt-1 text-white font-semibold">속력 $|v(t)|$, 이동 거리 $s = \int |v(t)|\,dt$</div>
+                            <div class="mt-1 text-slate-300 text-sm leading-relaxed">방향을 제외한 빠르기(항상 $0$ 이상). 속도 그래프의 정적분은 <b>변위($\Delta x$)</b>, 속력 그래프의 넓이는 <b>총 이동 거리($s$)</b>입니다.</div>
                         </div>
-                        <div class="bg-slate-800/80 p-3 rounded">
-                            <span class="font-bold text-orange-300">가속도 (Acceleration) = 속도의 미분</span>
-                            <div class="mt-1 text-slate-200">기호: $a(t) = \frac{dv}{dt}$, 단위: $\text{m/s}^2$</div>
-                            <div class="mt-1 text-slate-400 text-sm">속도-시간 그래프의 <b>접선의 기울기</b>입니다. 등가속도 운동에서는 가속도가 일정하여 속도가 일차함수로 변합니다.</div>
+                        <div class="bg-slate-900/90 p-3.5 rounded-xl border border-slate-700">
+                            <span class="font-bold text-orange-400">4. 가속도 (Acceleration) = 속도의 미분</span>
+                            <div class="mt-1 text-white font-semibold">$a(t) = \frac{dv}{dt} = \frac{F}{m}$, 단위: $\text{m/s}^2$</div>
+                            <div class="mt-1 text-slate-300 text-sm leading-relaxed">속도-시간 그래프의 <b>접선의 기울기</b>입니다. 알짜힘이 0이면 가속도가 0이 되어 등속 직선 운동을 합니다.</div>
                         </div>
-                        <div class="bg-slate-800/80 p-3 rounded">
-                            <span class="font-bold text-purple-300">운동량 (Momentum)</span>
-                            <div class="mt-1 text-slate-200">기호: $p(t) = m v(t)$, 단위: $\text{kg}\cdot\text{m/s}$</div>
-                            <div class="mt-1 text-slate-400 text-sm">질량($m$)과 속도($v$)의 곱으로, 물체의 운동 관성의 크기를 나타내는 벡터량입니다.</div>
+                        <div class="bg-slate-900/90 p-3.5 rounded-xl border border-slate-700">
+                            <span class="font-bold text-purple-400">5. 운동량($p$) vs 운동 에너지($E_k$)</span>
+                            <div class="mt-1 text-white font-semibold">$p = mv$ ($\text{kg}\cdot\text{m/s}$), $E_k = \frac{1}{2}mv^2$ ($\text{J}$)</div>
+                            <div class="mt-1 text-slate-300 text-sm leading-relaxed">운동량은 속도에 비례하지만, <b>운동 에너지와 제동 거리는 속력의 제곱($v^2$)에 비례</b>합니다.</div>
                         </div>
-                        <div class="bg-slate-800/80 p-3 rounded">
-                            <span class="font-bold text-yellow-400">충격량 (Impulse) &amp; 평균 힘</span>
-                            <div class="mt-1 text-slate-200">$J = \int F\,dt = \Delta p = F_{\text{avg}}\Delta t$ ($\text{N}\cdot\text{s}$)</div>
-                            <div class="mt-1 text-slate-400 text-sm">힘-시간 그래프 아래의 넓이는 운동량의 변화량($\Delta p$)과 같습니다. 충돌 시간 $\Delta t$를 늘리면 평균 충격력 $F_{\text{avg}}$가 감소합니다.</div>
+                        <div class="bg-slate-900/90 p-3.5 rounded-xl border border-slate-700">
+                            <span class="font-bold text-yellow-400">6. 충격량 (Impulse)과 평균 힘</span>
+                            <div class="mt-1 text-white font-semibold">$J = \int F\,dt = \Delta p = F_{\text{avg}}\Delta t$ ($\text{N}\cdot\text{s}$)</div>
+                            <div class="mt-1 text-slate-300 text-sm leading-relaxed">힘-시간 그래프 아래 넓이는 운동량 변화량과 같습니다. 완충재로 충돌 시간 $\Delta t$를 늘리면 평균 충격력 $F_{\text{avg}}$가 줄어듭니다.</div>
                         </div>
                     </div>
                 </div>
-            </div>
-            
-            <div class="flex flex-wrap justify-center gap-4 mt-2 px-2">
-                <button id="tab1-btn" class="tab-btn active px-6 py-3 text-sm md:text-lg font-bold rounded-full border border-slate-500 text-slate-300 hover:bg-slate-800 shadow-lg">
-                    1. 위치 · 속도 · 가속도 (미분과 적분)
-                </button>
-                <button id="tab2-btn" class="tab-btn px-6 py-3 text-sm md:text-lg font-bold rounded-full border border-slate-500 text-slate-300 hover:bg-slate-800 shadow-lg">
-                    2. 운동량과 충격량 (충돌 안전 실험)
-                </button>
             </div>
         </header>
 
         <main class="w-full max-w-7xl flex-grow relative pb-10">
             <!-- 탭 1: 위치, 속도, 가속도 -->
-            <section id="tab1-content" class="w-full flex flex-col gap-6">
-                <div class="glass-panel rounded-2xl p-4 shadow-xl border-blue-900/50">
-                    <div class="flex flex-col lg:flex-row justify-between items-start lg:items-center mb-4 gap-4">
-                        <div class="flex flex-wrap items-center gap-3">
-                            <h2 class="text-xl font-bold text-blue-200">직선 주행 시뮬레이터</h2>
-                            <!-- 공기저항 ON/OFF 토글 -->
-                            <label class="flex items-center gap-2 bg-slate-800/90 px-3 py-1.5 rounded-lg border border-slate-600 cursor-pointer text-xs md:text-sm text-slate-200 font-semibold" title="끄면 교과서와 동일한 이상적 등속·등가속도 운동을 관찰할 수 있습니다.">
+            <section id="tab1-content" class="w-full flex flex-col gap-5">
+                <div class="glass-panel rounded-2xl p-4 md:p-5 shadow-xl">
+                    <!-- 상단 조작 컨트롤 바 -->
+                    <div class="flex flex-col xl:flex-row justify-between items-start xl:items-center mb-4 gap-3">
+                        <div class="flex flex-wrap items-center gap-2.5">
+                            <h2 class="text-lg md:text-xl font-extrabold text-white">직선 주행 &amp; 미적분 실험</h2>
+                            <label class="flex items-center gap-2 bg-slate-900 px-3 py-1.5 rounded-lg border border-slate-600 cursor-pointer text-xs md:text-sm text-slate-200 font-semibold" title="끄면 교과서와 동일한 이상적 등속·등가속도 운동을 관찰할 수 있습니다.">
                                 <input type="checkbox" id="t1-chk-drag" class="w-4 h-4 accent-blue-500">
-                                <span>공기저항(마찰) 적용</span>
+                                <span>공기저항 적용</span>
                             </label>
-                            <span id="t1-mode-badge" class="px-2.5 py-1 rounded-full text-xs font-bold bg-blue-900/70 text-blue-300 border border-blue-700">
+                            <label class="flex items-center gap-2 bg-slate-900 px-3 py-1.5 rounded-lg border border-slate-600 cursor-pointer text-xs md:text-sm text-slate-200 font-semibold" title="한 그래프에서 점을 드래그하면 4개 그래프 모두 같은 시각 t를 동시에 가리킵니다.">
+                                <input type="checkbox" id="t1-chk-sync" checked class="w-4 h-4 accent-indigo-500">
+                                <span>4개 그래프 시각(t) 동시 연동</span>
+                            </label>
+                            <span id="t1-mode-badge" class="px-2.5 py-1 rounded-full text-xs font-bold bg-blue-950 text-blue-300 border border-blue-700">
                                 ✨ 교과서 이상적 운동 모드 (등속/등가속도)
                             </span>
                         </div>
-                        <div class="flex flex-wrap gap-2.5 w-full lg:w-auto">
-                            <button id="t1-btn-gas" class="flex-1 lg:flex-none px-5 py-2.5 bg-green-600 hover:bg-green-500 text-white rounded-xl font-bold shadow-lg shadow-green-900/50 text-sm md:text-base transition-all">가속 (+6m/s²)</button>
-                            <button id="t1-btn-brake" class="flex-1 lg:flex-none px-5 py-2.5 bg-red-600 hover:bg-red-500 text-white rounded-xl font-bold shadow-lg shadow-red-900/50 text-sm md:text-base transition-all">감속/후진 (-8m/s²)</button>
-                            <button id="t1-btn-ebrake" class="flex-1 lg:flex-none px-4 py-2.5 bg-amber-500 hover:bg-amber-400 active:scale-95 text-slate-900 rounded-xl font-black shadow-lg shadow-amber-900/50 text-sm md:text-base transition-all border border-amber-300">급브레이크(정지)</button>
-                            <button id="t1-btn-pause" class="flex-1 lg:flex-none px-4 py-2.5 bg-indigo-600 hover:bg-indigo-500 active:scale-95 text-white rounded-xl font-bold shadow-lg text-sm md:text-base transition-all border border-indigo-400">⏸ 일시정지</button>
-                            <button id="t1-btn-reset" class="flex-1 lg:flex-none px-4 py-2.5 bg-rose-700 hover:bg-rose-600 active:scale-95 text-white rounded-xl font-black shadow-lg shadow-rose-950/50 text-sm md:text-base transition-all border border-rose-400">초기화</button>
+                        <div class="flex flex-wrap gap-2 w-full xl:w-auto">
+                            <button id="t1-btn-gas" class="flex-1 xl:flex-none px-4 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl font-bold shadow text-sm transition-all">가속 (+6m/s²)</button>
+                            <button id="t1-btn-brake" class="flex-1 xl:flex-none px-4 py-2.5 bg-rose-600 hover:bg-rose-500 text-white rounded-xl font-bold shadow text-sm transition-all">감속/후진 (-8m/s²)</button>
+                            <button id="t1-btn-ebrake" class="flex-1 xl:flex-none px-4 py-2.5 bg-amber-500 hover:bg-amber-400 active:scale-95 text-slate-950 rounded-xl font-extrabold shadow text-sm transition-all">급브레이크(정지)</button>
+                            <button id="t1-btn-pause" class="flex-1 xl:flex-none px-4 py-2.5 bg-indigo-600 hover:bg-indigo-500 active:scale-95 text-white rounded-xl font-bold shadow text-sm transition-all">⏸ 일시정지</button>
+                            <button id="t1-btn-reset" class="flex-1 xl:flex-none px-4 py-2.5 bg-slate-700 hover:bg-slate-600 active:scale-95 text-white rounded-xl font-bold shadow text-sm transition-all border border-slate-500">초기화</button>
+                        </div>
+                    </div>
+
+                    <!-- 화면을 가리지 않는 상단 디지털 계기판 (Telemetry Strip) -->
+                    <div class="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-2.5 mb-3">
+                        <div class="telemetry-card">
+                            <span class="text-[11px] font-semibold text-slate-400">경과 시간 (t)</span>
+                            <span id="h1-time" class="text-sm md:text-base font-bold text-white hud-font mt-0.5">0.00 s</span>
+                        </div>
+                        <div class="telemetry-card border-l-4 border-l-blue-400">
+                            <span class="text-[11px] font-semibold text-blue-300">현재 변위 x(t)</span>
+                            <span id="h1-pos" class="text-sm md:text-base font-bold text-blue-300 hud-font mt-0.5">0.00 m</span>
+                        </div>
+                        <div class="telemetry-card border-l-4 border-l-teal-400">
+                            <span class="text-[11px] font-semibold text-teal-300">총 이동거리 s</span>
+                            <span id="h1-dist" class="text-sm md:text-base font-bold text-teal-200 hud-font mt-0.5">0.00 m</span>
+                        </div>
+                        <div class="telemetry-card border-l-4 border-l-green-400">
+                            <span class="text-[11px] font-semibold text-green-300">순간 속도 v(t)</span>
+                            <span id="h1-vel" class="text-sm md:text-base font-bold text-green-300 hud-font mt-0.5">0.00 m/s</span>
+                        </div>
+                        <div class="telemetry-card border-l-4 border-l-emerald-400">
+                            <span class="text-[11px] font-semibold text-emerald-300">순간 속력 |v(t)|</span>
+                            <span id="h1-spd" class="text-sm md:text-base font-bold text-emerald-300 hud-font mt-0.5">0.00 m/s</span>
+                        </div>
+                        <div class="telemetry-card border-l-4 border-l-orange-400">
+                            <span class="text-[11px] font-semibold text-orange-300">가속도 a(t)</span>
+                            <span id="h1-acc" class="text-sm md:text-base font-bold text-orange-300 hud-font mt-0.5">0.00 m/s²</span>
+                        </div>
+                        <div class="telemetry-card border-l-4 border-l-pink-400">
+                            <span class="text-[11px] font-semibold text-pink-300">운동 에너지 (½mv²)</span>
+                            <span id="h1-ke" class="text-sm md:text-base font-bold text-pink-300 hud-font mt-0.5">0 kJ</span>
+                        </div>
+                        <div class="telemetry-card border-l-4 border-l-amber-400">
+                            <span class="text-[11px] font-semibold text-amber-300">급제동 정지거리</span>
+                            <span id="h1-bdist" class="text-sm md:text-base font-bold text-amber-300 hud-font mt-0.5">0.00 m</span>
                         </div>
                     </div>
                     
-                    <div class="relative w-full h-56 md:h-72 bg-[#87CEEB] rounded-xl overflow-hidden border-2 border-slate-700 shadow-inner">
+                    <!-- 탁 트인 주행 애니메이션 캔버스 (내부 가림막 제거) -->
+                    <div class="relative w-full h-44 md:h-56 bg-[#87CEEB] rounded-xl overflow-hidden border-2 border-slate-700 shadow-inner">
                         <canvas id="sim-canvas-t1"></canvas>
-                        <div class="absolute top-3 left-3 bg-slate-900/85 backdrop-blur-md p-3 rounded-xl border border-slate-600 shadow-2xl pointer-events-none z-10">
-                            <div class="flex justify-between items-center mb-1 border-b border-slate-500 pb-1">
-                                <h3 class="text-xs font-bold text-white">실시간 측정 (Telemetry)</h3>
-                                <span id="h1-time" class="text-xs hud-font text-slate-300">t = 0.00 s</span>
-                            </div>
-                            <div class="grid grid-cols-1 gap-1 text-xs md:text-sm hud-font font-bold">
-                                <div class="flex justify-between w-52 md:w-60 text-blue-300"><span>변위 x(t):</span><span id="h1-pos">0.00 m</span></div>
-                                <div class="flex justify-between w-52 md:w-60 text-teal-200"><span>총 이동거리 s:</span><span id="h1-dist">0.00 m</span></div>
-                                <div class="flex justify-between w-52 md:w-60 text-green-300"><span>속도 v(t):</span><span id="h1-vel">0.00 m/s</span></div>
-                                <div class="flex justify-between w-52 md:w-60 text-teal-300"><span>속력 |v(t)|:</span><span id="h1-spd">0.00 m/s</span></div>
-                                <div class="flex justify-between w-52 md:w-60 text-orange-300"><span>가속도 a(t):</span><span id="h1-acc">0.00 m/s²</span></div>
-                            </div>
-                        </div>
                     </div>
                 </div>
 
-                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                    <!-- 위치 x(t) -->
+                <!-- 4대 운동학 그래프 그리드 (설명 박스를 캔버스 밖 하단 바에 분리하여 가독성 극대화) -->
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-5">
+                    <!-- 1) 위치 x(t) -->
                     <div id="wrapper-pos1" class="graph-wrapper glass-panel rounded-2xl flex flex-col overflow-hidden col-span-1">
-                        <div class="bg-slate-800 p-3 flex justify-between items-center border-b border-slate-700 flex-wrap gap-2">
-                            <h3 class="text-md font-bold text-blue-400 whitespace-nowrap">위치 $x(t)$ <span class="text-xs font-normal text-slate-300">(접선 기울기 = 속도 $v$)</span></h3>
-                            <div class="flex flex-wrap gap-2 items-center">
-                                <div class="flex items-center gap-1 bg-slate-900 px-2 py-1 rounded border border-slate-600">
+                        <div class="bg-slate-800/95 px-4 py-2.5 flex justify-between items-center border-b border-slate-700 flex-wrap gap-2">
+                            <div class="flex items-center gap-2 flex-wrap">
+                                <h3 class="text-base font-extrabold text-blue-400">① 위치 $x(t)$</h3>
+                                <span class="text-xs bg-blue-950/90 text-blue-200 px-2 py-0.5 rounded border border-blue-700/60 font-semibold">접선 기울기 = 순간 속도 $v$</span>
+                            </div>
+                            <div class="flex flex-wrap gap-1.5 items-center">
+                                <label class="flex items-center gap-1 bg-slate-900 px-2 py-1 rounded border border-pink-500/50 cursor-pointer text-xs text-pink-300 font-bold" title="처음 시각(t=0)부터 선택한 시각(t)까지의 평균 속도(할선)를 함께 표시합니다.">
+                                    <input type="checkbox" id="t1-chk-secant" checked class="w-3.5 h-3.5 accent-pink-500">
+                                    <span>평균 속도(할선) 비교</span>
+                                </label>
+                                <div class="flex items-center gap-1 bg-slate-900 px-1.5 py-0.5 rounded border border-slate-600" title="Y축 배율 축소/확대">
                                     <button onclick="phys_zoomChart('pos1', -0.2)" class="px-2 py-0.5 bg-slate-700 hover:bg-slate-500 text-white text-xs rounded font-bold">-</button>
                                     <button onclick="phys_zoomChart('pos1', 0.2)" class="px-2 py-0.5 bg-slate-700 hover:bg-slate-500 text-white text-xs rounded font-bold">+</button>
                                 </div>
-                                <div class="flex items-center gap-1 bg-slate-900 px-2 py-1 rounded border border-slate-600">
-                                    <button onclick="phys_resizeChartWindow('pos1', -1)" class="px-2 py-0.5 bg-slate-700 hover:bg-slate-500 text-white text-xs rounded font-bold">창 축소(-)</button>
-                                    <button onclick="phys_resizeChartWindow('pos1', 1)" class="px-2 py-0.5 bg-slate-700 hover:bg-slate-500 text-white text-xs rounded font-bold">창 확대(+)</button>
+                                <div class="flex items-center gap-1 bg-slate-900 px-1.5 py-0.5 rounded border border-slate-600" title="그래프 창 높이 조절">
+                                    <button onclick="phys_resizeChartWindow('pos1', -1)" class="px-1.5 py-0.5 bg-slate-700 hover:bg-slate-500 text-white text-xs rounded font-bold">창-</button>
+                                    <button onclick="phys_resizeChartWindow('pos1', 1)" class="px-1.5 py-0.5 bg-slate-700 hover:bg-slate-500 text-white text-xs rounded font-bold">창+</button>
                                 </div>
-                                <button onclick="phys_toggleChart('pos1')" id="btn-tg-pos1" class="w-7 h-7 bg-slate-700 hover:bg-slate-500 rounded text-white font-bold ml-1">_</button>
+                                <button onclick="phys_toggleChart('pos1')" id="btn-tg-pos1" class="w-7 h-7 bg-slate-700 hover:bg-slate-500 rounded text-white font-bold">_</button>
                             </div>
                         </div>
-                        <div id="body-pos1" class="w-full bg-slate-900 relative graph-body" style="height: 256px;">
+                        <div id="body-pos1" class="w-full bg-slate-950 relative graph-body" style="height: 250px;">
                             <canvas id="chart-pos1"></canvas>
-                            <div class="absolute bottom-2 left-2 pointer-events-none bg-slate-800/85 px-2.5 py-1 rounded border border-slate-600 text-slate-300 text-[11px]">
-                                💡 그래프 안을 <b>클릭·드래그</b>하면 곡선 위를 따라 점과 접선($v = \frac{dx}{dt}$)이 이동합니다.
-                            </div>
+                        </div>
+                        <div class="chart-footer">
+                            <span>💡 그래프 안을 <b>드래그</b>하면 고정된 축 위에서 <b>순간 속도(노란 접선)</b>와 <b>평균 속도(분홍 할선)</b>를 비교합니다.</span>
+                            <span id="badge-secant-val" class="font-mono font-bold text-pink-300 text-xs">평균 속도 = 0.00 m/s</span>
                         </div>
                     </div>
 
-                    <!-- 속도 v(t) -->
+                    <!-- 2) 속도 v(t) -->
                     <div id="wrapper-vel1" class="graph-wrapper glass-panel rounded-2xl flex flex-col overflow-hidden col-span-1">
-                        <div class="bg-slate-800 p-3 flex justify-between items-center border-b border-slate-700 flex-wrap gap-2">
-                            <h3 class="text-md font-bold text-green-400 whitespace-nowrap">속도 $v(t)$ (벡터) <span class="text-xs font-normal text-slate-300">(접선 기울기 = 가속도 $a$)</span></h3>
-                            <div class="flex flex-wrap gap-2 items-center">
-                                <div class="flex items-center gap-1 bg-slate-900 px-2 py-1 rounded border border-slate-600">
+                        <div class="bg-slate-800/95 px-4 py-2.5 flex justify-between items-center border-b border-slate-700 flex-wrap gap-2">
+                            <div class="flex items-center gap-2 flex-wrap">
+                                <h3 class="text-base font-extrabold text-green-400">② 속도 $v(t)$ (벡터)</h3>
+                                <span class="text-xs bg-green-950/90 text-green-200 px-2 py-0.5 rounded border border-green-700/60 font-semibold">접선 기울기 = 가속도 $a$</span>
+                            </div>
+                            <div class="flex flex-wrap gap-1.5 items-center">
+                                <div class="flex items-center gap-1 bg-slate-900 px-1.5 py-0.5 rounded border border-slate-600">
                                     <button onclick="phys_zoomChart('vel1', -0.2)" class="px-2 py-0.5 bg-slate-700 hover:bg-slate-500 text-white text-xs rounded font-bold">-</button>
                                     <button onclick="phys_zoomChart('vel1', 0.2)" class="px-2 py-0.5 bg-slate-700 hover:bg-slate-500 text-white text-xs rounded font-bold">+</button>
                                 </div>
-                                <div class="flex items-center gap-1 bg-slate-900 px-2 py-1 rounded border border-slate-600">
-                                    <button onclick="phys_resizeChartWindow('vel1', -1)" class="px-2 py-0.5 bg-slate-700 hover:bg-slate-500 text-white text-xs rounded font-bold">창 축소(-)</button>
-                                    <button onclick="phys_resizeChartWindow('vel1', 1)" class="px-2 py-0.5 bg-slate-700 hover:bg-slate-500 text-white text-xs rounded font-bold">창 확대(+)</button>
+                                <div class="flex items-center gap-1 bg-slate-900 px-1.5 py-0.5 rounded border border-slate-600">
+                                    <button onclick="phys_resizeChartWindow('vel1', -1)" class="px-1.5 py-0.5 bg-slate-700 hover:bg-slate-500 text-white text-xs rounded font-bold">창-</button>
+                                    <button onclick="phys_resizeChartWindow('vel1', 1)" class="px-1.5 py-0.5 bg-slate-700 hover:bg-slate-500 text-white text-xs rounded font-bold">창+</button>
                                 </div>
-                                <button onclick="phys_toggleChart('vel1')" id="btn-tg-vel1" class="w-7 h-7 bg-slate-700 hover:bg-slate-500 rounded text-white font-bold ml-1">_</button>
+                                <button onclick="phys_toggleChart('vel1')" id="btn-tg-vel1" class="w-7 h-7 bg-slate-700 hover:bg-slate-500 rounded text-white font-bold">_</button>
                             </div>
                         </div>
-                        <div id="body-vel1" class="w-full bg-slate-900 relative graph-body" style="height: 256px;">
+                        <div id="body-vel1" class="w-full bg-slate-950 relative graph-body" style="height: 250px;">
                             <canvas id="chart-vel1"></canvas>
-                            <div class="absolute bottom-2 left-2 pointer-events-none bg-slate-800/85 px-2.5 py-1.5 rounded border border-slate-600 shadow-lg">
-                                <div class="text-[10px] text-slate-400 mb-0.5">후진 시 음수($-$) 넓이는 차감됨 (클릭·드래그: 곡선 위 접선 이동)</div>
-                                <div class="text-[11px] text-green-300 font-bold">💡 정적분 넓이(변위 $\int v\,dt$) = <span id="badge-disp-val" class="font-mono text-white">0.00 m</span></div>
-                            </div>
+                        </div>
+                        <div class="chart-footer">
+                            <span>💡 후진($v &lt; 0$) 시 축 아래 넓이는 <b>마이너스($-$)</b>로 차감됩니다.</span>
+                            <span class="text-green-300 font-bold">정적분 변위($\int v\,dt$) = <span id="badge-disp-val" class="font-mono text-white">0.00 m</span></span>
                         </div>
                     </div>
 
-                    <!-- 속력 |v(t)| -->
+                    <!-- 3) 속력 |v(t)| -->
                     <div id="wrapper-spd1" class="graph-wrapper glass-panel rounded-2xl flex flex-col overflow-hidden col-span-1">
-                        <div class="bg-slate-800 p-3 flex justify-between items-center border-b border-slate-700 flex-wrap gap-2">
-                            <h3 class="text-md font-bold text-teal-400 whitespace-nowrap">속력 $|v(t)|$ (스칼라)</h3>
-                            <div class="flex flex-wrap gap-2 items-center">
-                                <div class="flex items-center gap-1 bg-slate-900 px-2 py-1 rounded border border-slate-600">
+                        <div class="bg-slate-800/95 px-4 py-2.5 flex justify-between items-center border-b border-slate-700 flex-wrap gap-2">
+                            <div class="flex items-center gap-2 flex-wrap">
+                                <h3 class="text-base font-extrabold text-teal-400">③ 속력 $|v(t)|$ (스칼라)</h3>
+                                <span class="text-xs bg-teal-950/90 text-teal-200 px-2 py-0.5 rounded border border-teal-700/60 font-semibold">항상 $0$ 이상 (V자 반전)</span>
+                            </div>
+                            <div class="flex flex-wrap gap-1.5 items-center">
+                                <div class="flex items-center gap-1 bg-slate-900 px-1.5 py-0.5 rounded border border-slate-600">
                                     <button onclick="phys_zoomChart('spd1', -0.2)" class="px-2 py-0.5 bg-slate-700 hover:bg-slate-500 text-white text-xs rounded font-bold">-</button>
                                     <button onclick="phys_zoomChart('spd1', 0.2)" class="px-2 py-0.5 bg-slate-700 hover:bg-slate-500 text-white text-xs rounded font-bold">+</button>
                                 </div>
-                                <div class="flex items-center gap-1 bg-slate-900 px-2 py-1 rounded border border-slate-600">
-                                    <button onclick="phys_resizeChartWindow('spd1', -1)" class="px-2 py-0.5 bg-slate-700 hover:bg-slate-500 text-white text-xs rounded font-bold">창 축소(-)</button>
-                                    <button onclick="phys_resizeChartWindow('spd1', 1)" class="px-2 py-0.5 bg-slate-700 hover:bg-slate-500 text-white text-xs rounded font-bold">창 확대(+)</button>
+                                <div class="flex items-center gap-1 bg-slate-900 px-1.5 py-0.5 rounded border border-slate-600">
+                                    <button onclick="phys_resizeChartWindow('spd1', -1)" class="px-1.5 py-0.5 bg-slate-700 hover:bg-slate-500 text-white text-xs rounded font-bold">창-</button>
+                                    <button onclick="phys_resizeChartWindow('spd1', 1)" class="px-1.5 py-0.5 bg-slate-700 hover:bg-slate-500 text-white text-xs rounded font-bold">창+</button>
                                 </div>
-                                <button onclick="phys_toggleChart('spd1')" id="btn-tg-spd1" class="w-7 h-7 bg-slate-700 hover:bg-slate-500 rounded text-white font-bold ml-1">_</button>
+                                <button onclick="phys_toggleChart('spd1')" id="btn-tg-spd1" class="w-7 h-7 bg-slate-700 hover:bg-slate-500 rounded text-white font-bold">_</button>
                             </div>
                         </div>
-                        <div id="body-spd1" class="w-full bg-slate-900 relative graph-body" style="height: 256px;">
+                        <div id="body-spd1" class="w-full bg-slate-950 relative graph-body" style="height: 250px;">
                             <canvas id="chart-spd1"></canvas>
-                            <div class="absolute bottom-2 left-2 pointer-events-none bg-slate-800/85 px-2.5 py-1.5 rounded border border-slate-600 shadow-lg">
-                                <div class="text-[10px] text-slate-400 mb-0.5">후진해도 항상 $0$ 이상으로 접혀 올라감 (클릭·드래그: 점 이동)</div>
-                                <div class="text-[11px] text-teal-300 font-bold">💡 넓이 합(총 이동거리 $\int |v|\,dt$) = <span id="badge-dist-val" class="font-mono text-white">0.00 m</span></div>
-                            </div>
+                        </div>
+                        <div class="chart-footer">
+                            <span>💡 후진 구간도 절댓값($|v|$)으로 접혀 올라가 모든 넓이가 더해집니다.</span>
+                            <span class="text-teal-300 font-bold">넓이 합(총 이동거리 $\int |v|\,dt$) = <span id="badge-dist-val" class="font-mono text-white">0.00 m</span></span>
                         </div>
                     </div>
 
-                    <!-- 가속도 a(t) -->
+                    <!-- 4) 가속도 a(t) -->
                     <div id="wrapper-acc1" class="graph-wrapper glass-panel rounded-2xl flex flex-col overflow-hidden col-span-1">
-                        <div class="bg-slate-800 p-3 flex justify-between items-center border-b border-slate-700 flex-wrap gap-2">
-                            <h3 class="text-md font-bold text-orange-400 whitespace-nowrap">가속도 $a(t) = \frac{dv}{dt}$</h3>
-                            <div class="flex flex-wrap gap-2 items-center">
-                                <div class="flex items-center gap-1 bg-slate-900 px-2 py-1 rounded border border-slate-600">
+                        <div class="bg-slate-800/95 px-4 py-2.5 flex justify-between items-center border-b border-slate-700 flex-wrap gap-2">
+                            <div class="flex items-center gap-2 flex-wrap">
+                                <h3 class="text-base font-extrabold text-orange-400">④ 가속도 $a(t) = \frac{dv}{dt}$</h3>
+                                <span class="text-xs bg-orange-950/90 text-orange-200 px-2 py-0.5 rounded border border-orange-700/60 font-semibold">속도의 순간 변화율</span>
+                            </div>
+                            <div class="flex flex-wrap gap-1.5 items-center">
+                                <div class="flex items-center gap-1 bg-slate-900 px-1.5 py-0.5 rounded border border-slate-600">
                                     <button onclick="phys_zoomChart('acc1', -0.2)" class="px-2 py-0.5 bg-slate-700 hover:bg-slate-500 text-white text-xs rounded font-bold">-</button>
                                     <button onclick="phys_zoomChart('acc1', 0.2)" class="px-2 py-0.5 bg-slate-700 hover:bg-slate-500 text-white text-xs rounded font-bold">+</button>
                                 </div>
-                                <div class="flex items-center gap-1 bg-slate-900 px-2 py-1 rounded border border-slate-600">
-                                    <button onclick="phys_resizeChartWindow('acc1', -1)" class="px-2 py-0.5 bg-slate-700 hover:bg-slate-500 text-white text-xs rounded font-bold">창 축소(-)</button>
-                                    <button onclick="phys_resizeChartWindow('acc1', 1)" class="px-2 py-0.5 bg-slate-700 hover:bg-slate-500 text-white text-xs rounded font-bold">창 확대(+)</button>
+                                <div class="flex items-center gap-1 bg-slate-900 px-1.5 py-0.5 rounded border border-slate-600">
+                                    <button onclick="phys_resizeChartWindow('acc1', -1)" class="px-1.5 py-0.5 bg-slate-700 hover:bg-slate-500 text-white text-xs rounded font-bold">창-</button>
+                                    <button onclick="phys_resizeChartWindow('acc1', 1)" class="px-1.5 py-0.5 bg-slate-700 hover:bg-slate-500 text-white text-xs rounded font-bold">창+</button>
                                 </div>
-                                <button onclick="phys_toggleChart('acc1')" id="btn-tg-acc1" class="w-7 h-7 bg-slate-700 hover:bg-slate-500 rounded text-white font-bold ml-1">_</button>
+                                <button onclick="phys_toggleChart('acc1')" id="btn-tg-acc1" class="w-7 h-7 bg-slate-700 hover:bg-slate-500 rounded text-white font-bold">_</button>
                             </div>
                         </div>
-                        <div id="body-acc1" class="w-full bg-slate-900 relative graph-body" style="height: 256px;">
+                        <div id="body-acc1" class="w-full bg-slate-950 relative graph-body" style="height: 250px;">
                             <canvas id="chart-acc1"></canvas>
-                            <div class="absolute bottom-2 left-2 text-[11px] bg-slate-800/85 px-2.5 py-1 rounded border border-slate-600 text-slate-300 pointer-events-none">
-                                등속 운동 시 $a = 0$, 등가속도 운동 시 상수함수($a = \text{일정}$)가 됩니다. (클릭·드래그: 점 이동)
-                            </div>
+                        </div>
+                        <div class="chart-footer">
+                            <span>💡 등속 직선 운동 시 $a = 0$, 등가속도 운동 시 수평 상수함수($a = \text{일정}$)가 됩니다.</span>
                         </div>
                     </div>
                 </div>
             </section>
 
             <!-- 탭 2: 운동량과 충격량 -->
-            <section id="tab2-content" class="w-full flex flex-col gap-6 hide">
-                <div class="glass-panel rounded-2xl p-4 md:p-6 shadow-xl border-purple-900/50">
+            <section id="tab2-content" class="w-full flex flex-col gap-5 hide">
+                <div class="glass-panel rounded-2xl p-4 md:p-6 shadow-xl">
                     <div class="grid grid-cols-1 lg:grid-cols-4 gap-6">
-                        <div class="flex flex-col gap-4 lg:col-span-1 bg-slate-800/80 p-5 rounded-xl border border-slate-600 shadow-inner">
-                            <h2 class="text-xl font-bold text-purple-300 border-b border-slate-600 pb-2">충돌 안전 테스트 설정</h2>
+                        <!-- 좌측 설정 패널 -->
+                        <div class="flex flex-col gap-4 lg:col-span-1 bg-slate-900/90 p-5 rounded-xl border border-slate-700">
+                            <h2 class="text-lg font-extrabold text-purple-300 border-b border-slate-700 pb-2">충돌 안전 테스트 설정</h2>
                             <div>
-                                <label class="block text-sm font-bold text-slate-300 mb-1.5">자동차 질량 $m$ <span class="font-normal text-slate-400">(kg)</span></label>
-                                <input type="number" id="mass-input" value="1000" min="100" max="10000" step="100" class="w-full bg-slate-900 border-2 border-slate-600 rounded p-2.5 text-lg font-bold text-white outline-none focus:border-purple-500 font-mono transition-colors">
+                                <label class="block text-sm font-bold text-slate-200 mb-1.5">자동차 질량 $m$ <span class="font-normal text-slate-400">(kg)</span></label>
+                                <input type="number" id="mass-input" value="1000" min="100" max="10000" step="100" class="w-full bg-slate-950 border-2 border-slate-600 rounded-lg p-2.5 text-base font-bold text-white outline-none focus:border-purple-500 font-mono">
                             </div>
                             <div>
-                                <label class="block text-sm font-bold text-slate-300 mb-1.5 flex justify-between">
+                                <label class="block text-sm font-bold text-slate-200 mb-1.5 flex justify-between">
                                     <span>초기 속도 ($v_0$)</span>
                                     <span id="v0-display" class="text-green-400 font-mono">20 m/s</span>
                                 </label>
                                 <input type="range" id="v0-slider" min="5" max="50" step="1" value="20" class="w-full h-2 bg-slate-600 rounded-lg appearance-none cursor-pointer">
                             </div>
                             <div>
-                                <label class="block text-sm font-bold text-slate-300 mb-1.5">장벽 완충재 (충돌 시간 $\Delta t$)</label>
-                                <select id="material-select" class="w-full bg-slate-900 border-2 border-slate-600 rounded p-2.5 text-base text-white outline-none focus:border-purple-500 font-bold transition-colors">
+                                <label class="block text-sm font-bold text-slate-200 mb-1.5">장벽 완충재 (충돌 시간 $\Delta t$)</label>
+                                <select id="material-select" class="w-full bg-slate-950 border-2 border-slate-600 rounded-lg p-2.5 text-sm md:text-base text-white outline-none focus:border-purple-500 font-bold">
                                     <option value="concrete">콘크리트 벽 (Δt = 0.1초)</option>
                                     <option value="water">플라스틱 물통 (Δt = 0.25초)</option>
                                     <option value="airbag">안전 에어백 (Δt = 0.5초)</option>
                                     <option value="sponge">초대형 스펀지 (Δt = 1.0초)</option>
                                 </select>
                             </div>
-                            <label class="flex items-center gap-2 bg-slate-900/80 p-2.5 rounded-lg border border-slate-600 cursor-pointer text-xs text-slate-200 font-semibold">
+                            <label class="flex items-center gap-2 bg-slate-800 p-2.5 rounded-lg border border-slate-600 cursor-pointer text-xs text-slate-200 font-semibold">
                                 <input type="checkbox" id="t2-chk-favg" checked class="w-4 h-4 accent-yellow-400">
-                                <span>그래프에 평균 힘($F_{\text{avg}} = \frac{\Delta p}{\Delta t}$) 점선 표시</span>
+                                <span>평균 힘($F_{\text{avg}} = \frac{\Delta p}{\Delta t}$) 점선 표시</span>
                             </label>
-                            <button id="btn-start-test" class="mt-1 w-full px-4 py-3.5 bg-blue-600 hover:bg-blue-500 active:bg-blue-700 text-white rounded-xl font-bold shadow-lg shadow-blue-900/50 text-base md:text-lg transition-transform transform active:scale-95">
+                            <button id="btn-start-test" class="mt-1 w-full px-4 py-3.5 bg-blue-600 hover:bg-blue-500 active:bg-blue-700 text-white rounded-xl font-extrabold shadow-lg text-base transition-transform transform active:scale-95">
                                 🚀 충돌 테스트 시작 / 리셋
                             </button>
                         </div>
 
+                        <!-- 우측 시뮬레이션 및 그래프 영역 -->
                         <div class="lg:col-span-3 flex flex-col gap-3">
-                            <div class="flex flex-wrap justify-between items-center gap-2 mb-1">
-                                <span class="text-xs md:text-sm text-slate-300 font-semibold">💡 서로 다른 완충재를 선택해 연속으로 테스트하면 그래프가 겹쳐져 비교할 수 있습니다.</span>
+                            <div class="flex flex-wrap justify-between items-center gap-2">
+                                <span class="text-xs md:text-sm text-slate-200 font-semibold">💡 완충재를 바꿔가며 연속 테스트하면 그래프가 겹쳐져 충격력을 비교할 수 있습니다.</span>
                                 <div class="flex gap-2">
-                                    <button id="t2-btn-gas" class="px-4 py-2 bg-green-600 hover:bg-green-500 text-white rounded-lg font-bold shadow opacity-50 cursor-not-allowed text-sm transition-all" disabled>가속 (토글)</button>
-                                    <button id="t2-btn-brake" class="px-4 py-2 bg-red-600 hover:bg-red-500 text-white rounded-lg font-bold shadow opacity-50 cursor-not-allowed text-sm transition-all" disabled>감속 (토글)</button>
-                                    <button id="t2-btn-pause" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg font-bold shadow text-sm transition-all">⏸ 일시정지</button>
+                                    <button id="t2-btn-gas" class="px-3.5 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg font-bold shadow opacity-50 cursor-not-allowed text-xs md:text-sm transition-all" disabled>가속</button>
+                                    <button id="t2-btn-brake" class="px-3.5 py-1.5 bg-rose-600 hover:bg-rose-500 text-white rounded-lg font-bold shadow opacity-50 cursor-not-allowed text-xs md:text-sm transition-all" disabled>감속</button>
+                                    <button id="t2-btn-pause" class="px-3.5 py-1.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg font-bold shadow text-xs md:text-sm transition-all">⏸ 일시정지</button>
                                 </div>
                             </div>
 
-                            <div class="w-full h-64 md:h-80 bg-[#87CEEB] rounded-xl overflow-hidden border-2 border-slate-700 relative shadow-inner">
-                                <canvas id="sim-canvas-t2"></canvas>
-                                <div class="absolute top-3 left-3 bg-slate-900/85 backdrop-blur-md p-3 rounded-xl border border-slate-500 shadow-2xl pointer-events-none z-10">
-                                    <h3 class="text-xs font-bold text-white mb-1 border-b border-slate-500 pb-1">충돌 동역학 측정 (Dynamics)</h3>
-                                    <div class="grid grid-cols-1 gap-1 text-xs md:text-sm hud-font font-bold w-56 md:w-64">
-                                        <div class="flex justify-between text-blue-300"><span>위치(x):</span><span id="h2-pos">0.00 m</span></div>
-                                        <div class="flex justify-between text-green-300"><span>속도(v):</span><span id="h2-vel">0.00 m/s</span></div>
-                                        <div class="flex justify-between text-orange-300"><span>가속도(a):</span><span id="h2-acc">0.00 m/s²</span></div>
-                                        <div class="flex justify-between text-purple-300 border-t border-slate-600 mt-1 pt-1">
-                                            <span>운동량(p=mv):</span><span id="h2-mom">0 kg·m/s</span>
-                                        </div>
-                                        <div class="flex justify-between text-red-400"><span>충격력(F):</span><span id="h2-force">0 N</span></div>
-                                        <div class="flex justify-between text-yellow-400"><span>충격량(J=Δp):</span><span id="h2-impulse">0 N·s</span></div>
-                                    </div>
+                            <!-- 상단 디지털 계기판 (시뮬레이션 화면 가림 해결) -->
+                            <div class="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-2">
+                                <div class="telemetry-card">
+                                    <span class="text-[11px] font-semibold text-blue-300">위치 (x)</span>
+                                    <span id="h2-pos" class="text-xs md:text-sm font-bold text-blue-300 hud-font mt-0.5">0.00 m</span>
                                 </div>
-                                <div id="status-msg" class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-2xl md:text-4xl font-black text-white bg-black/65 px-6 py-3 rounded-2xl border-4 border-slate-600 shadow-2xl pointer-events-none z-20 whitespace-nowrap">
+                                <div class="telemetry-card">
+                                    <span class="text-[11px] font-semibold text-green-300">속도 (v)</span>
+                                    <span id="h2-vel" class="text-xs md:text-sm font-bold text-green-300 hud-font mt-0.5">0.00 m/s</span>
+                                </div>
+                                <div class="telemetry-card">
+                                    <span class="text-[11px] font-semibold text-orange-300">가속도 (a)</span>
+                                    <span id="h2-acc" class="text-xs md:text-sm font-bold text-orange-300 hud-font mt-0.5">0.00 m/s²</span>
+                                </div>
+                                <div class="telemetry-card border-l-4 border-l-purple-400">
+                                    <span class="text-[11px] font-semibold text-purple-300">운동량 (p=mv)</span>
+                                    <span id="h2-mom" class="text-xs md:text-sm font-bold text-purple-300 hud-font mt-0.5">0 kg·m/s</span>
+                                </div>
+                                <div class="telemetry-card border-l-4 border-l-pink-400">
+                                    <span class="text-[11px] font-semibold text-pink-300">운동에너지(½mv²)</span>
+                                    <span id="h2-ke" class="text-xs md:text-sm font-bold text-pink-300 hud-font mt-0.5">0 kJ</span>
+                                </div>
+                                <div class="telemetry-card border-l-4 border-l-red-400">
+                                    <span class="text-[11px] font-semibold text-red-400">순간 충격력 (F)</span>
+                                    <span id="h2-force" class="text-xs md:text-sm font-bold text-red-400 hud-font mt-0.5">0 N</span>
+                                </div>
+                                <div class="telemetry-card border-l-4 border-l-yellow-400">
+                                    <span class="text-[11px] font-semibold text-yellow-400">충격량 (J=Δp)</span>
+                                    <span id="h2-impulse" class="text-xs md:text-sm font-bold text-yellow-300 hud-font mt-0.5">0 N·s</span>
+                                </div>
+                            </div>
+
+                            <!-- 충돌 애니메이션 캔버스 -->
+                            <div class="w-full h-48 md:h-60 bg-[#87CEEB] rounded-xl overflow-hidden border-2 border-slate-700 relative shadow-inner">
+                                <canvas id="sim-canvas-t2"></canvas>
+                                <div id="status-msg" class="absolute top-4 right-4 text-base md:text-xl font-extrabold text-white bg-slate-900/85 px-4 py-2 rounded-xl border-2 border-slate-500 shadow-lg pointer-events-none z-20 whitespace-nowrap">
                                     대기 중 (Ready)
                                 </div>
                             </div>
                             
-                            <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 mt-2">
+                            <!-- 탭 2 동역학 그래프 2종 -->
+                            <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 mt-1">
                                 <div id="wrapper-mom2" class="graph-wrapper glass-panel rounded-2xl flex flex-col overflow-hidden border border-slate-600 shadow-xl">
-                                    <div class="bg-slate-800 p-3 flex justify-between items-center border-b border-slate-700 flex-wrap gap-2">
-                                        <h3 class="text-base md:text-lg font-bold text-purple-400 whitespace-nowrap">충돌 후 운동량 $p(t)$ 변화</h3>
-                                        <div class="flex gap-2 items-center flex-wrap">
-                                            <div class="flex items-center gap-1 bg-slate-900 px-2 py-1 rounded border border-slate-600">
+                                    <div class="bg-slate-800/95 px-4 py-2.5 flex justify-between items-center border-b border-slate-700 flex-wrap gap-2">
+                                        <h3 class="text-base font-extrabold text-purple-400 whitespace-nowrap">충돌 후 운동량 $p(t)$ 변화</h3>
+                                        <div class="flex gap-1.5 items-center">
+                                            <div class="flex items-center gap-1 bg-slate-900 px-1.5 py-0.5 rounded border border-slate-600">
                                                 <button onclick="phys_zoomChart('mom2', -0.2)" class="px-2 py-0.5 bg-slate-700 hover:bg-slate-500 text-white text-xs rounded font-bold">-</button>
                                                 <button onclick="phys_zoomChart('mom2', 0.2)" class="px-2 py-0.5 bg-slate-700 hover:bg-slate-500 text-white text-xs rounded font-bold">+</button>
                                             </div>
-                                            <div class="flex items-center gap-1 bg-slate-900 px-2 py-1 rounded border border-slate-600">
-                                                <button onclick="phys_resizeChartWindow('mom2', -1)" class="px-2 py-0.5 bg-slate-700 hover:bg-slate-500 text-white text-xs rounded font-bold">축소(-)</button>
-                                                <button onclick="phys_resizeChartWindow('mom2', 1)" class="px-2 py-0.5 bg-slate-700 hover:bg-slate-500 text-white text-xs rounded font-bold">확대(+)</button>
+                                            <div class="flex items-center gap-1 bg-slate-900 px-1.5 py-0.5 rounded border border-slate-600">
+                                                <button onclick="phys_resizeChartWindow('mom2', -1)" class="px-1.5 py-0.5 bg-slate-700 hover:bg-slate-500 text-white text-xs rounded font-bold">창-</button>
+                                                <button onclick="phys_resizeChartWindow('mom2', 1)" class="px-1.5 py-0.5 bg-slate-700 hover:bg-slate-500 text-white text-xs rounded font-bold">창+</button>
                                             </div>
-                                            <button onclick="phys_toggleChart('mom2')" id="btn-tg-mom2" class="w-7 h-7 bg-slate-700 hover:bg-slate-500 rounded text-white font-bold ml-1">_</button>
+                                            <button onclick="phys_toggleChart('mom2')" id="btn-tg-mom2" class="w-7 h-7 bg-slate-700 hover:bg-slate-500 rounded text-white font-bold">_</button>
                                         </div>
                                     </div>
-                                    <div id="body-mom2" class="w-full bg-slate-900 relative graph-body" style="height: 300px;">
+                                    <div id="body-mom2" class="w-full bg-slate-950 relative graph-body" style="height: 260px;">
                                         <canvas id="chart-mom2"></canvas>
-                                        <div class="absolute bottom-2 left-2 text-[10px] md:text-[11px] text-slate-300 pointer-events-none bg-slate-800/85 px-2.5 py-1.5 rounded border border-slate-600">
-                                            <span class="text-purple-400 font-bold">※ 충돌 순간($t=0$)부터 정지할 때까지</span> 운동량이 $0$으로 감소합니다.<br>
-                                            <span class="text-slate-400 text-[10px]">💡 클릭·드래그 시 곡선 위를 따라 접선 기울기 $\frac{dp}{dt} = -F(t)$ 확인</span>
-                                        </div>
+                                    </div>
+                                    <div class="chart-footer">
+                                        <span>💡 충돌 순간($t=0$)부터 정지할 때까지 운동량이 $0$으로 감소합니다. (드래그: 접선 기울기 $\frac{dp}{dt} = -F$)</span>
                                     </div>
                                 </div>
 
                                 <div id="wrapper-force2" class="graph-wrapper glass-panel rounded-2xl flex flex-col overflow-hidden border border-slate-600 shadow-xl">
-                                    <div class="bg-slate-800 p-3 flex justify-between items-center border-b border-slate-700 flex-wrap gap-2">
-                                        <h3 class="text-base md:text-lg font-bold text-red-400 whitespace-nowrap">충격력 $F(t)$ 및 평균 힘</h3>
-                                        <div class="flex gap-2 items-center flex-wrap">
-                                            <button id="btn-clear-chart" class="text-xs px-3 py-1 bg-red-900/50 hover:bg-red-800/80 border border-red-700 rounded text-red-200 mr-1 font-bold">비교 기록 지우기</button>
-                                            <div class="flex items-center gap-1 bg-slate-900 px-2 py-1 rounded border border-slate-600">
+                                    <div class="bg-slate-800/95 px-4 py-2.5 flex justify-between items-center border-b border-slate-700 flex-wrap gap-2">
+                                        <h3 class="text-base font-extrabold text-red-400 whitespace-nowrap">충격력 $F(t)$ 및 평균 힘</h3>
+                                        <div class="flex gap-1.5 items-center flex-wrap">
+                                            <button id="btn-clear-chart" class="text-xs px-2.5 py-1 bg-red-900/60 hover:bg-red-800 border border-red-600 rounded text-red-100 font-bold">기록 지우기</button>
+                                            <div class="flex items-center gap-1 bg-slate-900 px-1.5 py-0.5 rounded border border-slate-600">
                                                 <button onclick="phys_zoomChart('force2', -0.2)" class="px-2 py-0.5 bg-slate-700 hover:bg-slate-500 text-white text-xs rounded font-bold">-</button>
                                                 <button onclick="phys_zoomChart('force2', 0.2)" class="px-2 py-0.5 bg-slate-700 hover:bg-slate-500 text-white text-xs rounded font-bold">+</button>
                                             </div>
-                                            <div class="flex items-center gap-1 bg-slate-900 px-2 py-1 rounded border border-slate-600">
-                                                <button onclick="phys_resizeChartWindow('force2', -1)" class="px-2 py-0.5 bg-slate-700 hover:bg-slate-500 text-white text-xs rounded font-bold">축소(-)</button>
-                                                <button onclick="phys_resizeChartWindow('force2', 1)" class="px-2 py-0.5 bg-slate-700 hover:bg-slate-500 text-white text-xs rounded font-bold">확대(+)</button>
+                                            <div class="flex items-center gap-1 bg-slate-900 px-1.5 py-0.5 rounded border border-slate-600">
+                                                <button onclick="phys_resizeChartWindow('force2', -1)" class="px-1.5 py-0.5 bg-slate-700 hover:bg-slate-500 text-white text-xs rounded font-bold">창-</button>
+                                                <button onclick="phys_resizeChartWindow('force2', 1)" class="px-1.5 py-0.5 bg-slate-700 hover:bg-slate-500 text-white text-xs rounded font-bold">창+</button>
                                             </div>
-                                            <button onclick="phys_toggleChart('force2')" id="btn-tg-force2" class="w-7 h-7 bg-slate-700 hover:bg-slate-500 rounded text-white font-bold ml-1">_</button>
+                                            <button onclick="phys_toggleChart('force2')" id="btn-tg-force2" class="w-7 h-7 bg-slate-700 hover:bg-slate-500 rounded text-white font-bold">_</button>
                                         </div>
                                     </div>
-                                    <div id="body-force2" class="w-full bg-slate-900 relative graph-body flex flex-col" style="height: 300px;">
-                                        <div class="relative flex-grow h-0">
-                                            <canvas id="chart-force2" class="absolute inset-0 w-full h-full"></canvas>
-                                            <div class="absolute bottom-2 left-2 pointer-events-none bg-slate-800/85 px-2.5 py-1.5 rounded border border-slate-600 shadow-lg">
-                                                <div class="text-[10px] md:text-[11px] text-slate-300 mb-0.5"><span class="text-red-400 font-bold">※ 핵심 비교:</span> 충돌 시간($\Delta t$)이 길수록 최대 힘과 평균 힘(점선)이 작아집니다!</div>
-                                                <div class="text-[11px] text-yellow-400 font-bold">💡 곡선 아래 넓이 = 충격량 ($J = \int F\,dt = \Delta p$)</div>
-                                            </div>
-                                        </div>
-                                        <div class="bg-slate-800/90 border-t border-slate-700 py-2 px-3 flex justify-between items-center h-10 shadow-inner z-10 text-xs md:text-sm">
-                                            <span class="text-yellow-400 font-bold flex items-center">
-                                                <span id="static-integral">\( J = \int F \, dt = \)</span>
-                                                <span id="integral-val" class="font-mono text-base ml-1.5">0</span>
-                                                <span class="font-mono text-xs ml-1">N·s</span>
-                                            </span>
-                                            <span class="text-red-300 font-bold font-mono" id="favg-summary">
-                                                평균 힘 F_avg = 0 N
-                                            </span>
-                                        </div>
+                                    <div id="body-force2" class="w-full bg-slate-950 relative graph-body" style="height: 260px;">
+                                        <canvas id="chart-force2"></canvas>
+                                    </div>
+                                    <div class="chart-footer">
+                                        <span class="text-yellow-300 font-bold flex items-center">
+                                            <span id="static-integral">충격량 \( J = \int F \, dt = \)</span>
+                                            <span id="integral-val" class="font-mono text-sm ml-1.5 text-white">0</span>
+                                            <span class="font-mono text-xs ml-1 text-white">N·s</span>
+                                        </span>
+                                        <span class="text-red-300 font-bold font-mono text-xs md:text-sm" id="favg-summary">
+                                            평균 힘 F_avg = 0 N
+                                        </span>
                                     </div>
                                 </div>
                             </div>
@@ -4651,7 +4845,7 @@ Gemini는 AI이며 인물 등에 관한 정보 제공 시 실수를 할 수 있�
 
 <script>
     /* =========================================================================
-       0. 복소수 연산 클래스 (거듭제곱 ^ 연산 및 극형식 지원 포함)
+       0. 복소수 연산 클래스 및 라디안(rad) + 도(°) 병기 포맷터
        ========================================================================= */
     class ComplexNum {
         constructor(re = 0, im = 0) { this.re = re; this.im = im; }
@@ -4673,6 +4867,29 @@ Gemini는 AI이며 인물 등에 관한 정보 제공 시 실수를 할 수 있�
             let ang = n * theta;
             return new ComplexNum(rn * Math.cos(ang), rn * Math.sin(ang));
         }
+    }
+
+    // 라디안 값을 특수각(π의 유리수배) 또는 소수 라디안 + 괄호 안 degree로 변환
+    function formatAngleRadDeg(rad) {
+        if (!isFinite(rad)) return '0 rad (0.0°)';
+        const deg = rad * 180 / Math.PI;
+        const specials = [
+            { r: 0, s: '0' },
+            { r: Math.PI / 6, s: 'π/6' }, { r: -Math.PI / 6, s: '-π/6' },
+            { r: Math.PI / 4, s: 'π/4' }, { r: -Math.PI / 4, s: '-π/4' },
+            { r: Math.PI / 3, s: 'π/3' }, { r: -Math.PI / 3, s: '-π/3' },
+            { r: Math.PI / 2, s: 'π/2' }, { r: -Math.PI / 2, s: '-π/2' },
+            { r: 2 * Math.PI / 3, s: '2π/3' }, { r: -2 * Math.PI / 3, s: '-2π/3' },
+            { r: 3 * Math.PI / 4, s: '3π/4' }, { r: -3 * Math.PI / 4, s: '-3π/4' },
+            { r: 5 * Math.PI / 6, s: '5π/6' }, { r: -5 * Math.PI / 6, s: '-5π/6' },
+            { r: Math.PI, s: 'π' }, { r: -Math.PI, s: '-π' }
+        ];
+        for (let i = 0; i < specials.length; i++) {
+            if (Math.abs(rad - specials[i].r) < 1e-3) {
+                return `${specials[i].s} rad (${deg.toFixed(1)}°)`;
+            }
+        }
+        return `${rad.toFixed(2)} rad (${deg.toFixed(1)}°)`;
     }
 
     /* =========================================================================
@@ -4725,11 +4942,15 @@ Gemini는 AI이며 인물 등에 관한 정보 제공 시 실수를 할 수 있�
     let func_isTouchInteraction = false;
     let func_touchIgnoreTimeout = null;
     let func_isIntersectionVisible = false;
+    let func_isIntegralVisible = false;
+    let func_usePiTicks = false;
     let func_showComplexSum = false;
+    let func_showComplexMul = false;
     let func_showUnitCircle = false;
 
     const REAL_PRESETS = [
         { label: '이차함수 x(x-2)', expr: 'x(x-2)' },
+        { label: '삼차함수 x³-3x', expr: 'x^3 - 3x' },
         { label: '절댓값 |x-1|+|x+1|', expr: '|x - 1| + |x + 1|' },
         { label: '가우스 함수 [x]', expr: '[x]' },
         { label: '소수부분 x-[x]', expr: 'x - [x]' },
@@ -4744,8 +4965,8 @@ Gemini는 AI이며 인물 등에 관한 정보 제공 시 실수를 할 수 있�
     ];
 
     const COMPLEX_PRESETS = [
-        { label: '기본 복소수 3+2i', expr: '3 + 2i' },
-        { label: '90° 회전 (2+i)*i', expr: '(2 + i) * i' },
+        { label: '기본 복소수 1+i', expr: '1 + i' },
+        { label: '90° 회전 i', expr: 'i' },
         { label: '거듭제곱 (1+i)^2', expr: '(1 + i)^2' },
         { label: '주기성 확인 i^3', expr: 'i^3' },
         { label: '단위원 위 0.8+0.6i', expr: '0.8 + 0.6i' }
@@ -4793,27 +5014,81 @@ Gemini는 AI이며 인물 등에 관한 정보 제공 시 실수를 할 수 있�
     }
     window.func_toggleIntersectionPanel = func_toggleIntersectionPanel;
 
+    function func_toggleIntegralPanel() {
+        func_isIntegralVisible = !func_isIntegralVisible;
+        const panel = document.getElementById('integralControlPanel');
+        const btn = document.getElementById('integralModeBtn');
+        if (panel && btn) {
+            panel.classList.toggle('visible', func_isIntegralVisible);
+            btn.classList.toggle('active', func_isIntegralVisible);
+            btn.innerHTML = `<span>∫</span> 정적분 넓이 도구: ${func_isIntegralVisible ? 'ON' : 'OFF'}`;
+        }
+        func_syncIntegralSelect();
+        func_updateAll();
+    }
+    window.func_toggleIntegralPanel = func_toggleIntegralPanel;
+
+    function func_togglePiTicks() {
+        func_usePiTicks = !func_usePiTicks;
+        const btn = document.getElementById('piTickBtn');
+        if (btn) {
+            btn.classList.toggle('active', func_usePiTicks);
+            btn.innerHTML = `<span>π</span> 호도법(π) 눈금: ${func_usePiTicks ? 'ON' : 'OFF'}`;
+        }
+        func_updateAll();
+    }
+    window.func_togglePiTicks = func_togglePiTicks;
+
     function func_toggleComplexSum() {
         func_showComplexSum = !func_showComplexSum;
         const btn = document.getElementById('complexSumBtn');
         if (btn) {
             btn.classList.toggle('active', func_showComplexSum);
-            btn.innerHTML = `<span>📐</span> 복소수 덧셈 평행사변형: ${func_showComplexSum ? 'ON' : 'OFF'}`;
+            btn.innerHTML = `<span>📐</span> 덧셈 평행사변형: ${func_showComplexSum ? 'ON' : 'OFF'}`;
         }
         func_updateAll();
     }
     window.func_toggleComplexSum = func_toggleComplexSum;
+
+    function func_toggleComplexMul() {
+        func_showComplexMul = !func_showComplexMul;
+        const btn = document.getElementById('complexMulBtn');
+        if (btn) {
+            btn.classList.toggle('active', func_showComplexMul);
+            btn.innerHTML = `<span>🔄</span> 곱셈 회전·확대(z₁×z₂): ${func_showComplexMul ? 'ON' : 'OFF'}`;
+        }
+        func_updateAll();
+    }
+    window.func_toggleComplexMul = func_toggleComplexMul;
 
     function func_toggleUnitCircle() {
         func_showUnitCircle = !func_showUnitCircle;
         const btn = document.getElementById('unitCircleBtn');
         if (btn) {
             btn.classList.toggle('active', func_showUnitCircle);
-            btn.innerHTML = `<span>⭕</span> 단위원(|z|=1) 보조선: ${func_showUnitCircle ? 'ON' : 'OFF'}`;
+            btn.innerHTML = `<span>⭕</span> 단위원(|z|=1): ${func_showUnitCircle ? 'ON' : 'OFF'}`;
         }
         func_updateAll();
     }
     window.func_toggleUnitCircle = func_toggleUnitCircle;
+
+    function func_syncIntegralSelect() {
+        const sel = document.getElementById('integralFuncSelect');
+        if (!sel) return;
+        const prevVal = sel.value;
+        sel.innerHTML = '';
+        func_functionsList.forEach((f, idx) => {
+            if (f.type === 'custom' && !func_isImplicitFunc(f)) {
+                const opt = document.createElement('option');
+                opt.value = f.id;
+                opt.textContent = `함수 f${idx + 1} (${f.expr})`;
+                sel.appendChild(opt);
+            }
+        });
+        if (prevVal && Array.from(sel.options).some(o => o.value === prevVal)) {
+            sel.value = prevVal;
+        }
+    }
 
     function func_expandCanvasDown() {
         const graphDiv = document.getElementById('graphPlot');
@@ -4845,10 +5120,10 @@ Gemini는 AI이며 인물 등에 관한 정보 제공 시 실수를 할 수 있�
         func_isTangentMode = !func_isTangentMode;
         const btn = document.getElementById('tangentModeBtn');
         if (func_isTangentMode) {
-            btn.className = 'toggle-btn active'; btn.innerHTML = `<span style="font-size:1.1rem;">⤡</span> 실시간 접선(미분): ON`;
+            btn.className = 'toggle-btn active'; btn.innerHTML = `<span style="font-size:1.05rem;">⤡</span> 실시간 접선(미분): ON`;
             Plotly.relayout('graphPlot', { hovermode: 'closest' });
         } else {
-            btn.className = 'toggle-btn'; btn.innerHTML = `<span style="font-size:1.1rem;">⤡</span> 실시간 접선(미분): OFF`;
+            btn.className = 'toggle-btn'; btn.innerHTML = `<span style="font-size:1.05rem;">⤡</span> 실시간 접선(미분): OFF`;
             Plotly.relayout('graphPlot', { shapes: [], annotations: [], hovermode: 'closest' }); 
         }
     }
@@ -4892,24 +5167,37 @@ Gemini는 AI이며 인물 등에 관한 정보 제공 시 실수를 할 수 있�
         const hasComplex = func_functionsList.some(f => f.type === 'complex');
         const intersectBtn = document.getElementById('intersectToggleBtn');
         const tangentBtn = document.getElementById('tangentModeBtn');
+        const integralBtn = document.getElementById('integralModeBtn');
+        const piTickBtn = document.getElementById('piTickBtn');
+        const integralPanel = document.getElementById('integralControlPanel');
         const complexSumBtn = document.getElementById('complexSumBtn');
+        const complexMulBtn = document.getElementById('complexMulBtn');
         const unitCircleBtn = document.getElementById('unitCircleBtn');
         const topInfoPanel = document.getElementById('topInfoPanel');
 
         if (hasComplex) {
             if (intersectBtn) intersectBtn.classList.add('hide');
             if (tangentBtn) tangentBtn.classList.add('hide');
+            if (integralBtn) integralBtn.classList.add('hide');
+            if (piTickBtn) piTickBtn.classList.add('hide');
+            if (integralPanel) integralPanel.classList.remove('visible');
             if (complexSumBtn) complexSumBtn.classList.remove('hide');
+            if (complexMulBtn) complexMulBtn.classList.remove('hide');
             if (unitCircleBtn) unitCircleBtn.classList.remove('hide');
             if (topInfoPanel) topInfoPanel.classList.remove('visible');
         } else {
             if (intersectBtn) intersectBtn.classList.remove('hide');
             if (tangentBtn) tangentBtn.classList.remove('hide');
+            if (integralBtn) integralBtn.classList.remove('hide');
+            if (piTickBtn) piTickBtn.classList.remove('hide');
+            if (integralPanel && func_isIntegralVisible) integralPanel.classList.add('visible');
             if (complexSumBtn) complexSumBtn.classList.add('hide');
+            if (complexMulBtn) complexMulBtn.classList.add('hide');
             if (unitCircleBtn) unitCircleBtn.classList.add('hide');
             if (topInfoPanel && func_isIntersectionVisible) topInfoPanel.classList.add('visible');
         }
         func_renderPresets();
+        func_syncIntegralSelect();
     }
 
     function func_addRealMode() {
@@ -4943,7 +5231,7 @@ Gemini는 AI이며 인물 등에 관한 정보 제공 시 실수를 할 수 있�
             func_functionsList.length = 0; 
             func_selectedFuncId = null;
         }
-        const defaultComplex = ['3 + 2i', '-1 + 3i', '(1 + i)^2', '2 * i'];
+        const defaultComplex = ['1 + i', 'i', '2 - i', '(1 + i)^2'];
         const chosenExpr = defaultComplex[func_functionsList.length % defaultComplex.length];
         const newComplex = {
             id: 'c_' + Date.now() + '_' + Math.floor(Math.random()*100),
@@ -4963,6 +5251,7 @@ Gemini는 AI이며 인물 등에 관한 정보 제공 시 실수를 할 수 있�
         let idx = func_functionsList.findIndex(f => f.id === id);
         if(idx !== -1) func_functionsList.splice(idx, 1);
         if (func_selectedFuncId === id) func_deselectGraph();
+        func_syncIntegralSelect();
         func_renderUI(); func_updateAll();
     }
     window.func_removeFunction = func_removeFunction;
@@ -4988,6 +5277,7 @@ Gemini는 AI이며 인물 등에 관한 정보 제공 시 실수를 할 수 있�
             if (infoEl && func.type === 'complex') {
                 infoEl.innerHTML = func_getComplexSummaryHTML(func.expr);
             }
+            func_syncIntegralSelect();
         }
         func_updateAll();
     }
@@ -5094,10 +5384,10 @@ Gemini는 AI이며 인물 등에 관한 정보 제공 시 실수를 할 수 있�
             return `<span style="color:#ef4444;">수식을 확인해주세요 (예: 3+2i, (1+i)^2)</span>`;
         }
         let r = Math.hypot(c.re, c.im);
-        let deg = (Math.atan2(c.im, c.re) * 180 / Math.PI);
+        let rad = Math.atan2(c.im, c.re);
         let reVal = func_formatNumber(c.re), imVal = func_formatNumber(c.im);
         let sign = imVal >= 0 ? '+' : '-';
-        return `계산값: <b>${reVal} ${sign} ${Math.abs(imVal)}i</b> &nbsp;|&nbsp; 크기 |z| = <b>${r.toFixed(2)}</b> &nbsp;|&nbsp; 편각 θ = <b>${deg.toFixed(1)}°</b>`;
+        return `계산값: <b>${reVal} ${sign} ${Math.abs(imVal)}i</b> &nbsp;|&nbsp; 크기 $|z| =$ <b>${r.toFixed(2)}</b> &nbsp;|&nbsp; 편각 $\\theta =$ <b>${formatAngleRadDeg(rad)}</b>`;
     }
 
     function func_renderUI() {
@@ -5109,7 +5399,7 @@ Gemini는 AI이며 인물 등에 관한 정보 제공 시 실수를 할 수 있�
                 statusBoard.innerHTML = `<div>✥ <b>그래프 평행이동 모드 활성화됨</b> — 그래프 영역을 드래그하면 선택한 함수/복소수가 평행이동합니다. (완료 후 [이동 해제] 클릭)</div>`;
             } else {
                 statusBoard.classList.remove('active');
-                statusBoard.innerHTML = `<div style="font-weight: 700; color:#0f172a;">💡 그래프 평행이동 및 특수 함수 입력 안내</div><div style="margin-top: 3px;">절댓값 <code>|x|</code>, 가우스 함수 <code>[x]</code> 입력을 지원하며, 각 카드의 <b>[✥ 이동]</b> 버튼이나 그래프 선 클릭 후 드래그로 평행이동할 수 있습니다.</div>`;
+                statusBoard.innerHTML = `<div style="font-weight: 700; color:#0f172a;">💡 그래프 평행이동 및 특수 함수 입력 안내</div><div style="margin-top: 3px;">절댓값 <code>|x|</code>, 가우스 함수 <code>[x]</code>(열린 점 ○·닫힌 점 ● 표시)를 지원하며, 각 카드의 <b>[✥ 이동]</b> 버튼이나 그래프 선 클릭 후 드래그로 평행이동할 수 있습니다.</div>`;
             }
         }
 
@@ -5191,7 +5481,6 @@ Gemini는 AI이며 인물 등에 관한 정보 제공 시 실수를 할 수 있�
         }
     };
 
-    // 절댓값 기호 |...| 를 중첩 및 다중 수식(|x-1| + |x+1|, ||x|-2| 등)까지 안전하게 abs(...)로 변환
     function func_convertAbsBars(str) {
         if (!str.includes('|')) return str;
         let out = '';
@@ -5221,7 +5510,6 @@ Gemini는 AI이며 인물 등에 관한 정보 제공 시 실수를 할 수 있�
                     openStack.pop();
                     prevNonSpace = ')';
                 } else {
-                    // 2|x-1| 또는 x|x| 형태: 암시적 곱셈이 포함된 여는 절댓값
                     out += '*abs(';
                     openStack.push(parenDepth);
                     prevNonSpace = '(';
@@ -5247,29 +5535,24 @@ Gemini는 AI이며 인물 등에 관한 정보 제공 시 실수를 할 수 있�
                 .replace(/÷/g, '/')
                 .replace(/[⌊⌋]/g, function(m) { return m === '⌊' ? '[' : ']'; });
 
-            // 1) 가우스 기호 [x] -> floor(x) (중첩 대괄호 포함 안쪽부터 변환)
             let guard = 0;
             while (/\[([^\[\]]+)\]/.test(cleanExpr) && guard < 12) {
                 cleanExpr = cleanExpr.replace(/\[([^\[\]]+)\]/g, 'floor($1)');
                 guard++;
             }
 
-            // 2) 절댓값 기호 |x| -> abs(x) 변환
             cleanExpr = func_convertAbsBars(cleanExpr);
 
-            // 3) 로그 함수 변환
             cleanExpr = cleanExpr.replace(/\blog([0-9.]+)\s*\(([^)]+)\)/gi, 'customMath.customLog($1, $2)');
             cleanExpr = cleanExpr.replace(/\blog\s*\(([^)]+)\)/gi, 'customMath.customLog(10, $1)');
             cleanExpr = cleanExpr.replace(/\bln\s*\(([^)]+)\)/gi, '((($1) > 0) ? Math.log($1) : NaN)');
 
-            // 4) 암시적 곱셈 처리
             cleanExpr = cleanExpr.replace(/\)\s*([a-zA-Z0-9(])/g, ')*$1');
             cleanExpr = cleanExpr.replace(/(^|[^a-zA-Z0-9_.])(\d+(?:\.\d+)?)\s*([a-zA-Z(])/g, '$1$2*$3');
             cleanExpr = cleanExpr.replace(/\b(x|y|pi|PI)\s*\(/g, '$1*(');
             cleanExpr = cleanExpr.replace(/\b(x)\s*(y)\b/g, '$1*$2');
             cleanExpr = cleanExpr.replace(/\b(y)\s*(x)\b/g, '$1*$2');
 
-            // 5) 음수 밑의 홀수 거듭제곱근 처리: (식)^(p/q) 또는 x^(p/q)
             cleanExpr = cleanExpr.replace(/\(([^()]+)\)\s*\^\s*\(\s*(-?\d+)\s*\/\s*(\d+)\s*\)/g, 'customMath.realFracPow(($1), $2, $3)');
             cleanExpr = cleanExpr.replace(/\b(x|y)\s*\^\s*\(\s*(-?\d+)\s*\/\s*(\d+)\s*\)/g, 'customMath.realFracPow($1, $2, $3)');
 
@@ -5345,13 +5628,15 @@ Gemini는 AI이며 인물 등에 관한 정보 제공 시 실수를 할 수 있�
     }
 
     function func_updateIntersectionPanel(panelData) {
-        const xDiv = document.getElementById('panel-x-axis'); const yDiv = document.getElementById('panel-y-axis'); const fDiv = document.getElementById('panel-intersections');
+        const xDiv = document.getElementById('panel-x-axis'); const yDiv = document.getElementById('panel-y-axis'); const fDiv = document.getElementById('panel-intersections'); const eDiv = document.getElementById('panel-extrema');
         if(!xDiv || !yDiv || !fDiv) return;
-        let xHTML = '', yHTML = '', fHTML = '';
+        let xHTML = '', yHTML = '', fHTML = '', eHTML = '';
         if (panelData.xInt.length === 0) xHTML = '<div class="empty-msg">교점이 없습니다.</div>'; else panelData.xInt.forEach(p => xHTML += `<div class="coord-item" style="border-left-color: ${p.color};"><span style="color:${p.color}">${p.name}</span> : (${p.x.toFixed(2)}, 0.00)</div>`);
         if (panelData.yInt.length === 0) yHTML = '<div class="empty-msg">교점이 없습니다.</div>'; else panelData.yInt.forEach(p => yHTML += `<div class="coord-item" style="border-left-color: ${p.color};"><span style="color:${p.color}">${p.name}</span> : (0.00, ${p.y.toFixed(2)})</div>`);
         if (panelData.funcInt.length === 0) fHTML = '<div class="empty-msg">두 함수의 교점이 없습니다.</div>'; else panelData.funcInt.forEach(p => fHTML += `<div class="coord-item"><span style="color:${p.c1}">■</span> <span style="color:${p.c2}">■</span> : (${p.x.toFixed(2)}, ${p.y.toFixed(2)})</div>`);
+        if (!panelData.extrema || panelData.extrema.length === 0) eHTML = '<div class="empty-msg">극값/꼭짓점이 없습니다.</div>'; else panelData.extrema.forEach(p => eHTML += `<div class="coord-item" style="border-left-color: ${p.color};"><span style="color:${p.color}">${p.name} (${p.kind})</span> : (${p.x.toFixed(2)}, ${p.y.toFixed(2)})</div>`);
         xDiv.innerHTML = xHTML; yDiv.innerHTML = yHTML; fDiv.innerHTML = fHTML;
+        if (eDiv) eDiv.innerHTML = eHTML;
     }
 
     function func_generateTraces(rangeX, rangeY, skipHeavy) {
@@ -5364,7 +5649,9 @@ Gemini는 AI이며 인물 등에 관한 정보 제공 시 실수를 할 수 있�
         const xVal = []; for (let x = minX; x <= maxX; x += step) xVal.push(x);
         
         const yDataCollection = []; const axisIntX = [], axisIntY = [], axisIntText = [];
-        const panelData = { yInt: [], xInt: [], funcInt: [] }; let hasInverse = false;
+        const extremaX = [], extremaY = [], extremaText = [];
+        const stepOpenX = [], stepOpenY = [], stepClosedX = [], stepClosedY = [], stepColors = [];
+        const panelData = { yInt: [], xInt: [], funcInt: [], extrema: [] }; let hasInverse = false;
         const parsedComplexPoints = [];
 
         if (func_showUnitCircle && visibleFunctions.some(f => f.type === 'complex')) {
@@ -5379,6 +5666,61 @@ Gemini는 AI이며 인물 등에 관한 정보 제공 시 실수를 할 수 있�
             });
         }
 
+        // 정적분 넓이 색칠 (활성화 시)
+        if (func_isIntegralVisible && !visibleFunctions.some(f => f.type === 'complex')) {
+            const selEl = document.getElementById('integralFuncSelect');
+            const aEl = document.getElementById('integralA');
+            const bEl = document.getElementById('integralB');
+            const resEl = document.getElementById('integralResultText');
+            const targetFunc = visibleFunctions.find(f => f.id === (selEl ? selEl.value : '')) || visibleFunctions.find(f => f.type === 'custom' && !func_isImplicitFunc(f));
+            let aVal = aEl ? parseFloat(aEl.value) : 0;
+            let bVal = bEl ? parseFloat(bEl.value) : 2;
+            if (targetFunc && isFinite(aVal) && isFinite(bVal)) {
+                const sgn = aVal <= bVal ? 1 : -1;
+                const low = Math.min(aVal, bVal), high = Math.max(aVal, bVal);
+                const nSteps = 300;
+                const hStep = (high - low) / nSteps;
+                let signedSum = 0, absSum = 0;
+                const posX = [], posY = [], negX = [], negY = [];
+                for (let i = 0; i <= nSteps; i++) {
+                    const xi = low + i * hStep;
+                    const yi = func_evaluateFunction(targetFunc, xi);
+                    if (isFinite(yi)) {
+                        if (i > 0) {
+                            const prevX = low + (i - 1) * hStep;
+                            const prevY = func_evaluateFunction(targetFunc, prevX);
+                            if (isFinite(prevY)) {
+                                const trap = 0.5 * (prevY + yi) * hStep;
+                                signedSum += trap;
+                                absSum += 0.5 * (Math.abs(prevY) + Math.abs(yi)) * hStep;
+                            }
+                        }
+                        if (yi >= 0) {
+                            posX.push(xi); posY.push(yi);
+                            negX.push(xi); negY.push(0);
+                        } else {
+                            posX.push(xi); posY.push(0);
+                            negX.push(xi); negY.push(yi);
+                        }
+                    }
+                }
+                signedSum *= sgn;
+                traces.push({
+                    x: posX, y: posY, mode: 'lines', fill: 'tozeroy',
+                    fillcolor: 'rgba(16, 185, 129, 0.25)', line: { width: 0, color: 'rgba(16,185,129,0)' },
+                    name: '양(+)의 넓이', hoverinfo: 'skip'
+                });
+                traces.push({
+                    x: negX, y: negY, mode: 'lines', fill: 'tozeroy',
+                    fillcolor: 'rgba(244, 63, 94, 0.25)', line: { width: 0, color: 'rgba(244,63,94,0)' },
+                    name: '음(-)의 정적분 영역', hoverinfo: 'skip'
+                });
+                if (resEl) {
+                    resEl.innerText = `정적분 ∫f(x)dx = ${signedSum.toFixed(3)}  |  넓이 ∫|f(x)|dx = ${absSum.toFixed(3)}`;
+                }
+            }
+        }
+
         visibleFunctions.forEach((f) => {
             let sameTypeFuncs = func_functionsList.filter(x => x.type === f.type); let typeIndex = sameTypeFuncs.indexOf(f) + 1;
             let fName = f.type === 'complex' ? `z${typeIndex}` : `함수 ${typeIndex}`;
@@ -5389,7 +5731,7 @@ Gemini는 AI이며 인물 등에 관한 정보 제공 시 실수를 할 수 있�
                 if (!isNaN(c.re) && !isNaN(c.im)) {
                     parsedComplexPoints.push({ name: fName, re: c.re, im: c.im, color: f.color });
                     let r = Math.hypot(c.re, c.im);
-                    let deg = (Math.atan2(c.im, c.re) * 180 / Math.PI);
+                    let rad = Math.atan2(c.im, c.re);
                     traces.push({
                         x: [0, c.re], y: [0, c.im], mode: 'lines',
                         line: { color: f.color, width: 2.5, dash: 'dot' },
@@ -5401,7 +5743,7 @@ Gemini는 AI이며 인물 등에 관한 정보 제공 시 실수를 할 수 있�
                         text: [`  ${fName}: (${func_formatNumber(c.re)}, ${func_formatNumber(c.im)})`], textposition: 'top right',
                         textfont: { size: 13, weight: 'bold', color: f.color },
                         customdata: [f.id],
-                        hovertemplate: `<b>${fName}</b> = ${func_formatNumber(c.re)} ${c.im >= 0 ? '+' : '-'} ${Math.abs(func_formatNumber(c.im))}i<br>|z| = ${r.toFixed(2)}, θ = ${deg.toFixed(1)}°<extra></extra>`
+                        hovertemplate: `<b>${fName}</b> = ${func_formatNumber(c.re)} ${c.im >= 0 ? '+' : '-'} ${Math.abs(func_formatNumber(c.im))}i<br>|z| = ${r.toFixed(2)}, θ = ${formatAngleRadDeg(rad)}<extra></extra>`
                     });
 
                     if (f.showConjugate) {
@@ -5441,9 +5783,20 @@ Gemini는 AI이며 인물 등에 관한 정보 제공 시 실수를 할 수 있�
             for (let i = 0; i < xVal.length; i++) { 
                 let y = func_evaluateFunction(f, xVal[i]); 
                 if (!isFinite(y) || Math.abs(y) > 1e6) y = NaN; 
-                // 가우스 함수([x])의 계단 점프나 유리/탄젠트 함수의 점근선에서 수직 실선이 이어지지 않도록 분리
                 if (i > 0 && !isNaN(y) && !isNaN(yVal[i - 1])) {
                     if (Math.abs(y - yVal[i - 1]) > jumpThreshold) {
+                        // 가우스 함수 등 불연속 점프에서 열린 점(○)과 닫힌 점(●) 좌표 수집
+                        if (isStepExpr && !skipHeavy && xVal[i] >= rangeX[0] && xVal[i] <= rangeX[1]) {
+                            const jumpX = Math.round(xVal[i] * 2) / 2;
+                            const exactVal = func_evaluateFunction(f, jumpX);
+                            const leftLim = func_evaluateFunction(f, jumpX - 1e-4);
+                            const rightLim = func_evaluateFunction(f, jumpX + 1e-4);
+                            if (isFinite(exactVal) && Math.abs(rightLim - leftLim) > 0.2) {
+                                stepClosedX.push(jumpX); stepClosedY.push(exactVal); stepColors.push(f.color);
+                                const openY = Math.abs(exactVal - leftLim) > Math.abs(exactVal - rightLim) ? leftLim : rightLim;
+                                stepOpenX.push(jumpX); stepOpenY.push(openY);
+                            }
+                        }
                         yVal[i - 1] = NaN;
                     }
                 }
@@ -5470,6 +5823,24 @@ Gemini는 AI이며 인물 등에 관한 정보 제공 시 실수를 할 수 있�
                             if (!panelData.xInt.some(p => p.name === fName && Math.abs(p.x - ix) < 0.05)) { panelData.xInt.push({ name: fName, color: f.color, x: ix, y: 0 }); axisIntX.push(ix); axisIntY.push(0); axisIntText.push(`(${ix.toFixed(2)}, 0.00)`); }
                         }
                     }
+
+                    // 극대·극소 및 꼭짓점 탐색 (가시 범위 내)
+                    if (!isStepExpr && k > 0 && k < xVal.length - 2 && xVal[k] >= rangeX[0] && xVal[k] <= rangeX[1]) {
+                        let yPrev = yVal[k - 1], yCurr = yVal[k], yNext = yVal[k + 1];
+                        if (!isNaN(yPrev) && !isNaN(yCurr) && !isNaN(yNext)) {
+                            const isLocalMax = (yCurr > yPrev + 1e-7 && yCurr > yNext + 1e-7);
+                            const isLocalMin = (yCurr < yPrev - 1e-7 && yCurr < yNext - 1e-7);
+                            if (isLocalMax || isLocalMin) {
+                                const ex = xVal[k], ey = yCurr;
+                                const kind = isLocalMax ? '극대' : '극소';
+                                if (!panelData.extrema.some(p => p.name === fName && Math.abs(p.x - ex) < 0.15)) {
+                                    panelData.extrema.push({ name: fName, color: f.color, x: ex, y: ey, kind });
+                                    extremaX.push(ex); extremaY.push(ey);
+                                    extremaText.push(`${kind}(${ex.toFixed(2)}, ${ey.toFixed(2)})`);
+                                }
+                            }
+                        }
+                    }
                 }
             }
 
@@ -5481,9 +5852,27 @@ Gemini는 AI이며 인물 등에 관한 정보 제공 시 실수를 할 수 있�
             }
         });
 
+        // 가우스 함수 등의 불연속 열린 점(○)과 닫힌 점(●) 표시
+        if (stepClosedX.length > 0) {
+            traces.push({
+                x: stepClosedX, y: stepClosedY, mode: 'markers', name: '함숫값 (닫힌 점 ●)',
+                marker: { size: 9, color: stepColors[0] || '#2563eb', symbol: 'circle' },
+                hovertemplate: '닫힌 점 ● (%{x:.2f}, %{y:.2f})<extra></extra>'
+            });
+        }
+        if (stepOpenX.length > 0) {
+            traces.push({
+                x: stepOpenX, y: stepOpenY, mode: 'markers', name: '극한값 (열린 점 ○)',
+                marker: { size: 9, color: '#ffffff', symbol: 'circle', line: { color: stepColors[0] || '#2563eb', width: 2.5 } },
+                hovertemplate: '열린 점 ○ (%{x:.2f}, %{y:.2f})<extra></extra>'
+            });
+        }
+
+        // 복소수 덧셈 평행사변형 시각화
         if (func_showComplexSum && parsedComplexPoints.length >= 2) {
             const p1 = parsedComplexPoints[0], p2 = parsedComplexPoints[1];
             const sumRe = p1.re + p2.re, sumIm = p1.im + p2.im;
+            const sumR = Math.hypot(sumRe, sumIm), sumRad = Math.atan2(sumIm, sumRe);
             traces.push({
                 x: [p1.re, sumRe, p2.re], y: [p1.im, sumIm, p2.im],
                 mode: 'lines', name: '평행사변형 보조선',
@@ -5492,8 +5881,7 @@ Gemini는 AI이며 인물 등에 관한 정보 제공 시 실수를 할 수 있�
             });
             traces.push({
                 x: [0, sumRe], y: [0, sumIm],
-                mode: 'lines',
-                line: { color: '#0f172a', width: 2.5 },
+                mode: 'lines', line: { color: '#0f172a', width: 2.5 },
                 hoverinfo: 'none', showlegend: false
             });
             traces.push({
@@ -5503,7 +5891,46 @@ Gemini는 AI이며 인물 등에 관한 정보 제공 시 실수를 할 수 있�
                 text: [`  합(${p1.name}+${p2.name}): (${func_formatNumber(sumRe)}, ${func_formatNumber(sumIm)})`],
                 textposition: 'top right',
                 textfont: { size: 13, weight: 'bold', color: '#0f172a' },
-                hovertemplate: `<b>${p1.name} + ${p2.name}</b> = ${func_formatNumber(sumRe)} ${sumIm >= 0 ? '+' : '-'} ${Math.abs(func_formatNumber(sumIm))}i<extra></extra>`
+                hovertemplate: `<b>${p1.name} + ${p2.name}</b> = ${func_formatNumber(sumRe)} ${sumIm >= 0 ? '+' : '-'} ${Math.abs(func_formatNumber(sumIm))}i<br>|z| = ${sumR.toFixed(2)}, θ = ${formatAngleRadDeg(sumRad)}<extra></extra>`
+            });
+        }
+
+        // 복소수 곱셈 회전·확대 시각화 (z1 * z2: 크기는 곱해지고 편각은 더해짐)
+        if (func_showComplexMul && parsedComplexPoints.length >= 2) {
+            const p1 = parsedComplexPoints[0], p2 = parsedComplexPoints[1];
+            const c1 = new ComplexNum(p1.re, p1.im), c2 = new ComplexNum(p2.re, p2.im);
+            const prod = c1.mul(c2);
+            const r1 = Math.hypot(p1.re, p1.im), th1 = Math.atan2(p1.im, p1.re);
+            const r2 = Math.hypot(p2.re, p2.im), th2 = Math.atan2(p2.im, p2.re);
+            const rProd = Math.hypot(prod.re, prod.im), thProd = Math.atan2(prod.im, prod.re);
+
+            // 회전 호(arc) 보조선 (th1에서 th1+th2까지)
+            const arcX = [], arcY = [];
+            const arcR = Math.min(r1, rProd, 1.5) * 0.65;
+            const startAng = th1, endAng = th1 + th2;
+            const nArc = 40;
+            for (let k = 0; k <= nArc; k++) {
+                const a = startAng + (endAng - startAng) * (k / nArc);
+                arcX.push(arcR * Math.cos(a));
+                arcY.push(arcR * Math.sin(a));
+            }
+            traces.push({
+                x: arcX, y: arcY, mode: 'lines', name: '회전각 (θ₁ → θ₁+θ₂)',
+                line: { color: '#d97706', width: 2.5, dash: 'dot' },
+                hoverinfo: 'none'
+            });
+            traces.push({
+                x: [0, prod.re], y: [0, prod.im], mode: 'lines',
+                line: { color: '#d97706', width: 3 },
+                hoverinfo: 'none', showlegend: false
+            });
+            traces.push({
+                x: [prod.re], y: [prod.im], mode: 'markers+text', name: `${p1.name} × ${p2.name}`,
+                marker: { size: 14, color: '#d97706', symbol: 'pentagon', line: { color: '#ffffff', width: 2 } },
+                text: [`  곱(${p1.name}×${p2.name}): |z|=${rProd.toFixed(2)}, θ=${formatAngleRadDeg(thProd)}`],
+                textposition: 'bottom right',
+                textfont: { size: 13, weight: 'bold', color: '#b45309' },
+                hovertemplate: `<b>${p1.name} × ${p2.name}</b> = ${func_formatNumber(prod.re)} ${prod.im >= 0 ? '+' : '-'} ${Math.abs(func_formatNumber(prod.im))}i<br>크기 |z₁||z₂| = ${r1.toFixed(2)}×${r2.toFixed(2)} = ${rProd.toFixed(2)}<br>편각 θ₁+θ₂ = ${formatAngleRadDeg(thProd)}<extra></extra>`
             });
         }
 
@@ -5568,6 +5995,9 @@ Gemini는 AI이며 인물 등에 관한 정보 제공 시 실수를 할 수 있�
                 traces.push({ x: intersectX, y: intersectY, mode: 'markers+text', name: '함수 교점', marker: { size: 10, color: '#0f172a', symbol: 'circle' }, text: intersectText, textposition: 'top left', textfont: { size: 12, weight: 'bold', color: '#0f172a' }, hoverinfo: 'text' });
             }
             if (axisIntX.length > 0) traces.push({ x: axisIntX, y: axisIntY, mode: 'markers+text', name: '축 교점(절편)', marker: { size: 9, color: '#ea580c', symbol: 'diamond' }, text: axisIntText, textposition: 'bottom right', textfont: { size: 12, weight: 'bold', color: '#ea580c' }, hoverinfo: 'text' });
+            if (extremaX.length > 0) {
+                traces.push({ x: extremaX, y: extremaY, mode: 'markers+text', name: '극값/꼭짓점', marker: { size: 10, color: '#16a34a', symbol: 'triangle-up' }, text: extremaText, textposition: 'top center', textfont: { size: 12, weight: 'bold', color: '#15803d' }, hoverinfo: 'text' });
+            }
             func_updateIntersectionPanel(panelData);
         }
         if (traces.length === 0) traces.push({ x: [], y: [], name: '활성화 없음' });
@@ -5584,6 +6014,24 @@ Gemini는 AI이며 인물 등에 관한 정보 제공 시 실수를 할 수 있�
         xAxisLayers.forEach(layer => { layer.style.transform = bottomHidden > 0 ? `translateY(-${bottomHidden}px)` : `translateY(0px)`; });
     }
 
+    function func_buildPiTicks(rangeX) {
+        const minX = rangeX[0] - 4, maxX = rangeX[1] + 4;
+        const stepPi = Math.PI / 2;
+        const kStart = Math.floor(minX / stepPi), kEnd = Math.ceil(maxX / stepPi);
+        const vals = [], texts = [];
+        for (let k = kStart; k <= kEnd; k++) {
+            vals.push(k * stepPi);
+            if (k === 0) texts.push('0');
+            else if (k % 2 === 0) {
+                const m = k / 2;
+                texts.push(m === 1 ? 'π' : (m === -1 ? '-π' : `${m}π`));
+            } else {
+                texts.push(k === 1 ? 'π/2' : (k === -1 ? '-π/2' : `${k}π/2`));
+            }
+        }
+        return { vals, texts };
+    }
+
     function func_updateAll(skipHeavy = false) {
         const graphDiv = document.getElementById('graphPlot'); if (!graphDiv || !graphDiv.layout) return;
         const currentXRange = graphDiv.layout.xaxis.range, currentYRange = graphDiv.layout.yaxis.range;
@@ -5596,11 +6044,20 @@ Gemini는 AI이며 인물 등에 관한 정보 제공 시 실수를 할 수 있�
         const layoutUpdate = {
             'xaxis.title': hasComplex ? '실수축 (Re)' : 'x',
             'yaxis.title': hasComplex ? '허수축 (Im)' : 'y',
-            'xaxis.dtick': func_getDynamicTick(currentXRange),
             'yaxis.dtick': func_getDynamicTick(graphDiv.layout.yaxis.range),
             'yaxis.scaleanchor': 'x',
             'yaxis.scaleratio': 1
         };
+
+        if (!hasComplex && func_usePiTicks) {
+            const piTicks = func_buildPiTicks(currentXRange);
+            layoutUpdate['xaxis.tickmode'] = 'array';
+            layoutUpdate['xaxis.tickvals'] = piTicks.vals;
+            layoutUpdate['xaxis.ticktext'] = piTicks.texts;
+        } else {
+            layoutUpdate['xaxis.tickmode'] = 'linear';
+            layoutUpdate['xaxis.dtick'] = func_getDynamicTick(currentXRange);
+        }
 
         if (typeof Plotly !== 'undefined') {
             Plotly.react('graphPlot', newTraces, graphDiv.layout);
@@ -5793,7 +6250,7 @@ Gemini는 AI이며 인물 등에 관한 정보 제공 시 실수를 할 수 있�
         let func_relayoutDebounceTimer = null;
         graphDiv.on('plotly_relayout', function(eventData) {
             if (eventData['shapes'] !== undefined || eventData['annotations'] !== undefined || eventData['hovermode'] !== undefined) return;
-            if (eventData['xaxis.dtick'] !== undefined || eventData['yaxis.dtick'] !== undefined || eventData['yaxis.scaleanchor'] !== undefined) return;
+            if (eventData['xaxis.dtick'] !== undefined || eventData['yaxis.dtick'] !== undefined || eventData['yaxis.scaleanchor'] !== undefined || eventData['xaxis.tickvals'] !== undefined) return;
             if (func_relayoutDebounceTimer) clearTimeout(func_relayoutDebounceTimer);
             func_relayoutDebounceTimer = setTimeout(() => { func_updateAll(false); }, 220); 
         });
@@ -5812,7 +6269,8 @@ Gemini는 AI이며 인물 등에 관한 정보 제공 시 실수를 할 수 있�
 
     const phys_kState = {
         t: 0, x: 0, dist: 0, v: 0, a: 0, inputAcc: 0,
-        useDrag: false, isEbrake: false, isStopped: false, isPaused: false,
+        useDrag: false, syncCursor: true, showSecant: true,
+        isEbrake: false, isStopped: false, isPaused: false,
         history: []
     };
     const phys_dState = {
@@ -5829,12 +6287,12 @@ Gemini는 AI이며 인물 등에 관한 정보 제공 시 실수를 할 수 있�
     };
 
     const phys_charts = {
-        pos1: { id: 'chart-pos1', wrapId: 'wrapper-pos1', zoom: 1, collapsed: false, selT: -1, yKey: 'x', color: '#60a5fa', ylabel: 'x (m)', slopeLabel: '기울기(속도 v)', winH: 256, offsetX: 0, offsetY: 0 },
-        vel1: { id: 'chart-vel1', wrapId: 'wrapper-vel1', zoom: 1, collapsed: false, selT: -1, yKey: 'v', color: '#4ade80', ylabel: 'v (m/s)', slopeLabel: '기울기(가속도 a)', winH: 256, offsetX: 0, offsetY: 0 },
-        spd1: { id: 'chart-spd1', wrapId: 'wrapper-spd1', zoom: 1, collapsed: false, selT: -1, yKey: 'speed', color: '#14b8a6', ylabel: '|v| (m/s)', slopeLabel: '기울기(d|v|/dt)', winH: 256, offsetX: 0, offsetY: 0 },
-        acc1: { id: 'chart-acc1', wrapId: 'wrapper-acc1', zoom: 1, collapsed: false, selT: -1, yKey: 'a', color: '#fb923c', ylabel: 'a (m/s²)', slopeLabel: '기울기(da/dt)', winH: 256, offsetX: 0, offsetY: 0 },
-        force2: { id: 'chart-force2', wrapId: 'wrapper-force2', zoom: 1, collapsed: false, selT: -1, yKey: 'F', ylabel: 'F (N)', slopeLabel: '기울기(dF/dt)', winH: 300, offsetX: 0, offsetY: 0 },
-        mom2: { id: 'chart-mom2', wrapId: 'wrapper-mom2', zoom: 1, collapsed: false, selT: -1, yKey: 'p', ylabel: 'p (kg·m/s)', slopeLabel: '기울기(알짜힘 F)', winH: 300, offsetX: 0, offsetY: 0 }
+        pos1: { id: 'chart-pos1', wrapId: 'wrapper-pos1', zoom: 1, collapsed: false, selT: -1, yKey: 'x', color: '#60a5fa', ylabel: 'x (m)', slopeLabel: '접선(순간속도 v)', winH: 250, offsetX: 0, offsetY: 0 },
+        vel1: { id: 'chart-vel1', wrapId: 'wrapper-vel1', zoom: 1, collapsed: false, selT: -1, yKey: 'v', color: '#4ade80', ylabel: 'v (m/s)', slopeLabel: '접선(가속도 a)', winH: 250, offsetX: 0, offsetY: 0 },
+        spd1: { id: 'chart-spd1', wrapId: 'wrapper-spd1', zoom: 1, collapsed: false, selT: -1, yKey: 'speed', color: '#14b8a6', ylabel: '|v| (m/s)', slopeLabel: '접선(d|v|/dt)', winH: 250, offsetX: 0, offsetY: 0 },
+        acc1: { id: 'chart-acc1', wrapId: 'wrapper-acc1', zoom: 1, collapsed: false, selT: -1, yKey: 'a', color: '#fb923c', ylabel: 'a (m/s²)', slopeLabel: '접선(da/dt)', winH: 250, offsetX: 0, offsetY: 0 },
+        force2: { id: 'chart-force2', wrapId: 'wrapper-force2', zoom: 1, collapsed: false, selT: -1, yKey: 'F', ylabel: 'F (N)', slopeLabel: '접선(dF/dt)', winH: 260, offsetX: 0, offsetY: 0 },
+        mom2: { id: 'chart-mom2', wrapId: 'wrapper-mom2', zoom: 1, collapsed: false, selT: -1, yKey: 'p', ylabel: 'p (kg·m/s)', slopeLabel: '접선(알짜힘 -F)', winH: 260, offsetX: 0, offsetY: 0 }
     };
 
     function phys_syncCanvasSize(canvas) {
@@ -5917,14 +6375,17 @@ Gemini는 AI이며 인물 등에 관한 정보 제공 시 실수를 할 수 있�
         if(bBtn) bBtn.classList.remove('ring-4', 'ring-white', 'scale-95');
         if(pBtn) pBtn.innerText = '⏸ 일시정지';
 
-        let elT = document.getElementById('h1-time'); if(elT) elT.innerText = `t = 0.00 s`;
+        let elT = document.getElementById('h1-time'); if(elT) elT.innerText = `0.00 s`;
         let elP = document.getElementById('h1-pos'); if(elP) elP.innerText = `0.00 m`;
         let elD = document.getElementById('h1-dist'); if(elD) elD.innerText = `0.00 m`;
         let elV = document.getElementById('h1-vel'); if(elV) elV.innerText = `0.00 m/s`;
         let elS = document.getElementById('h1-spd'); if(elS) elS.innerText = `0.00 m/s`;
         let elA = document.getElementById('h1-acc'); if(elA) elA.innerText = `0.00 m/s²`;
+        let elKe = document.getElementById('h1-ke'); if(elKe) elKe.innerText = `0 kJ`;
+        let elBd = document.getElementById('h1-bdist'); if(elBd) elBd.innerText = `0.00 m`;
         let bDisp = document.getElementById('badge-disp-val'); if(bDisp) bDisp.innerText = `0.00 m`;
         let bDist = document.getElementById('badge-dist-val'); if(bDist) bDist.innerText = `0.00 m`;
+        let bSec = document.getElementById('badge-secant-val'); if(bSec) bSec.innerText = `평균 속도 = 0.00 m/s`;
 
         ['pos1', 'vel1', 'spd1', 'acc1'].forEach(k => {
             phys_charts[k].selT = -1;
@@ -5956,7 +6417,7 @@ Gemini는 AI이며 인물 등에 관한 정보 제공 시 실수를 할 수 있�
     function phys_startDynamicsTest() {
         phys_initAudio();
         phys_resetDynamics(); phys_dState.phase = 'running'; phys_dState.v = phys_dState.v0; 
-        let sm = document.getElementById('status-msg'); if(sm) sm.style.display = 'none';
+        let sm = document.getElementById('status-msg'); if(sm) { sm.innerText = "주행 중..."; sm.style.display = 'block'; sm.style.color = '#38bdf8'; sm.style.borderColor = '#0284c7'; }
         let bg = document.getElementById('t2-btn-gas'); if(bg) { bg.disabled = false; bg.classList.remove('opacity-50', 'cursor-not-allowed'); }
         let bb = document.getElementById('t2-btn-brake'); if(bb) { bb.disabled = false; bb.classList.remove('opacity-50', 'cursor-not-allowed'); }
         const mat = phys_materials[phys_dState.matKey];
@@ -6022,10 +6483,10 @@ Gemini는 AI이며 인물 등에 관한 정보 제공 시 실수를 할 수 있�
         const yZeroPx = T + gh - (0 - yMin) / rangeY * gh;
         const tZeroPx = L + (0 - xMin) / rangeX * gw;
 
-        ctx.strokeStyle = '#334155'; ctx.lineWidth = 1; ctx.fillStyle = '#94a3b8'; ctx.font = '11px Inter'; ctx.textAlign = 'center'; ctx.textBaseline = 'top';
+        ctx.strokeStyle = '#334155'; ctx.lineWidth = 1; ctx.fillStyle = '#cbd5e1'; ctx.font = '11px Inter'; ctx.textAlign = 'center'; ctx.textBaseline = 'top';
         for(let i=0; i<=5; i++) {
             let val = xMin + rangeX * (i / 5); let px = L + (val - xMin) / rangeX * gw;
-            ctx.beginPath(); ctx.moveTo(px, T); ctx.lineTo(px, h - B); ctx.stroke(); ctx.fillText(val.toFixed(1), px, h - B + 5);
+            ctx.beginPath(); ctx.moveTo(px, T); ctx.lineTo(px, h - B); ctx.stroke(); ctx.fillText(val.toFixed(1), px, h - B + 6);
         }
         ctx.textAlign = 'right'; ctx.textBaseline = 'middle';
         for(let i=0; i<=4; i++) {
@@ -6038,11 +6499,11 @@ Gemini는 AI이며 인물 등에 관한 정보 제공 시 실수를 할 수 있�
         ctx.strokeStyle = '#475569'; ctx.lineWidth = 2; ctx.beginPath(); ctx.rect(L, T, gw, gh); ctx.stroke();
         
         if(yMin <= 0 && yMax >= 0) {
-            ctx.strokeStyle = '#cbd5e1'; ctx.lineWidth = 2.5; 
+            ctx.strokeStyle = '#94a3b8'; ctx.lineWidth = 2; 
             ctx.beginPath(); ctx.moveTo(L, yZeroPx); ctx.lineTo(w - R, yZeroPx); ctx.stroke();
         }
         if(xMin <= 0 && xMax >= 0) {
-            ctx.strokeStyle = '#cbd5e1'; ctx.lineWidth = 2.5; 
+            ctx.strokeStyle = '#94a3b8'; ctx.lineWidth = 2; 
             ctx.beginPath(); ctx.moveTo(tZeroPx, T); ctx.lineTo(tZeroPx, h - B); ctx.stroke();
         }
         if(xMin <= 0 && xMax >= 0 && yMin <= 0 && yMax >= 0) {
@@ -6050,13 +6511,12 @@ Gemini는 AI이며 인물 등에 관한 정보 제공 시 실수를 할 수 있�
             ctx.beginPath(); ctx.arc(tZeroPx, yZeroPx, 4, 0, Math.PI*2); ctx.fill();
         }
 
-        ctx.fillStyle = '#f8fafc'; ctx.font = 'bold 12px Inter'; ctx.textAlign = 'right'; ctx.textBaseline = 'bottom';
-        ctx.fillText(xLabel, w - R, h - B - 8); ctx.save(); ctx.translate(15, T + 20); ctx.rotate(-Math.PI/2); ctx.textAlign = 'right'; ctx.fillText(yLabel, 0, 0); ctx.restore();
+        ctx.fillStyle = '#e2e8f0'; ctx.font = 'bold 12px Inter'; ctx.textAlign = 'right'; ctx.textBaseline = 'bottom';
+        ctx.fillText(xLabel, w - R - 4, h - B - 6); ctx.save(); ctx.translate(14, T + 20); ctx.rotate(-Math.PI/2); ctx.textAlign = 'right'; ctx.fillText(yLabel, 0, 0); ctx.restore();
     }
 
     function phys_drawTan(ctx, w, h, pad, mapX, mapY, pt, slope, color, ylabel, slopeLabel, isLargeNum = false) {
         const px = mapX(pt.t), py = mapY(pt.y);
-        // 선택된 시각 t를 나타내는 수직 가이드선 표시 (그래프 내부 이동 시각화)
         ctx.strokeStyle = 'rgba(252, 211, 77, 0.35)';
         ctx.lineWidth = 1.5;
         ctx.setLineDash([3, 3]);
@@ -6068,14 +6528,14 @@ Gemini는 AI이며 인물 등에 관한 정보 제공 시 실수를 할 수 있�
         const dtSpan = isLargeNum ? 0.15 : 0.6;
         const t1 = pt.t - dtSpan, y1 = pt.y - slope * dtSpan;
         const t2 = pt.t + dtSpan, y2 = pt.y + slope * dtSpan;
-        ctx.strokeStyle = '#fcd34d'; ctx.lineWidth = 2.2; ctx.setLineDash([5, 5]);
+        ctx.strokeStyle = '#fcd34d'; ctx.lineWidth = 2.4; ctx.setLineDash([5, 5]);
         ctx.beginPath(); ctx.moveTo(mapX(t1), mapY(y1)); ctx.lineTo(mapX(t2), mapY(y2)); ctx.stroke(); ctx.setLineDash([]);
         ctx.fillStyle = 'white'; ctx.beginPath(); ctx.arc(px, py, 5.5, 0, Math.PI*2); ctx.fill(); ctx.strokeStyle = color; ctx.lineWidth = 2.5; ctx.stroke();
 
-        const boxW = 195, boxH = 46;
+        const boxW = 200, boxH = 46;
         const boxX = (px + 12 + boxW > w - 10) ? Math.max(55, px - boxW - 12) : px + 12;
         const boxY = Math.max(15, Math.min(h - pad.B - boxH - 4, py - 46));
-        ctx.fillStyle = 'rgba(15, 23, 42, 0.92)'; ctx.strokeStyle = '#64748b';
+        ctx.fillStyle = 'rgba(15, 23, 42, 0.94)'; ctx.strokeStyle = '#94a3b8';
         ctx.beginPath(); ctx.roundRect(boxX, boxY, boxW, boxH, 6); ctx.fill(); ctx.stroke();
 
         const valStr = isLargeNum ? Math.round(pt.y).toLocaleString() : pt.y.toFixed(2);
@@ -6109,7 +6569,7 @@ Gemini는 AI이며 인물 등에 관한 정보 제공 시 실수를 할 수 있�
             const sync = phys_syncCanvasSize(canvas);
             if (!sync) return;
             const { ctx, w, h } = sync;
-            const pad = {L: 50, R: 20, T: 20, B: 30};
+            const pad = {L: 52, R: 20, T: 18, B: 28};
             
             let yMin = -1, yMax = 1;
             if(key === 'pos1') { yMin = Math.min(-2, minPos - 3); yMax = Math.max(10, maxPos + 5); }
@@ -6119,7 +6579,6 @@ Gemini는 AI이며 인물 등에 관한 정보 제공 시 실수를 할 수 있�
 
             const yCenter = (yMax + yMin) / 2; const baseRange = (yMax - yMin);
             const yRangeZoomed = baseRange / chart.zoom;
-            // 그래프 틀과 좌표축이 움직이지 않도록 offsetX, offsetY를 고정(0)
             yMin = yCenter - yRangeZoomed / 2; 
             yMax = yCenter + yRangeZoomed / 2;
 
@@ -6144,13 +6603,33 @@ Gemini는 AI이며 인물 등에 관한 정보 제공 시 실수를 할 수 있�
             hData.forEach((pt, i) => i===0 ? ctx.moveTo(mapX(pt.t), mapY(pt[chart.yKey])) : ctx.lineTo(mapX(pt.t), mapY(pt[chart.yKey]))); ctx.stroke();
 
             const selT = chart.selT;
+            let targetIdx = hData.length - 1;
             if (selT >= 0) {
-                let closestIdx = 0; let minD = Infinity;
-                hData.forEach((pt, i) => { const d = Math.abs(pt.t - selT); if(d < minD) { minD = d; closestIdx = i; } });
-                if (minD < 1.5) {
-                    const pt = hData[closestIdx]; const slope = phys_calcSlope(hData, closestIdx, chart.yKey);
-                    phys_drawTan(ctx, w, h, pad, mapX, mapY, {t: pt.t, y: pt[chart.yKey]}, slope, chart.color, chart.ylabel, chart.slopeLabel, false);
-                }
+                let minD = Infinity;
+                hData.forEach((pt, i) => { const d = Math.abs(pt.t - selT); if(d < minD) { minD = d; targetIdx = i; } });
+            }
+
+            // 위치 그래프에서 평균 속도(할선) 표시
+            if (key === 'pos1' && phys_kState.showSecant && hData.length >= 2 && targetIdx > 0) {
+                const pt0 = hData[0];
+                const ptTarget = hData[targetIdx];
+                const dtSec = ptTarget.t - pt0.t;
+                const avgV = dtSec > 1e-5 ? (ptTarget.x - pt0.x) / dtSec : 0;
+                ctx.strokeStyle = '#f472b6';
+                ctx.lineWidth = 2;
+                ctx.setLineDash([6, 4]);
+                ctx.beginPath();
+                ctx.moveTo(mapX(pt0.t), mapY(pt0.x));
+                ctx.lineTo(mapX(ptTarget.t), mapY(ptTarget.x));
+                ctx.stroke();
+                ctx.setLineDash([]);
+                const bSec = document.getElementById('badge-secant-val');
+                if (bSec) bSec.innerText = `평균 속도(0~${ptTarget.t.toFixed(1)}s) = ${avgV.toFixed(2)} m/s`;
+            }
+
+            if (selT >= 0 && targetIdx >= 0) {
+                const pt = hData[targetIdx]; const slope = phys_calcSlope(hData, targetIdx, chart.yKey);
+                phys_drawTan(ctx, w, h, pad, mapX, mapY, {t: pt.t, y: pt[chart.yKey]}, slope, chart.color, chart.ylabel, chart.slopeLabel, false);
             }
         });
     }
@@ -6162,7 +6641,7 @@ Gemini는 AI이며 인물 등에 관한 정보 제공 시 실수를 할 수 있�
             const sync = phys_syncCanvasSize(canvas);
             if (!sync) return;
             const { ctx, w, h } = sync;
-            const pad = {L: 60, R: 20, T: 20, B: 30};
+            const pad = {L: 60, R: 20, T: 18, B: 28};
             
             let fMaxBase = Math.ceil(((phys_globalMass * 50 * Math.PI) / (2 * 0.1)) / 10000) * 10000;
             let pMaxBase = phys_globalMass * 50 * 1.1; 
@@ -6244,7 +6723,7 @@ Gemini는 AI이며 인물 등에 관한 정보 제공 시 실수를 할 수 있�
         const fAvgEl = document.getElementById('favg-summary'); if (fAvgEl) fAvgEl.innerText = `평균 힘 F_avg = ${Math.round(lastFavg).toLocaleString()} N`;
     }
 
-    // 그래프 자체가 움직이지 않고, 클릭·드래그 시 그래프 내부 곡선을 따라 탐색 점과 접선(selT)이 이동하도록 처리
+    // 좌표축은 고정한 채 그래프 내부 곡선을 따라 측정 점과 접선이 이동 (4개 그래프 동시 연동 옵션 지원)
     function phys_attachPanZoomDrag(key) {
         const canvas = document.getElementById(phys_charts[key].id); if(!canvas) return;
         let isScrubbing = false;
@@ -6254,13 +6733,21 @@ Gemini는 AI이며 인물 등에 관한 정보 제공 시 실수를 할 수 있�
             const pt = (e.touches && e.touches.length > 0) ? e.touches[0] : (e.changedTouches && e.changedTouches.length > 0 ? e.changedTouches[0] : e);
             if (!pt) return;
             const x = pt.clientX - rect.left;
-            const padL = (key === 'force2' || key === 'mom2') ? 60 : 50;
+            const padL = (key === 'force2' || key === 'mom2') ? 60 : 52;
             const gw = rect.width - padL - 20;
             if (gw <= 0) return;
             const clampedX = Math.max(padL, Math.min(rect.width - 20, x));
             const ratio = (clampedX - padL) / gw;
-            const tVal = (phys_charts[key].currentTMin || 0) + ratio * (phys_charts[key].currentTRange || 1);
-            phys_charts[key].selT = Math.max(0, tVal);
+            const tVal = Math.max(0, (phys_charts[key].currentTMin || 0) + ratio * (phys_charts[key].currentTRange || 1));
+
+            if (['pos1', 'vel1', 'spd1', 'acc1'].includes(key) && phys_kState.syncCursor) {
+                ['pos1', 'vel1', 'spd1', 'acc1'].forEach(k => { phys_charts[k].selT = tVal; });
+            } else if (['mom2', 'force2'].includes(key)) {
+                phys_charts['mom2'].selT = tVal;
+                phys_charts['force2'].selT = tVal;
+            } else {
+                phys_charts[key].selT = tVal;
+            }
         };
 
         const down = (e) => {
@@ -6292,20 +6779,20 @@ Gemini는 AI이며 인물 등에 관한 정보 제공 시 실수를 할 수 있�
                 const glossaryWrapper = document.getElementById('glossary-wrapper');
                 if (glossaryWrapper.classList.contains('glossary-collapsed')) {
                     glossaryWrapper.classList.remove('glossary-collapsed'); glossaryWrapper.classList.add('glossary-expanded');
-                    btnToggleGlossary.innerText = '▲ 물리 기호 및 미적분 연결 해설 닫기';
+                    btnToggleGlossary.innerText = '▲ 물리 공식·용어 해설 닫기';
                 } else {
                     glossaryWrapper.classList.remove('glossary-expanded'); glossaryWrapper.classList.add('glossary-collapsed');
-                    btnToggleGlossary.innerText = '▼ 물리 기호 및 미적분 연결 해설 열기';
+                    btnToggleGlossary.innerText = '📖 물리 공식·용어 해설 열기';
                 }
             });
         }
         
-        let glFontSize = 16;
+        let glFontSize = 15;
         const glossaryContent = document.getElementById('glossary-content');
         const btnGlIn = document.getElementById('btn-gl-in');
         const btnGlOut = document.getElementById('btn-gl-out');
-        if(btnGlIn) btnGlIn.addEventListener('click', () => { glFontSize = Math.min(32, glFontSize + 2); glossaryContent.style.fontSize = glFontSize + 'px'; });
-        if(btnGlOut) btnGlOut.addEventListener('click', () => { glFontSize = Math.max(10, glFontSize - 2); glossaryContent.style.fontSize = glFontSize + 'px'; });
+        if(btnGlIn) btnGlIn.addEventListener('click', () => { glFontSize = Math.min(28, glFontSize + 2); glossaryContent.style.fontSize = glFontSize + 'px'; });
+        if(btnGlOut) btnGlOut.addEventListener('click', () => { glFontSize = Math.max(12, glFontSize - 2); glossaryContent.style.fontSize = glFontSize + 'px'; });
 
         const tabs = ['tab1', 'tab2'];
         tabs.forEach(tab => {
@@ -6328,12 +6815,26 @@ Gemini는 AI이며 인물 등에 관한 정보 제공 시 실수를 할 수 있�
                 if (modeBadge) {
                     if (phys_kState.useDrag) {
                         modeBadge.innerText = '🌬️ 실제 주행 모드 (공기저항 -0.05v 포함)';
-                        modeBadge.className = 'px-2.5 py-1 rounded-full text-xs font-bold bg-amber-900/70 text-amber-300 border border-amber-700';
+                        modeBadge.className = 'px-2.5 py-1 rounded-full text-xs font-bold bg-amber-950 text-amber-300 border border-amber-700';
                     } else {
                         modeBadge.innerText = '✨ 교과서 이상적 운동 모드 (등속/등가속도)';
-                        modeBadge.className = 'px-2.5 py-1 rounded-full text-xs font-bold bg-blue-900/70 text-blue-300 border border-blue-700';
+                        modeBadge.className = 'px-2.5 py-1 rounded-full text-xs font-bold bg-blue-950 text-blue-300 border border-blue-700';
                     }
                 }
+            });
+        }
+
+        const chkSync = document.getElementById('t1-chk-sync');
+        if (chkSync) {
+            chkSync.addEventListener('change', (e) => {
+                phys_kState.syncCursor = e.target.checked;
+            });
+        }
+
+        const chkSecant = document.getElementById('t1-chk-secant');
+        if (chkSecant) {
+            chkSecant.addEventListener('change', (e) => {
+                phys_kState.showSecant = e.target.checked;
             });
         }
 
@@ -6485,12 +6986,17 @@ Gemini는 AI이며 인물 등에 관한 정보 제공 시 실수를 할 수 있�
                     }
                 }
                 
-                let elT = document.getElementById('h1-time'); if(elT) elT.innerText = `t = ${phys_kState.t.toFixed(2)} s`;
+                const keKJ = 0.5 * phys_globalMass * phys_kState.v * phys_kState.v / 1000;
+                const brakeDist = (phys_kState.v * phys_kState.v) / (2 * 8.0); // 감속도 8m/s² 기준 제동거리(v²에 비례)
+
+                let elT = document.getElementById('h1-time'); if(elT) elT.innerText = `${phys_kState.t.toFixed(2)} s`;
                 let elP = document.getElementById('h1-pos'); if(elP) elP.innerText = `${phys_kState.x.toFixed(2)} m`;
                 let elD = document.getElementById('h1-dist'); if(elD) elD.innerText = `${phys_kState.dist.toFixed(2)} m`;
                 let elV = document.getElementById('h1-vel'); if(elV) elV.innerText = `${phys_kState.v.toFixed(2)} m/s`;
                 let elS = document.getElementById('h1-spd'); if(elS) elS.innerText = `${Math.abs(phys_kState.v).toFixed(2)} m/s`;
                 let elA = document.getElementById('h1-acc'); if(elA) elA.innerText = `${phys_kState.a.toFixed(2)} m/s²`;
+                let elKe = document.getElementById('h1-ke'); if(elKe) elKe.innerText = `${keKJ.toFixed(1)} kJ`;
+                let elBd = document.getElementById('h1-bdist'); if(elBd) elBd.innerText = `${brakeDist.toFixed(2)} m`;
                 let bDisp = document.getElementById('badge-disp-val'); if(bDisp) bDisp.innerText = `${phys_kState.x.toFixed(2)} m`;
                 let bDist = document.getElementById('badge-dist-val'); if(bDist) bDist.innerText = `${phys_kState.dist.toFixed(2)} m`;
 
@@ -6500,7 +7006,7 @@ Gemini는 AI이며 인물 등에 관한 정보 제공 시 실수를 할 수 있�
                     const { ctx, w, h } = sync;
                     ctx.fillStyle = '#87CEEB'; ctx.fillRect(0, 0, w, h);
                     phys_drawEnv(ctx, w, h, phys_kState.x); 
-                    phys_drawCar(ctx, w * 0.25, h - 45, 1.4);
+                    phys_drawCar(ctx, w * 0.35, h - 45, 1.4);
                 }
                 phys_renderKineCharts();
 
@@ -6525,11 +7031,11 @@ Gemini는 AI이며 인물 등에 관한 정보 제공 시 실수를 할 수 있�
 
                                 let bg = document.getElementById('t2-btn-gas'); if(bg) { bg.disabled = true; bg.classList.add('opacity-50', 'cursor-not-allowed'); bg.classList.remove('ring-4', 'ring-white', 'scale-95'); }
                                 let bb = document.getElementById('t2-btn-brake'); if(bb) { bb.disabled = true; bb.classList.add('opacity-50', 'cursor-not-allowed'); bb.classList.remove('ring-4', 'ring-white', 'scale-95'); }
-                                let sm = document.getElementById('status-msg'); if(sm) { sm.innerText = "충돌 중! (Impact)"; sm.style.display = 'block'; sm.style.color = '#ef4444'; sm.style.borderColor = '#7f1d1d'; }
+                                let sm = document.getElementById('status-msg'); if(sm) { sm.innerText = "💥 충돌 중! (Impact)"; sm.style.display = 'block'; sm.style.color = '#f87171'; sm.style.borderColor = '#ef4444'; }
                                 phys_playCrashSound(mat.T);
                             } else {
                                 phys_dState.phase = 'done'; phys_dState.v = 0; phys_dState.a = 0; phys_dState.F = 0;
-                                let sm = document.getElementById('status-msg'); if(sm) { sm.innerText = "안전 정지"; sm.style.display = 'block'; sm.style.color = '#4ade80'; sm.style.borderColor = '#14532d'; }
+                                let sm = document.getElementById('status-msg'); if(sm) { sm.innerText = "안전 정지"; sm.style.display = 'block'; sm.style.color = '#4ade80'; sm.style.borderColor = '#22c55e'; }
                             }
                         }
                     } else if (phys_dState.phase === 'crashing') {
@@ -6543,16 +7049,18 @@ Gemini는 AI이며 인물 등에 관한 정보 제공 시 실수를 할 수 있�
                         } else {
                             phys_dState.F = 0; phys_dState.a = 0; phys_dState.v = 0; phys_dState.p = 0; phys_dState.J = phys_dState.p_impact; phys_dState.phase = 'done';
                             const currentSeries = phys_dState.chartData[phys_dState.chartData.length - 1]; if(currentSeries) currentSeries.data.push({ t: mat.T, F: 0, p: 0 });
-                            let sm = document.getElementById('status-msg'); if(sm) { sm.innerText = "테스트 완료 (그래프 비교)"; sm.style.color = '#f8fafc'; sm.style.borderColor = '#64748b'; }
+                            let sm = document.getElementById('status-msg'); if(sm) { sm.innerText = "✅ 테스트 완료 (그래프 비교)"; sm.style.color = '#f8fafc'; sm.style.borderColor = '#64748b'; }
                         }
                     }
                     phys_dState.t += phys_dt;
                 }
 
+                const dynKeKJ = 0.5 * phys_globalMass * phys_dState.v * phys_dState.v / 1000;
                 let h2p=document.getElementById('h2-pos'); if(h2p) h2p.innerText = `${phys_dState.x.toFixed(2)} m`; 
                 let h2v=document.getElementById('h2-vel'); if(h2v) h2v.innerText = `${phys_dState.v.toFixed(2)} m/s`;
                 let h2a=document.getElementById('h2-acc'); if(h2a) h2a.innerText = `${phys_dState.a.toFixed(2)} m/s²`; 
                 let h2m=document.getElementById('h2-mom'); if(h2m) h2m.innerText = `${Math.round(phys_dState.p).toLocaleString()} kg·m/s`;
+                let h2ke=document.getElementById('h2-ke'); if(h2ke) h2ke.innerText = `${dynKeKJ.toFixed(1)} kJ`;
                 let h2f=document.getElementById('h2-force'); if(h2f) h2f.innerText = `${Math.round(phys_dState.F).toLocaleString()} N`; 
                 let h2i=document.getElementById('h2-impulse'); if(h2i) h2i.innerText = `${Math.round(phys_dState.J).toLocaleString()} N·s`;
 
@@ -6561,7 +7069,7 @@ Gemini는 AI이며 인물 등에 관한 정보 제공 시 실수를 할 수 있�
                 if (sync) {
                     const { ctx, w, h } = sync;
                     ctx.fillStyle = '#87CEEB'; ctx.fillRect(0, 0, w, h);
-                    let camPos = phys_dState.x - (w * 0.2 / phys_PIXELS_PER_METER);
+                    let camPos = phys_dState.x - (w * 0.25 / phys_PIXELS_PER_METER);
                     if (phys_WALL_POS_M - camPos < (w * 0.8 / phys_PIXELS_PER_METER)) camPos = phys_WALL_POS_M - (w * 0.8 / phys_PIXELS_PER_METER);
                     if(camPos < 0) camPos = 0;
                     
