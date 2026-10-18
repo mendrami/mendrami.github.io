@@ -837,6 +837,7 @@
     let func_showUnitCircle = false;
 
     const REAL_PRESETS = [
+        { label: '이차함수 -x²+x', expr: '-x^2+x' },
         { label: '이차함수 x(x-2)', expr: 'x(x-2)' },
         { label: '삼차함수 x³-3x', expr: 'x^3 - 3x' },
         { label: '절댓값 |x-1|+|x+1|', expr: '|x - 1| + |x + 1|' },
@@ -999,7 +1000,7 @@
         const graphDiv = document.getElementById('graphPlot');
         if (graphDiv && graphDiv.layout) {
             graphDiv.style.height = '650px';
-            Plotly.Plots.resize(graphDiv).then(() => { Plotly.relayout('graphPlot', { 'xaxis.range': [-5, 5], 'yaxis.range': [-5, 5] }); });
+            Plotly.Plots.resize(graphDiv).then(() => { Plotly.relayout('graphPlot', { 'xaxis.range': [-6, 6], 'yaxis.range': [-6, 6] }); });
         }
     }
     window.func_resetAndScrollUp = func_resetAndScrollUp;
@@ -1099,7 +1100,7 @@
             func_functionsList.length = 0; 
             func_selectedFuncId = null;
         }
-        const defaultExprs = ['x^2 - 2x', '|x - 1|', '[x]', 'sin(x)'];
+        const defaultExprs = ['-x^2 + x', '|x - 1|', '[x]', 'sin(x)'];
         const chosenExpr = defaultExprs[func_functionsList.length % defaultExprs.length];
         const newFunc = { 
             id: 'f_' + Date.now() + '_' + Math.floor(Math.random()*100), 
@@ -1224,33 +1225,37 @@
             }
 
             function parseTerm() {
-                let res = parsePower();
+                let res = parseUnary();
                 while (pos < expTokens.length && (expTokens[pos] === '*' || expTokens[pos] === '/')) {
                     let op = expTokens[pos++];
-                    let right = parsePower();
+                    let right = parseUnary();
                     res = (op === '*') ? res.mul(right) : res.div(right);
                 }
                 return res;
+            }
+
+            function parseUnary() {
+                if (pos < expTokens.length && expTokens[pos] === '-') {
+                    pos++; let f = parseUnary();
+                    return new ComplexNum(-f.re, -f.im);
+                }
+                if (pos < expTokens.length && expTokens[pos] === '+') {
+                    pos++; return parseUnary();
+                }
+                return parsePower();
             }
 
             function parsePower() {
                 let base = parseFactor();
                 while (pos < expTokens.length && expTokens[pos] === '^') {
                     pos++;
-                    let exp = parseFactor();
+                    let exp = parseUnary();
                     base = base.pow(exp);
                 }
                 return base;
             }
 
             function parseFactor() {
-                if (pos < expTokens.length && expTokens[pos] === '-') {
-                    pos++; let f = parseFactor();
-                    return new ComplexNum(-f.re, -f.im);
-                }
-                if (pos < expTokens.length && expTokens[pos] === '+') {
-                    pos++; return parseFactor();
-                }
                 if (pos < expTokens.length && expTokens[pos] === '(') {
                     pos++; let res = parseExpr();
                     if (pos < expTokens.length && expTokens[pos] === ')') pos++;
@@ -1448,6 +1453,10 @@
 
             cleanExpr = cleanExpr.replace(/\(([^()]+)\)\s*\^\s*\(\s*(-?\d+)\s*\/\s*(\d+)\s*\)/g, 'customMath.realFracPow(($1), $2, $3)');
             cleanExpr = cleanExpr.replace(/\b(x|y)\s*\^\s*\(\s*(-?\d+)\s*\/\s*(\d+)\s*\)/g, 'customMath.realFracPow($1, $2, $3)');
+
+            // 지수 위치의 단항 음수 처리 (예: 2^-x -> 2^((-1)*x)) 및 일반 단항 음수 처리 (-x^2+x -> (-1)*x^2+x = -(x^2)+x)
+            cleanExpr = cleanExpr.replace(/\^\s*-\s*([a-zA-Z0-9_.]+|\([^()]+\))/g, '^((-1)*$1)');
+            cleanExpr = cleanExpr.replace(/(^|[+\-*/(=,])\s*-\s*(?=[a-zA-Z0-9_(])/g, '$1(-1)*');
 
             cleanExpr = cleanExpr
                 .replace(/\^/g, '**')
@@ -1897,7 +1906,24 @@
         return traces;
     }
 
-    function func_getDynamicTick(range) { return (!range || range.length < 2) ? 0.5 : (Math.abs(range[1] - range[0]) <= 20 ? 0.5 : undefined); }
+    // 눈금 간격은 1 단위로 유지하고, 숫자 표시는 5의 배수(... -10, -5, 0, 5, 10 ...)만 출력
+    function func_buildUnit1Label5Ticks(range) {
+        const r0 = (range && range.length >= 2) ? Math.min(range[0], range[1]) : -6;
+        const r1 = (range && range.length >= 2) ? Math.max(range[0], range[1]) : 6;
+        const span = Math.max(r1 - r0, 1);
+        const pad = Math.min(Math.max(Math.ceil(span * 0.5), 5), 50);
+        const start = Math.floor(r0) - pad;
+        const end = Math.ceil(r1) + pad;
+        const vals = [], texts = [];
+        // 지나치게 축소된 경우에도 브라우저 성능을 지키면서 1단위 눈금 및 5배수 라벨 유지
+        const step = (end - start > 600) ? 5 : 1;
+        const alignedStart = step === 5 ? Math.floor(start / 5) * 5 : start;
+        for (let k = alignedStart; k <= end; k += step) {
+            vals.push(k);
+            texts.push(k % 5 === 0 ? String(k) : '');
+        }
+        return { vals, texts };
+    }
     function func_clearTangentShape() { Plotly.relayout('graphPlot', { shapes: [], annotations: [] }); }
 
     function func_floatXAxis() {
@@ -1934,10 +1960,13 @@
         const titleEl = document.getElementById('planeTitle');
         if (titleEl) titleEl.innerText = hasComplex ? '복소 평면 (Complex Plane)' : '실평면 함수 그래프';
 
+        const yTicks = func_buildUnit1Label5Ticks(currentYRange);
         const layoutUpdate = {
             'xaxis.title': hasComplex ? '실수축 (Re)' : 'x',
             'yaxis.title': hasComplex ? '허수축 (Im)' : 'y',
-            'yaxis.dtick': func_getDynamicTick(graphDiv.layout.yaxis.range),
+            'yaxis.tickmode': 'array',
+            'yaxis.tickvals': yTicks.vals,
+            'yaxis.ticktext': yTicks.texts,
             'yaxis.scaleanchor': 'x',
             'yaxis.scaleratio': 1
         };
@@ -1948,8 +1977,10 @@
             layoutUpdate['xaxis.tickvals'] = piTicks.vals;
             layoutUpdate['xaxis.ticktext'] = piTicks.texts;
         } else {
-            layoutUpdate['xaxis.tickmode'] = 'linear';
-            layoutUpdate['xaxis.dtick'] = func_getDynamicTick(currentXRange);
+            const xTicks = func_buildUnit1Label5Ticks(currentXRange);
+            layoutUpdate['xaxis.tickmode'] = 'array';
+            layoutUpdate['xaxis.tickvals'] = xTicks.vals;
+            layoutUpdate['xaxis.ticktext'] = xTicks.texts;
         }
 
         if (typeof Plotly !== 'undefined') {
@@ -2021,7 +2052,7 @@
 
     function initFuncGraph() {
         if (typeof Plotly === 'undefined') { setTimeout(initFuncGraph, 100); return; }
-        const layout = { dragmode: 'pan', hovermode: 'closest', xaxis: { range: [-5, 5], dtick: 0.5, zeroline: true, zerolinecolor: '#334155', zerolinewidth: 2, gridcolor: '#e2e8f0', showticklabels: true, tickfont: { size: 13, color: '#0f172a', weight: 'bold' } }, yaxis: { range: [-5, 5], dtick: 0.5, zeroline: true, zerolinecolor: '#334155', zerolinewidth: 2, gridcolor: '#e2e8f0', scaleanchor: 'x', scaleratio: 1, showticklabels: true, tickfont: { size: 13, color: '#0f172a', weight: 'bold' } }, margin: { l: 55, r: 35, t: 45, b: 55 }, legend: { orientation: 'h', yanchor: 'bottom', y: 1.02, xanchor: 'left', x: 0 } };
+        const initTicks = func_buildUnit1Label5Ticks([-6, 6]); const layout = { dragmode: 'pan', hovermode: 'closest', xaxis: { range: [-6, 6], tickmode: 'array', tickvals: initTicks.vals, ticktext: initTicks.texts, ticks: 'outside', ticklen: 4, tickcolor: '#94a3b8', zeroline: true, zerolinecolor: '#334155', zerolinewidth: 2, gridcolor: '#e2e8f0', showticklabels: true, tickfont: { size: 13, color: '#0f172a', weight: 'bold' } }, yaxis: { range: [-6, 6], tickmode: 'array', tickvals: initTicks.vals, ticktext: initTicks.texts, ticks: 'outside', ticklen: 4, tickcolor: '#94a3b8', zeroline: true, zerolinecolor: '#334155', zerolinewidth: 2, gridcolor: '#e2e8f0', scaleanchor: 'x', scaleratio: 1, showticklabels: true, tickfont: { size: 13, color: '#0f172a', weight: 'bold' } }, margin: { l: 55, r: 35, t: 45, b: 55 }, legend: { orientation: 'h', yanchor: 'bottom', y: 1.02, xanchor: 'left', x: 0 } };
         Plotly.newPlot('graphPlot', [], layout, { responsive: true, scrollZoom: true, displayModeBar: false, doubleClick: false });
         const graphDiv = document.getElementById('graphPlot');
 
@@ -2143,7 +2174,7 @@
         let func_relayoutDebounceTimer = null;
         graphDiv.on('plotly_relayout', function(eventData) {
             if (eventData['shapes'] !== undefined || eventData['annotations'] !== undefined || eventData['hovermode'] !== undefined) return;
-            if (eventData['xaxis.dtick'] !== undefined || eventData['yaxis.dtick'] !== undefined || eventData['yaxis.scaleanchor'] !== undefined || eventData['xaxis.tickvals'] !== undefined) return;
+            if (eventData['xaxis.dtick'] !== undefined || eventData['yaxis.dtick'] !== undefined || eventData['yaxis.scaleanchor'] !== undefined || eventData['xaxis.tickvals'] !== undefined || eventData['yaxis.tickvals'] !== undefined) return;
             if (func_relayoutDebounceTimer) clearTimeout(func_relayoutDebounceTimer);
             func_relayoutDebounceTimer = setTimeout(() => { func_updateAll(false); }, 220); 
         });
