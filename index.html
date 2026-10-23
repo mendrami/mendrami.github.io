@@ -151,6 +151,18 @@
         .mission-bar { background: rgba(15, 23, 42, 0.85); border: 1px solid #334155; border-radius: 12px; padding: 10px 14px; margin-bottom: 14px; display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px; }
         .mission-step { background: #1e293b; border: 1px solid #475569; border-radius: 8px; padding: 6px 11px; font-size: 0.8rem; color: #cbd5e1; display: flex; align-items: center; gap: 6px; font-weight: 600; transition: all 0.2s; }
         .mission-step.done { background: rgba(6, 95, 70, 0.55); border-color: #10b981; color: #a7f3d0; font-weight: 700; }
+        .calc-explorer-panel { display: none; background: #f8fafc; border: 2px solid #cbd5e1; border-radius: 12px; padding: 12px 16px; margin-bottom: 12px; box-shadow: 0 4px 12px rgba(15, 23, 42, 0.06); }
+        .calc-explorer-panel.visible { display: block; }
+        .calc-explorer-header { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 10px; padding-bottom: 8px; border-bottom: 1px solid #e2e8f0; }
+        .calc-explorer-controls { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; font-size: 0.85rem; font-weight: 700; color: #1e293b; }
+        .calc-explorer-controls select, .calc-explorer-controls input[type="number"] { padding: 4px 8px; border-radius: 6px; border: 1px solid #94a3b8; background: #fff; font-weight: 700; font-family: 'JetBrains Mono', monospace; }
+        .calc-table { width: 100%; border-collapse: collapse; font-size: 0.8rem; margin-top: 8px; background: #fff; border-radius: 8px; overflow: hidden; border: 1px solid #cbd5e1; }
+        .calc-table th { background: #f1f5f9; color: #334155; padding: 6px 8px; font-weight: 800; border-bottom: 1px solid #cbd5e1; text-align: center; }
+        .calc-table td { padding: 5px 8px; border-bottom: 1px solid #e2e8f0; text-align: center; font-family: 'JetBrains Mono', monospace; }
+        .calc-btn-anim { padding: 5px 12px; border-radius: 7px; font-size: 0.8rem; font-weight: 800; color: #fff; background: #2563eb; border: none; cursor: pointer; transition: all 0.15s; }
+        .calc-btn-anim:hover { background: #1d4ed8; }
+        .zoom-chip-btn { padding: 4px 10px; border-radius: 6px; font-size: 0.78rem; font-weight: 800; border: 1px solid #cbd5e1; background: #fff; color: #334155; cursor: pointer; }
+        .zoom-chip-btn.active { background: #4f46e5; color: #fff; border-color: #4338ca; }
     </style>
 </head>
 <body class="bg-slate-900">
@@ -189,8 +201,17 @@
                 <button id="intersectToggleBtn" class="toggle-btn" onclick="func_toggleIntersectionPanel()">
                     <span>📍</span> 교점·절편·극값 좌표
                 </button>
+                <button id="limitModeBtn" class="toggle-btn" onclick="func_toggleLimitPanel()">
+                    <span>🎯</span> 좌극한·우극한 탐색: OFF
+                </button>
+                <button id="secantModeBtn" class="toggle-btn" onclick="func_toggleSecantPanel()">
+                    <span>📐</span> 평균변화율→미분계수(Δx→0): OFF
+                </button>
                 <button id="tangentModeBtn" class="toggle-btn" onclick="func_toggleTangentMode()">
-                    <span style="font-size:1.05rem;">⤡</span> 실시간 접선(미분): OFF
+                    <span style="font-size:1.05rem;">⤡</span> 실시간 접선(좌·우미분): OFF
+                </button>
+                <button id="microscopeModeBtn" class="toggle-btn" onclick="func_toggleMicroscopePanel()">
+                    <span>🔬</span> 미분 현미경(국소 확대): OFF
                 </button>
                 <button id="integralModeBtn" class="toggle-btn emerald" onclick="func_toggleIntegralPanel()">
                     <span>∫</span> 정적분 넓이 도구: OFF
@@ -209,6 +230,80 @@
                 <button id="unitCircleBtn" class="toggle-btn purple hide" onclick="func_toggleUnitCircle()">
                     <span>⭕</span> 단위원(|z|=1): OFF
                 </button>
+            </div>
+
+            <!-- 1) 좌극한·우극한 및 연속성 양방향 탐색 패널 -->
+            <div id="limitControlPanel" class="calc-explorer-panel" style="border-color:#93c5fd; background:#eff6ff;">
+                <div class="calc-explorer-header">
+                    <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
+                        <span style="font-size:0.95rem; font-weight:800; color:#1e3a8a;">🎯 좌극한(x → a⁻) · 우극한(x → a⁺) 및 연속성 탐색기</span>
+                        <span id="limitVerdictBox" style="font-size:0.8rem; font-weight:800; padding:3px 10px; border-radius:999px; background:#dbeafe; color:#1e40af; border:1px solid #93c5fd;">판정 대기 중</span>
+                    </div>
+                    <button class="calc-btn-anim" onclick="func_animateLimitH()">▶ h → 0 양방향 수렴 애니메이션</button>
+                </div>
+                <div class="calc-explorer-controls">
+                    <label>대상 함수: <select id="limitFuncSelect" onchange="func_updateAll()"></select></label>
+                    <label>목표 지점 x = a : <input type="number" id="limitTargetA" value="1" step="0.5" style="width:76px;" oninput="func_updateAll()"></label>
+                    <label style="display:flex; align-items:center; gap:6px;">
+                        <span>접근 거리 h = <span id="limitHVal" style="color:#2563eb; font-family:'JetBrains Mono',monospace;">0.500</span></span>
+                        <input type="range" id="limitHSlider" min="0.001" max="1.5" step="0.001" value="0.5" style="width:150px;" oninput="func_onLimitSliderChange(this.value)">
+                    </label>
+                    <span id="limitSummaryReadout" style="font-size:0.8rem; font-family:'JetBrains Mono',monospace; background:#fff; padding:4px 10px; border-radius:6px; border:1px solid #bfdbfe; color:#0f172a;"></span>
+                </div>
+                <table class="calc-table">
+                    <thead>
+                        <tr>
+                            <th>접근 거리 h</th>
+                            <th style="color:#2563eb;">좌측 x = a - h</th>
+                            <th style="color:#2563eb;">좌극한 접근값 f(a - h)</th>
+                            <th style="color:#ea580c;">우측 x = a + h</th>
+                            <th style="color:#ea580c;">우극한 접근값 f(a + h)</th>
+                        </tr>
+                    </thead>
+                    <tbody id="limitTableBody"></tbody>
+                </table>
+            </div>
+
+            <!-- 2) 평균변화율(할선) -> 미분계수(접선) 수렴 탐색 패널 -->
+            <div id="secantControlPanel" class="calc-explorer-panel" style="border-color:#fda4af; background:#fff1f2;">
+                <div class="calc-explorer-header">
+                    <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
+                        <span style="font-size:0.95rem; font-weight:800; color:#881337;">📐 평균변화율(할선 AB) → 미분계수(접선) 수렴 탐색기</span>
+                        <span style="font-size:0.78rem; color:#9f1239; font-weight:600;">Δx → 0 일 때 할선이 접선으로 수렴하는 과정을 관찰합니다</span>
+                    </div>
+                    <button class="calc-btn-anim" style="background:#e11d48;" onclick="func_animateSecantDx()">▶ Δx → 0 수렴 애니메이션</button>
+                </div>
+                <div class="calc-explorer-controls">
+                    <label>대상 함수: <select id="secantFuncSelect" onchange="func_updateAll()"></select></label>
+                    <label>기준점 x = a : <input type="number" id="secantA" value="1" step="0.5" style="width:76px;" oninput="func_updateAll()"></label>
+                    <label style="display:flex; align-items:center; gap:6px;">
+                        <span>증분 Δx = <span id="secantDxVal" style="color:#e11d48; font-family:'JetBrains Mono',monospace;">1.00</span></span>
+                        <input type="range" id="secantDxSlider" min="-2" max="2" step="0.01" value="1.0" style="width:160px;" oninput="func_onSecantSliderChange(this.value)">
+                    </label>
+                    <div id="secantResultBox" style="background:#fff; padding:5px 12px; border-radius:6px; border:1px solid #fecdd3; font-family:'JetBrains Mono',monospace; font-size:0.82rem; color:#0f172a;"></div>
+                </div>
+            </div>
+
+            <!-- 3) 미분 현미경 (국소 선형성 vs 첨점 확대 비교) 패널 -->
+            <div id="microscopeControlPanel" class="calc-explorer-panel" style="border-color:#c7d2fe; background:#eef2ff;">
+                <div class="calc-explorer-header">
+                    <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
+                        <span style="font-size:0.95rem; font-weight:800; color:#312e81;">🔬 미분 현미경 (국소 선형성 돋보기)</span>
+                        <span id="microscopeVerdictBadge" style="font-size:0.78rem; font-weight:800; padding:3px 10px; border-radius:999px; background:#e0e7ff; color:#3730a3; border:1px solid #a5b4fc;">미분가능성 확인</span>
+                    </div>
+                    <div style="display:flex; align-items:center; gap:6px;">
+                        <span style="font-size:0.78rem; font-weight:700; color:#4338ca;">배율:</span>
+                        <button id="microZoom10" class="zoom-chip-btn active" onclick="func_setMicroscopeZoom(10)">10× 확대</button>
+                        <button id="microZoom50" class="zoom-chip-btn" onclick="func_setMicroscopeZoom(50)">50× 확대</button>
+                        <button id="microZoom200" class="zoom-chip-btn" onclick="func_setMicroscopeZoom(200)">200× 초고배율</button>
+                    </div>
+                </div>
+                <div class="calc-explorer-controls" style="margin-bottom:8px;">
+                    <label>대상 함수: <select id="microscopeFuncSelect" onchange="func_updateMicroscopePlot()"></select></label>
+                    <label>관찰 지점 x = a : <input type="number" id="microscopeA" value="1" step="0.1" style="width:80px;" oninput="func_updateMicroscopePlot()"></label>
+                    <span id="microscopeDescText" style="font-size:0.8rem; color:#3730a3; font-weight:700;">💡 미분가능한 곡선은 고배율 확대 시 접선(직선)과 완전히 포개지지만, 첨점(예: |x-1|의 x=1)은 아무리 확대해도 꺾인 V자 모양이 유지됩니다.</span>
+                </div>
+                <div id="microscopePlot" style="width:100%; height:260px; background:#fff; border-radius:8px; border:1px solid #c7d2fe;"></div>
             </div>
 
             <!-- 정적분 넓이 계산 및 색칠 컨트롤 패널 -->
@@ -831,6 +926,12 @@
     let func_touchIgnoreTimeout = null;
     let func_isIntersectionVisible = false;
     let func_isIntegralVisible = false;
+    let func_isLimitVisible = false;
+    let func_isSecantVisible = false;
+    let func_isMicroscopeVisible = false;
+    let func_microscopeZoom = 10;
+    let func_limitAnimId = null;
+    let func_secantAnimId = null;
     let func_usePiTicks = false;
     let func_showComplexSum = false;
     let func_showComplexMul = false;
@@ -851,13 +952,18 @@
         { label: '^2 (제곱)', expr: '^2' },
         { label: '^ (거듭제곱)', expr: '^' },
         { label: 'e (자연상수)', expr: 'e' },
-        { label: '( ) (괄호)', expr: '()' }
+        { label: '( ) (괄호)', expr: '()' },
+        { label: '? : (구간함수)', expr: 'x < 1 ? x^2 : 2x - 1' }
     ];
 
     const REAL_PRESETS = [
         { label: '이차함수 -x²+x', expr: '-x^2+x' },
         { label: '이차함수 x(x-2)', expr: 'x(x-2)' },
         { label: '삼차함수 x³-3x', expr: 'x^3 - 3x' },
+        { label: '0/0 극한 (x²-1)/(x-1)', expr: '(x^2 - 1)/(x - 1)' },
+        { label: '삼각극한 sin(x)/x', expr: 'sin(x)/x' },
+        { label: '구간함수 x<1 ? x² : 2x-1', expr: 'x < 1 ? x^2 : 2x - 1' },
+        { label: '첨점 비교 |x(x-2)|', expr: '|x(x - 2)|' },
         { label: '복합 |x[x-2]|', expr: '|x[x - 2]|' },
         { label: '절댓값 |x-1|+|x+1|', expr: '|x - 1| + |x + 1|' },
         { label: '가우스 함수 [x]', expr: '[x]' },
@@ -1088,22 +1194,247 @@
     window.func_toggleUnitCircle = func_toggleUnitCircle;
 
     function func_syncIntegralSelect() {
-        const sel = document.getElementById('integralFuncSelect');
-        if (!sel) return;
-        const prevVal = sel.value;
-        sel.innerHTML = '';
-        func_functionsList.forEach((f, idx) => {
-            if (f.type === 'custom' && !func_isImplicitFunc(f)) {
-                const opt = document.createElement('option');
-                opt.value = f.id;
-                opt.textContent = `함수 f${idx + 1} (${f.expr})`;
-                sel.appendChild(opt);
+        const selectIds = ['integralFuncSelect', 'limitFuncSelect', 'secantFuncSelect', 'microscopeFuncSelect'];
+        selectIds.forEach(sid => {
+            const sel = document.getElementById(sid);
+            if (!sel) return;
+            const prevVal = sel.value;
+            sel.innerHTML = '';
+            func_functionsList.forEach((f, idx) => {
+                if (f.type === 'custom' && !func_isImplicitFunc(f)) {
+                    const opt = document.createElement('option');
+                    opt.value = f.id;
+                    opt.textContent = `함수 f${idx + 1} (${f.expr})`;
+                    sel.appendChild(opt);
+                }
+            });
+            if (prevVal && Array.from(sel.options).some(o => o.value === prevVal)) {
+                sel.value = prevVal;
             }
         });
-        if (prevVal && Array.from(sel.options).some(o => o.value === prevVal)) {
-            sel.value = prevVal;
+        if (func_isMicroscopeVisible) func_updateMicroscopePlot();
+    }
+
+    function func_toggleLimitPanel() {
+        func_isLimitVisible = !func_isLimitVisible;
+        const panel = document.getElementById('limitControlPanel');
+        const btn = document.getElementById('limitModeBtn');
+        if (panel && btn) {
+            panel.classList.toggle('visible', func_isLimitVisible);
+            btn.classList.toggle('active', func_isLimitVisible);
+            btn.innerHTML = `<span>🎯</span> 좌극한·우극한 탐색: ${func_isLimitVisible ? 'ON' : 'OFF'}`;
+        }
+        if (!func_isLimitVisible && func_limitAnimId) {
+            cancelAnimationFrame(func_limitAnimId);
+            func_limitAnimId = null;
+        }
+        func_syncIntegralSelect();
+        func_updateAll();
+    }
+    window.func_toggleLimitPanel = func_toggleLimitPanel;
+
+    function func_onLimitSliderChange(val) {
+        const h = parseFloat(val);
+        const badge = document.getElementById('limitHVal');
+        if (badge && isFinite(h)) badge.textContent = h.toFixed(3);
+        func_updateAll(true);
+    }
+    window.func_onLimitSliderChange = func_onLimitSliderChange;
+
+    function func_animateLimitH() {
+        if (func_limitAnimId) {
+            cancelAnimationFrame(func_limitAnimId);
+            func_limitAnimId = null;
+        }
+        const slider = document.getElementById('limitHSlider');
+        if (!slider) return;
+        let h = 1.2;
+        function stepAnim() {
+            h *= 0.94;
+            if (h <= 0.002) {
+                h = 0.001;
+                slider.value = String(h);
+                func_onLimitSliderChange(h);
+                func_updateAll(false);
+                func_limitAnimId = null;
+                return;
+            }
+            slider.value = String(h);
+            func_onLimitSliderChange(h);
+            func_limitAnimId = requestAnimationFrame(stepAnim);
+        }
+        stepAnim();
+    }
+    window.func_animateLimitH = func_animateLimitH;
+
+    function func_toggleSecantPanel() {
+        func_isSecantVisible = !func_isSecantVisible;
+        const panel = document.getElementById('secantControlPanel');
+        const btn = document.getElementById('secantModeBtn');
+        if (panel && btn) {
+            panel.classList.toggle('visible', func_isSecantVisible);
+            btn.classList.toggle('active', func_isSecantVisible);
+            btn.innerHTML = `<span>📐</span> 평균변화율→미분계수(Δx→0): ${func_isSecantVisible ? 'ON' : 'OFF'}`;
+        }
+        if (!func_isSecantVisible && func_secantAnimId) {
+            cancelAnimationFrame(func_secantAnimId);
+            func_secantAnimId = null;
+        }
+        func_syncIntegralSelect();
+        func_updateAll();
+    }
+    window.func_toggleSecantPanel = func_toggleSecantPanel;
+
+    function func_onSecantSliderChange(val) {
+        let dx = parseFloat(val);
+        if (Math.abs(dx) < 0.01) dx = dx >= 0 ? 0.01 : -0.01;
+        const badge = document.getElementById('secantDxVal');
+        if (badge && isFinite(dx)) badge.textContent = (dx >= 0 ? '+' : '') + dx.toFixed(2);
+        func_updateAll(true);
+    }
+    window.func_onSecantSliderChange = func_onSecantSliderChange;
+
+    function func_animateSecantDx() {
+        if (func_secantAnimId) {
+            cancelAnimationFrame(func_secantAnimId);
+            func_secantAnimId = null;
+        }
+        const slider = document.getElementById('secantDxSlider');
+        if (!slider) return;
+        let cur = parseFloat(slider.value) || 1.5;
+        let sign = cur < 0 ? -1 : 1;
+        let mag = Math.max(Math.abs(cur), 1.4);
+        function stepAnim() {
+            mag *= 0.94;
+            if (mag <= 0.012) {
+                mag = 0.01;
+                slider.value = String(sign * mag);
+                func_onSecantSliderChange(sign * mag);
+                func_updateAll(false);
+                func_secantAnimId = null;
+                return;
+            }
+            slider.value = String(sign * mag);
+            func_onSecantSliderChange(sign * mag);
+            func_secantAnimId = requestAnimationFrame(stepAnim);
+        }
+        stepAnim();
+    }
+    window.func_animateSecantDx = func_animateSecantDx;
+
+    function func_toggleMicroscopePanel() {
+        func_isMicroscopeVisible = !func_isMicroscopeVisible;
+        const panel = document.getElementById('microscopeControlPanel');
+        const btn = document.getElementById('microscopeModeBtn');
+        if (panel && btn) {
+            panel.classList.toggle('visible', func_isMicroscopeVisible);
+            btn.classList.toggle('active', func_isMicroscopeVisible);
+            btn.innerHTML = `<span>🔬</span> 미분 현미경(국소 확대): ${func_isMicroscopeVisible ? 'ON' : 'OFF'}`;
+        }
+        func_syncIntegralSelect();
+        if (func_isMicroscopeVisible) {
+            setTimeout(func_updateMicroscopePlot, 50);
         }
     }
+    window.func_toggleMicroscopePanel = func_toggleMicroscopePanel;
+
+    function func_setMicroscopeZoom(z) {
+        func_microscopeZoom = z;
+        [10, 50, 200].forEach(val => {
+            const b = document.getElementById('microZoom' + val);
+            if (b) b.classList.toggle('active', val === z);
+        });
+        func_updateMicroscopePlot();
+    }
+    window.func_setMicroscopeZoom = func_setMicroscopeZoom;
+
+    function func_updateMicroscopePlot() {
+        if (!func_isMicroscopeVisible || typeof Plotly === 'undefined') return;
+        const plotEl = document.getElementById('microscopePlot');
+        if (!plotEl) return;
+        const selEl = document.getElementById('microscopeFuncSelect');
+        const aEl = document.getElementById('microscopeA');
+        const badgeEl = document.getElementById('microscopeVerdictBadge');
+        const visibleReal = func_functionsList.filter(f => f.visible && f.type === 'custom' && !func_isImplicitFunc(f));
+        const targetFunc = visibleReal.find(f => f.id === (selEl ? selEl.value : '')) || visibleReal[0];
+        if (!targetFunc) return;
+        const a = aEl && isFinite(parseFloat(aEl.value)) ? parseFloat(aEl.value) : 1;
+        const ya = func_evaluateFunction(targetFunc, a);
+        const leftLim = func_evaluateFunction(targetFunc, a - 1e-5);
+        const rightLim = func_evaluateFunction(targetFunc, a + 1e-5);
+        const centerY = isFinite(ya) ? ya : (isFinite(leftLim) && isFinite(rightLim) ? 0.5 * (leftLim + rightLim) : 0);
+
+        const span = 4.0 / func_microscopeZoom;
+        const xMin = a - span, xMax = a + span;
+        const yMin = centerY - span, yMax = centerY + span;
+        const nPts = 240;
+        const xs = [], ys = [];
+        for (let i = 0; i <= nPts; i++) {
+            const xi = xMin + (xMax - xMin) * (i / nPts);
+            xs.push(xi);
+            ys.push(func_evaluateFunction(targetFunc, xi));
+        }
+        const microTraces = [
+            { x: xs, y: ys, mode: 'lines', name: `곡선 f(x)`, line: { color: targetFunc.color, width: 3.5 } }
+        ];
+
+        const { dLeft, dRight } = func_evaluateOneSidedDerivatives(targetFunc, a);
+        if (isFinite(dLeft) && isFinite(dRight) && Math.abs(dRight - dLeft) <= 0.12) {
+            const m = 0.5 * (dLeft + dRight);
+            microTraces.push({
+                x: [xMin, xMax],
+                y: [centerY + m * (xMin - a), centerY + m * (xMax - a)],
+                mode: 'lines', name: `접선 (기울기 ${m.toFixed(3)})`,
+                line: { color: '#10b981', width: 2.5, dash: 'dash' }
+            });
+            if (badgeEl) {
+                badgeEl.style.background = '#dcfce7';
+                badgeEl.style.color = '#166534';
+                badgeEl.style.borderColor = '#86efac';
+                badgeEl.textContent = `✅ 미분가능 (f'(${a}) = ${m.toFixed(3)}) — 확대할수록 곡선과 접선이 한 직선으로 일치합니다`;
+            }
+        } else if (isFinite(dLeft) && isFinite(dRight)) {
+            microTraces.push({
+                x: [xMin, a],
+                y: [centerY + dLeft * (xMin - a), centerY],
+                mode: 'lines', name: `좌접선 (f'₋=${dLeft.toFixed(2)})`,
+                line: { color: '#16a34a', width: 2.5, dash: 'dash' }
+            });
+            microTraces.push({
+                x: [a, xMax],
+                y: [centerY, centerY + dRight * (xMax - a)],
+                mode: 'lines', name: `우접선 (f'₊=${dRight.toFixed(2)})`,
+                line: { color: '#ea580c', width: 2.5, dash: 'dash' }
+            });
+            if (badgeEl) {
+                badgeEl.style.background = '#fef2f2';
+                badgeEl.style.color = '#991b1b';
+                badgeEl.style.borderColor = '#fca5a5';
+                badgeEl.textContent = `⚠️ 첨점·미분불가능 (좌미분계수 ${dLeft.toFixed(2)} ≠ 우미분계수 ${dRight.toFixed(2)}) — ${func_microscopeZoom}× 확대해도 꺾인 모서리가 펴지지 않습니다`;
+            }
+        } else {
+            if (badgeEl) {
+                badgeEl.style.background = '#fef3c7';
+                badgeEl.style.color = '#92400e';
+                badgeEl.style.borderColor = '#fcd34d';
+                badgeEl.textContent = `⚡ 불연속 또는 미정의 지점 (x = ${a}) — 미분계수가 존재하지 않습니다`;
+            }
+        }
+        microTraces.push({
+            x: [a], y: [centerY], mode: 'markers', name: `기준점 x=${a}`,
+            marker: { size: 9, color: isFinite(ya) ? targetFunc.color : '#ffffff', line: { color: targetFunc.color, width: 2.5 } }
+        });
+
+        const microLayout = {
+            margin: { l: 50, r: 20, t: 25, b: 35 },
+            xaxis: { range: [xMin, xMax], zeroline: true, gridcolor: '#e2e8f0', title: `x (배율 ${func_microscopeZoom}×)` },
+            yaxis: { range: [yMin, yMax], zeroline: true, gridcolor: '#e2e8f0', scaleanchor: 'x', scaleratio: 1 },
+            legend: { orientation: 'h', y: 1.14, x: 0 },
+            paper_bgcolor: '#ffffff', plot_bgcolor: '#ffffff'
+        };
+        Plotly.react('microscopePlot', microTraces, microLayout, { responsive: true, displayModeBar: false });
+    }
+    window.func_updateMicroscopePlot = func_updateMicroscopePlot;
 
     function func_expandCanvasDown() {
         const graphDiv = document.getElementById('graphPlot');
@@ -1135,10 +1466,10 @@
         func_isTangentMode = !func_isTangentMode;
         const btn = document.getElementById('tangentModeBtn');
         if (func_isTangentMode) {
-            btn.className = 'toggle-btn active'; btn.innerHTML = `<span style="font-size:1.05rem;">⤡</span> 실시간 접선(미분): ON`;
+            btn.className = 'toggle-btn active'; btn.innerHTML = `<span style="font-size:1.05rem;">⤡</span> 실시간 접선(좌·우미분): ON`;
             Plotly.relayout('graphPlot', { hovermode: 'closest' });
         } else {
-            btn.className = 'toggle-btn'; btn.innerHTML = `<span style="font-size:1.05rem;">⤡</span> 실시간 접선(미분): OFF`;
+            btn.className = 'toggle-btn'; btn.innerHTML = `<span style="font-size:1.05rem;">⤡</span> 실시간 접선(좌·우미분): OFF`;
             Plotly.relayout('graphPlot', { shapes: [], annotations: [], hovermode: 'closest' }); 
         }
     }
@@ -1173,6 +1504,7 @@
     // 부등식 파서: 이상(>=, =>, ≥), 이하(<=, =<, ≤), 초과(>), 미만(<) 인식
     function func_parseInequality(expr) {
         let clean = (expr || '').trim();
+        if (clean.includes('?')) return null; // 구간별 조각함수(삼항연산자)는 부등식 영역 색칠이 아닌 일반 함수로 처리
         let m = clean.match(/^(.*?)(>=|=>|<=|=<|≥|≤|>|<)(.*)$/);
         if (!m) return null;
         let left = m[1].trim();
@@ -1233,10 +1565,16 @@
     function func_syncModeToolbar() {
         const hasComplex = func_functionsList.some(f => f.type === 'complex');
         const intersectBtn = document.getElementById('intersectToggleBtn');
+        const limitBtn = document.getElementById('limitModeBtn');
+        const secantBtn = document.getElementById('secantModeBtn');
         const tangentBtn = document.getElementById('tangentModeBtn');
+        const microscopeBtn = document.getElementById('microscopeModeBtn');
         const integralBtn = document.getElementById('integralModeBtn');
         const piTickBtn = document.getElementById('piTickBtn');
         const integralPanel = document.getElementById('integralControlPanel');
+        const limitPanel = document.getElementById('limitControlPanel');
+        const secantPanel = document.getElementById('secantControlPanel');
+        const microscopePanel = document.getElementById('microscopeControlPanel');
         const complexSumBtn = document.getElementById('complexSumBtn');
         const complexMulBtn = document.getElementById('complexMulBtn');
         const unitCircleBtn = document.getElementById('unitCircleBtn');
@@ -1244,20 +1582,32 @@
 
         if (hasComplex) {
             if (intersectBtn) intersectBtn.classList.add('hide');
+            if (limitBtn) limitBtn.classList.add('hide');
+            if (secantBtn) secantBtn.classList.add('hide');
             if (tangentBtn) tangentBtn.classList.add('hide');
+            if (microscopeBtn) microscopeBtn.classList.add('hide');
             if (integralBtn) integralBtn.classList.add('hide');
             if (piTickBtn) piTickBtn.classList.add('hide');
             if (integralPanel) integralPanel.classList.remove('visible');
+            if (limitPanel) limitPanel.classList.remove('visible');
+            if (secantPanel) secantPanel.classList.remove('visible');
+            if (microscopePanel) microscopePanel.classList.remove('visible');
             if (complexSumBtn) complexSumBtn.classList.remove('hide');
             if (complexMulBtn) complexMulBtn.classList.remove('hide');
             if (unitCircleBtn) unitCircleBtn.classList.remove('hide');
             if (topInfoPanel) topInfoPanel.classList.remove('visible');
         } else {
             if (intersectBtn) intersectBtn.classList.remove('hide');
+            if (limitBtn) limitBtn.classList.remove('hide');
+            if (secantBtn) secantBtn.classList.remove('hide');
             if (tangentBtn) tangentBtn.classList.remove('hide');
+            if (microscopeBtn) microscopeBtn.classList.remove('hide');
             if (integralBtn) integralBtn.classList.remove('hide');
             if (piTickBtn) piTickBtn.classList.remove('hide');
             if (integralPanel && func_isIntegralVisible) integralPanel.classList.add('visible');
+            if (limitPanel && func_isLimitVisible) limitPanel.classList.add('visible');
+            if (secantPanel && func_isSecantVisible) secantPanel.classList.add('visible');
+            if (microscopePanel && func_isMicroscopeVisible) microscopePanel.classList.add('visible');
             if (complexSumBtn) complexSumBtn.classList.add('hide');
             if (complexMulBtn) complexMulBtn.classList.add('hide');
             if (unitCircleBtn) unitCircleBtn.classList.add('hide');
@@ -1281,6 +1631,8 @@
             color: func_colorPalette[func_colorIndex % func_colorPalette.length], 
             visible: true, 
             showInverse: false, 
+            showDerivative: false,
+            showSecondDerivative: false,
             H: 0, 
             K: 0,
             baseExpr: chosenExpr,
@@ -1340,6 +1692,8 @@
         const func = func_functionsList.find(f => f.id === id); if (!func) return;
         if (field === 'visible') func.visible = value;
         else if (field === 'showInverse') func.showInverse = value;
+        else if (field === 'showDerivative') func.showDerivative = value;
+        else if (field === 'showSecondDerivative') func.showSecondDerivative = value;
         else if (field === 'showConjugate') func.showConjugate = value;
         else if (field === 'color') { func.color = value; document.getElementById(`card_${id}`).style.borderLeftColor = value; } 
         else if (field === 'expr') {
@@ -1500,7 +1854,13 @@
                             <input type="checkbox" ${func.showConjugate ? 'checked' : ''} onchange="func_updateState('${func.id}', 'showConjugate', this.checked)"> 켤레복소수
                         </label>
                         ` : `
-                        <label title="y=x 대칭인 역함수 그래프를 함께 표시합니다" style="font-size:0.78rem; display:flex; align-items:center; gap:3px; cursor:pointer; background:#f8fafc; padding:3px 7px; border-radius:5px; border:1px solid #cbd5e1; font-weight:600;">
+                        <label title="도함수 y = f'(x) 그래프를 점선으로 함께 그립니다" style="font-size:0.76rem; display:flex; align-items:center; gap:3px; cursor:pointer; background:#eff6ff; color:#1e40af; padding:3px 7px; border-radius:5px; border:1px solid #93c5fd; font-weight:700;">
+                            <input type="checkbox" ${func.showDerivative ? 'checked' : ''} onchange="func_updateState('${func.id}', 'showDerivative', this.checked)"> 도함수 f'(x)
+                        </label>
+                        <label title="이계도함수 y = f''(x) 그래프를 함께 그립니다" style="font-size:0.76rem; display:flex; align-items:center; gap:3px; cursor:pointer; background:#f5f3ff; color:#5b21b6; padding:3px 7px; border-radius:5px; border:1px solid #c4b5fd; font-weight:700;">
+                            <input type="checkbox" ${func.showSecondDerivative ? 'checked' : ''} onchange="func_updateState('${func.id}', 'showSecondDerivative', this.checked)"> 이계도함수 f''(x)
+                        </label>
+                        <label title="y=x 대칭인 역함수 그래프를 함께 표시합니다" style="font-size:0.76rem; display:flex; align-items:center; gap:3px; cursor:pointer; background:#f8fafc; padding:3px 7px; border-radius:5px; border:1px solid #cbd5e1; font-weight:600;">
                             <input type="checkbox" ${func.showInverse ? 'checked' : ''} onchange="func_updateState('${func.id}', 'showInverse', this.checked)"> 역함수
                         </label>
                         `}
@@ -1575,7 +1935,7 @@
                 prevNonSpace = ch;
             } else if (ch === '|') {
                 let topDepth = openStack.length > 0 ? openStack[openStack.length - 1] : -1;
-                let isOpOrEmpty = (prevNonSpace === '' || '+-*/^(=,['.includes(prevNonSpace));
+                let isOpOrEmpty = (prevNonSpace === '' || '+-*/^(=,[?:<>'.includes(prevNonSpace));
                 if (isOpOrEmpty) {
                     out += 'abs(';
                     openStack.push(parenDepth);
@@ -1614,6 +1974,8 @@
                 .replace(/³/g, '^3')
                 .replace(/√\s*\(/g, 'sqrt(')
                 .replace(/√\s*([a-zA-Z0-9_.]+)/g, 'sqrt($1)')
+                .replace(/=>|≥/g, '>=')
+                .replace(/=<|≤/g, '<=')
                 .replace(/[⌊⌋]/g, function(m) { return m === '⌊' ? '[' : ']'; });
 
             // 1) 절댓값 기호 |...| 를 먼저 abs(...)로 변환 (내부에 [...] 가 있어도 괄호 깊이를 추적하여 정확히 매칭)
@@ -1647,7 +2009,7 @@
 
             // 지수 위치의 단항 음수 처리 (예: 2^-x -> 2^((-1)*x)) 및 일반 단항 음수 처리 (-x^2+x -> (-1)*x^2+x = -(x^2)+x)
             cleanExpr = cleanExpr.replace(/\^\s*-\s*([a-zA-Z0-9_.]+|\([^()]+\))/g, '^((-1)*$1)');
-            cleanExpr = cleanExpr.replace(/(^|[+\-*/(=,])\s*-\s*(?=[a-zA-Z0-9_(])/g, '$1(-1)*');
+            cleanExpr = cleanExpr.replace(/(^|[+\-*/(=,?:<>])\s*-\s*(?=[a-zA-Z0-9_(])/g, '$1(-1)*');
 
             cleanExpr = cleanExpr
                 .replace(/\^/g, '**')
@@ -1710,11 +2072,34 @@
         return NaN;
     }
 
+    function func_evaluateOneSidedDerivatives(f, x) {
+        const h = 1e-5;
+        const y0 = func_evaluateFunction(f, x);
+        const yLeft = func_evaluateFunction(f, x - h);
+        const yRight = func_evaluateFunction(f, x + h);
+        const dLeft = (isFinite(y0) && isFinite(yLeft)) ? (y0 - yLeft) / h : NaN;
+        const dRight = (isFinite(y0) && isFinite(yRight)) ? (yRight - y0) / h : NaN;
+        return { dLeft, dRight, y0 };
+    }
+
     function func_evaluateDerivative(f, x) {
-        const h = 1e-5; let y1 = func_evaluateFunction(f, x - h), y2 = func_evaluateFunction(f, x + h);
+        const h = 1e-5;
+        let y1 = func_evaluateFunction(f, x - h), y2 = func_evaluateFunction(f, x + h);
         if (isNaN(y1)) { y1 = func_evaluateFunction(f, x); y2 = func_evaluateFunction(f, x + h); return (y2 - y1) / h; }
         if (isNaN(y2)) { y1 = func_evaluateFunction(f, x - h); y2 = func_evaluateFunction(f, x); return (y2 - y1) / h; }
         return (y2 - y1) / (2 * h);
+    }
+
+    function func_evaluateSecondDerivative(f, x) {
+        const h = 1e-3;
+        const y0 = func_evaluateFunction(f, x);
+        const y1 = func_evaluateFunction(f, x - h);
+        const y2 = func_evaluateFunction(f, x + h);
+        if (!isFinite(y0) || !isFinite(y1) || !isFinite(y2)) return NaN;
+        const dLeft = (y0 - y1) / h;
+        const dRight = (y2 - y0) / h;
+        if (Math.abs(dRight - dLeft) > 0.25) return NaN; // 첨점·불연속점에서는 이계도함수 미정의
+        return (y2 - 2 * y0 + y1) / (h * h);
     }
     
     function func_evaluateImplicitDerivative(f, x, y) {
@@ -1937,6 +2322,169 @@
             }
         }
 
+        // 1) 좌극한·우극한 양방향 접근 탐색기 시각화
+        if (func_isLimitVisible && !visibleFunctions.some(f => f.type === 'complex')) {
+            const selEl = document.getElementById('limitFuncSelect');
+            const aEl = document.getElementById('limitTargetA');
+            const hEl = document.getElementById('limitHSlider');
+            const verdictEl = document.getElementById('limitVerdictBox');
+            const summaryEl = document.getElementById('limitSummaryReadout');
+            const tbodyEl = document.getElementById('limitTableBody');
+            const targetFunc = visibleFunctions.find(f => f.id === (selEl ? selEl.value : '')) || visibleFunctions.find(f => f.type === 'custom' && !func_isImplicitFunc(f));
+            const aVal = aEl && isFinite(parseFloat(aEl.value)) ? parseFloat(aEl.value) : 1;
+            const hVal = hEl && isFinite(parseFloat(hEl.value)) ? Math.max(0.001, parseFloat(hEl.value)) : 0.5;
+
+            if (targetFunc) {
+                const xL = aVal - hVal, xR = aVal + hVal;
+                const yL = func_evaluateFunction(targetFunc, xL);
+                const yR = func_evaluateFunction(targetFunc, xR);
+                const ya = func_evaluateFunction(targetFunc, aVal);
+                const limL = func_evaluateFunction(targetFunc, aVal - 1e-5);
+                const limR = func_evaluateFunction(targetFunc, aVal + 1e-5);
+
+                // 목표 지점 x = a 보조선
+                traces.push({
+                    x: [aVal, aVal], y: [minY, maxY], mode: 'lines', name: `목표 x = ${aVal}`,
+                    line: { color: '#64748b', width: 1.5, dash: 'dot' }, hoverinfo: 'skip', showlegend: false
+                });
+
+                if (isFinite(yL)) {
+                    traces.push({
+                        x: [xL, xL, 0], y: [0, yL, yL], mode: 'lines', name: '좌극한 투영선',
+                        line: { color: '#2563eb', width: 1.5, dash: 'dash' }, hoverinfo: 'skip', showlegend: false
+                    });
+                    traces.push({
+                        x: [xL], y: [yL], mode: 'markers+text', name: `좌극한 접근 P_L(a-h)`,
+                        marker: { size: 11, color: '#2563eb', symbol: 'circle', line: { color: '#fff', width: 2 } },
+                        text: [`  x→a⁻: (${xL.toFixed(3)}, ${yL.toFixed(3)})`], textposition: 'top left',
+                        textfont: { size: 12, weight: 'bold', color: '#1d4ed8' }
+                    });
+                }
+                if (isFinite(yR)) {
+                    traces.push({
+                        x: [xR, xR, 0], y: [0, yR, yR], mode: 'lines', name: '우극한 투영선',
+                        line: { color: '#ea580c', width: 1.5, dash: 'dash' }, hoverinfo: 'skip', showlegend: false
+                    });
+                    traces.push({
+                        x: [xR], y: [yR], mode: 'markers+text', name: `우극한 접근 P_R(a+h)`,
+                        marker: { size: 11, color: '#ea580c', symbol: 'circle', line: { color: '#fff', width: 2 } },
+                        text: [`  x→a⁺: (${xR.toFixed(3)}, ${yR.toFixed(3)})`], textposition: 'bottom right',
+                        textfont: { size: 12, weight: 'bold', color: '#c2410c' }
+                    });
+                }
+
+                if (summaryEl) {
+                    const strL = isFinite(limL) ? limL.toFixed(4) : '발산/미정의';
+                    const strR = isFinite(limR) ? limR.toFixed(4) : '발산/미정의';
+                    const strA = isFinite(ya) ? ya.toFixed(4) : '미정의(구멍 ○)';
+                    summaryEl.innerHTML = `lim<sub>x→${aVal}⁻</sub>f(x) = <b style="color:#2563eb">${strL}</b> &nbsp;|&nbsp; lim<sub>x→${aVal}⁺</sub>f(x) = <b style="color:#ea580c">${strR}</b> &nbsp;|&nbsp; 함숫값 f(${aVal}) = <b>${strA}</b>`;
+                }
+
+                if (verdictEl) {
+                    const hasFiniteLim = isFinite(limL) && isFinite(limR) && Math.abs(limL) < 1e4 && Math.abs(limR) < 1e4;
+                    if (hasFiniteLim && Math.abs(limL - limR) < 1e-2) {
+                        const L = 0.5 * (limL + limR);
+                        if (isFinite(ya) && Math.abs(ya - L) < 1e-2) {
+                            verdictEl.style.background = '#dcfce7'; verdictEl.style.color = '#166534'; verdictEl.style.borderColor = '#86efac';
+                            verdictEl.textContent = `✅ 연속: 좌극한(${L.toFixed(2)}) = 우극한(${L.toFixed(2)}) = f(${aVal})`;
+                        } else {
+                            verdictEl.style.background = '#fef3c7'; verdictEl.style.color = '#92400e'; verdictEl.style.borderColor = '#fcd34d';
+                            verdictEl.textContent = `⭕ 불연속 (구멍 ○): 극한값 L = ${L.toFixed(2)} 존재하지만 함숫값 f(${aVal}) ${isFinite(ya) ? '= ' + ya.toFixed(2) + ' 로 다름' : '미정의(0/0 꼴)'}`;
+                        }
+                    } else if (hasFiniteLim) {
+                        verdictEl.style.background = '#fee2e2'; verdictEl.style.color = '#991b1b'; verdictEl.style.borderColor = '#fca5a5';
+                        verdictEl.textContent = `⚡ 점프 불연속: 좌극한(${limL.toFixed(2)}) ≠ 우극한(${limR.toFixed(2)}) → 극한값 없음`;
+                    } else {
+                        verdictEl.style.background = '#fae8ff'; verdictEl.style.color = '#86198f'; verdictEl.style.borderColor = '#f0abfc';
+                        verdictEl.textContent = `🚀 발산 (수직 점근선 x = ${aVal}) → 극한값 없음`;
+                    }
+                }
+
+                if (tbodyEl) {
+                    const hSteps = [0.5, 0.1, 0.01, 0.001];
+                    let rowsHtml = '';
+                    hSteps.forEach(hs => {
+                        const xl = aVal - hs, xr = aVal + hs;
+                        const yl = func_evaluateFunction(targetFunc, xl);
+                        const yr = func_evaluateFunction(targetFunc, xr);
+                        rowsHtml += `<tr>
+                            <td style="font-weight:700;">h = ${hs}</td>
+                            <td>${xl.toFixed(3)}</td>
+                            <td style="color:#2563eb; font-weight:700;">${isFinite(yl) ? yl.toFixed(5) : '미정의'}</td>
+                            <td>${xr.toFixed(3)}</td>
+                            <td style="color:#ea580c; font-weight:700;">${isFinite(yr) ? yr.toFixed(5) : '미정의'}</td>
+                        </tr>`;
+                    });
+                    tbodyEl.innerHTML = rowsHtml;
+                }
+            }
+        }
+
+        // 2) 평균변화율(할선) -> 미분계수(접선) 수렴 탐색기 시각화
+        if (func_isSecantVisible && !visibleFunctions.some(f => f.type === 'complex')) {
+            const selEl = document.getElementById('secantFuncSelect');
+            const aEl = document.getElementById('secantA');
+            const dxEl = document.getElementById('secantDxSlider');
+            const resBox = document.getElementById('secantResultBox');
+            const targetFunc = visibleFunctions.find(f => f.id === (selEl ? selEl.value : '')) || visibleFunctions.find(f => f.type === 'custom' && !func_isImplicitFunc(f));
+            const aVal = aEl && isFinite(parseFloat(aEl.value)) ? parseFloat(aEl.value) : 1;
+            let dxVal = dxEl && isFinite(parseFloat(dxEl.value)) ? parseFloat(dxEl.value) : 1.0;
+            if (Math.abs(dxVal) < 0.01) dxVal = dxVal >= 0 ? 0.01 : -0.01;
+
+            if (targetFunc) {
+                const ya = func_evaluateFunction(targetFunc, aVal);
+                const xb = aVal + dxVal;
+                const yb = func_evaluateFunction(targetFunc, xb);
+                const { dLeft, dRight } = func_evaluateOneSidedDerivatives(targetFunc, aVal);
+                const isDiff = isFinite(dLeft) && isFinite(dRight) && Math.abs(dRight - dLeft) <= 0.12;
+                const mTan = isDiff ? 0.5 * (dLeft + dRight) : func_evaluateDerivative(targetFunc, aVal);
+
+                if (isFinite(ya) && isFinite(yb)) {
+                    const dyVal = yb - ya;
+                    const mSec = dyVal / dxVal;
+
+                    // 직각삼각형 밑변 Δx, 높이 Δy 보조선
+                    traces.push({
+                        x: [aVal, xb, xb], y: [ya, ya, yb], mode: 'lines', name: '증분 Δx, Δy',
+                        line: { color: '#64748b', width: 2, dash: 'dot' }, hoverinfo: 'skip'
+                    });
+
+                    // 할선 (Secant Line)
+                    traces.push({
+                        x: [minX, maxX],
+                        y: [ya + mSec * (minX - aVal), ya + mSec * (maxX - aVal)],
+                        mode: 'lines', name: `할선 (평균변화율 ${mSec.toFixed(3)})`,
+                        line: { color: '#e11d48', width: 2.5 }
+                    });
+
+                    // 기준점 A의 접선 (Tangent Line)
+                    if (isFinite(mTan)) {
+                        traces.push({
+                            x: [minX, maxX],
+                            y: [ya + mTan * (minX - aVal), ya + mTan * (maxX - aVal)],
+                            mode: 'lines', name: `접선 (미분계수 ${mTan.toFixed(3)})`,
+                            line: { color: '#059669', width: 2.5, dash: 'dash' }
+                        });
+                    }
+
+                    // 두 점 A, B 마커
+                    traces.push({
+                        x: [aVal, xb], y: [ya, yb], mode: 'markers+text', name: '할선 두 점 A, B',
+                        marker: { size: [11, 11], color: ['#059669', '#e11d48'], line: { color: '#fff', width: 2 } },
+                        text: [`  A(${aVal.toFixed(2)}, ${ya.toFixed(2)})`, `  B(${xb.toFixed(2)}, ${yb.toFixed(2)})`],
+                        textposition: ['bottom left', 'top right'],
+                        textfont: { size: 12, weight: 'bold', color: '#0f172a' }
+                    });
+
+                    if (resBox) {
+                        const errStr = isFinite(mTan) ? Math.abs(mSec - mTan).toFixed(4) : '-';
+                        const tanStr = isDiff ? mTan.toFixed(4) : `미분불가능 (f'₋=${isFinite(dLeft)?dLeft.toFixed(2):'NaN'}, f'₊=${isFinite(dRight)?dRight.toFixed(2):'NaN'})`;
+                        resBox.innerHTML = `평균변화율 <span style="color:#e11d48; font-weight:800;">Δy/Δx = ${mSec.toFixed(4)}</span> &nbsp;|&nbsp; 미분계수 <span style="color:#059669; font-weight:800;">f'(${aVal}) = ${tanStr}</span> &nbsp;|&nbsp; 차이 = <b>${errStr}</b>`;
+                    }
+                }
+            }
+        }
+
         visibleFunctions.forEach((f) => {
             let sameTypeFuncs = func_functionsList.filter(x => x.type === f.type); let typeIndex = sameTypeFuncs.indexOf(f) + 1;
             let fName = f.type === 'complex' ? `z${typeIndex}` : `함수 ${typeIndex}`;
@@ -2008,7 +2556,7 @@
                 return; 
             }
 
-            const isStepExpr = /(\[|\]|\bfloor\b|\bceil\b|\bround\b|\bsgn\b|\bsign\b)/i.test(f.expr || '');
+            const isStepExpr = /(\[|\]|\bfloor\b|\bceil\b|\bround\b|\bsgn\b|\bsign\b|\?)/i.test(f.expr || '');
             const jumpThreshold = isStepExpr ? 0.08 : (spanY * 1.8);
             const yVal = [];
             const yRawVal = [];
@@ -2126,6 +2674,91 @@
             if (f.showInverse && !func_isImplicitFunc(f)) { 
                 hasInverse = true; 
                 traces.push({ x: yVal, y: xVal, mode: 'lines', name: `${fName} 역함수`, line: { color: f.color, width: 2, dash: 'dot' }, customdata: Array(xVal.length).fill('inv_' + f.id), hovertemplate: '(%{x:.2f}, %{y:.2f})<extra></extra>' }); 
+            }
+
+            // 0/0 꼴 구멍 뚫린 점(제거 가능 불연속점 ○) 및 수직 점근선 자동 탐지
+            if (!skipHeavy && !func_isImplicitFunc(f) && (f.expr || '').includes('/')) {
+                const candidateC = new Set();
+                const qStart = Math.ceil(rangeX[0] * 4) / 4;
+                const qEnd = Math.floor(rangeX[1] * 4) / 4;
+                for (let qc = qStart; qc <= qEnd; qc += 0.25) {
+                    candidateC.add(Math.round(qc * 1000) / 1000);
+                }
+                for (let i = 0; i < xVal.length; i++) {
+                    if (isNaN(yRawVal[i]) && xVal[i] >= rangeX[0] && xVal[i] <= rangeX[1]) {
+                        candidateC.add(Math.round(xVal[i] * 100) / 100);
+                    }
+                }
+                candidateC.forEach(c => {
+                    const yc = func_evaluateFunction(f, c);
+                    if (!isFinite(yc)) {
+                        const l1 = func_evaluateFunction(f, c - 1e-5);
+                        const r1 = func_evaluateFunction(f, c + 1e-5);
+                        const l2 = func_evaluateFunction(f, c - 1e-3);
+                        const r2 = func_evaluateFunction(f, c + 1e-3);
+                        if (isFinite(l1) && isFinite(r1) && Math.abs(l1 - r1) < 1e-2 && Math.abs(l1 - l2) < 0.05) {
+                            const holeY = 0.5 * (l1 + r1);
+                            if (!stepOpenX.some(ox => Math.abs(ox - c) < 0.03 && Math.abs(stepOpenY[stepOpenX.indexOf(ox)] - holeY) < 0.05)) {
+                                stepOpenX.push(c);
+                                stepOpenY.push(holeY);
+                                stepColors.push(f.color);
+                            }
+                        } else if ((Math.abs(l1) > 20 || !isFinite(l1)) && (Math.abs(r1) > 20 || !isFinite(r1)) && Math.abs(l1) > Math.abs(l2) * 2) {
+                            traces.push({
+                                x: [c, c], y: [minY, maxY], mode: 'lines', name: `점근선 x = ${func_formatNumber(c)}`,
+                                line: { color: '#94a3b8', width: 1.5, dash: 'dash' }, hoverinfo: 'name'
+                            });
+                        }
+                    }
+                });
+            }
+
+            // 도함수 y = f'(x) 원클릭 그리기 및 극값(f'(x)=0) 수직 보조선
+            if (f.showDerivative && !func_isImplicitFunc(f)) {
+                const dyVal = [];
+                for (let i = 0; i < xVal.length; i++) {
+                    const { dLeft, dRight } = func_evaluateOneSidedDerivatives(f, xVal[i]);
+                    if (isFinite(dLeft) && isFinite(dRight) && Math.abs(dRight - dLeft) <= 0.2) {
+                        const m = 0.5 * (dLeft + dRight);
+                        dyVal.push(Math.abs(m) > 1e5 ? NaN : m);
+                    } else {
+                        dyVal.push(NaN);
+                    }
+                    if (i > 0 && isFinite(dyVal[i]) && isFinite(dyVal[i - 1]) && Math.abs(dyVal[i] - dyVal[i - 1]) > spanY * 0.9) {
+                        dyVal[i - 1] = NaN;
+                    }
+                }
+                traces.push({
+                    x: xVal, y: dyVal, mode: 'lines', name: `${fName} 도함수 f'(x)`,
+                    line: { color: f.color, width: 2.5, dash: 'dash' },
+                    hovertemplate: `${fName} f'(%{x:.2f}) = %{y:.3f}<extra></extra>`
+                });
+                // f(x)의 극값에서 x축 위의 f'(x)=0 절편까지 수직 보조선 연결
+                if (!skipHeavy) {
+                    panelData.extrema.filter(e => e.name === fName).forEach(ex => {
+                        traces.push({
+                            x: [ex.x, ex.x], y: [0, ex.y], mode: 'lines', name: `극값↔f'(x)=0 대응선`,
+                            line: { color: '#16a34a', width: 1.5, dash: 'dot' }, showlegend: false, hoverinfo: 'skip'
+                        });
+                    });
+                }
+            }
+
+            // 이계도함수 y = f''(x) 원클릭 그리기
+            if (f.showSecondDerivative && !func_isImplicitFunc(f)) {
+                const d2yVal = [];
+                for (let i = 0; i < xVal.length; i++) {
+                    const d2 = func_evaluateSecondDerivative(f, xVal[i]);
+                    d2yVal.push((isFinite(d2) && Math.abs(d2) < 1e4) ? d2 : NaN);
+                    if (i > 0 && isFinite(d2yVal[i]) && isFinite(d2yVal[i - 1]) && Math.abs(d2yVal[i] - d2yVal[i - 1]) > spanY * 1.2) {
+                        d2yVal[i - 1] = NaN;
+                    }
+                }
+                traces.push({
+                    x: xVal, y: d2yVal, mode: 'lines', name: `${fName} 이계도함수 f''(x)`,
+                    line: { color: '#7c3aed', width: 2, dash: 'dashdot' },
+                    hovertemplate: `${fName} f''(%{x:.2f}) = %{y:.3f}<extra></extra>`
+                });
             }
         });
 
@@ -2361,6 +2994,9 @@
         if (typeof Plotly !== 'undefined') {
             Plotly.react('graphPlot', newTraces, graphDiv.layout);
             Plotly.relayout('graphPlot', layoutUpdate);
+            if (!skipHeavy && func_isMicroscopeVisible) {
+                func_updateMicroscopePlot();
+            }
         }
     }
 
@@ -2377,7 +3013,50 @@
 
     function func_drawTangentFromObj(f, px, py, isInverse) {
         if (f.type === 'complex') return;
-        let m = 0; let isImplicit = func_isImplicitFunc(f);
+        let isImplicit = func_isImplicitFunc(f);
+        if (!isImplicit && !isInverse) {
+            // 마우스가 첨점(예: 정수/반정수 지점) 근처(0.08 이내)에 접근하면 첨점으로 자동 스냅하여 좌·우미분계수를 명확히 비교
+            const snapCandidate = Math.round(px * 4) / 4;
+            if (Math.abs(px - snapCandidate) < 0.08) {
+                const candSides = func_evaluateOneSidedDerivatives(f, snapCandidate);
+                if (isFinite(candSides.dLeft) && isFinite(candSides.dRight) && Math.abs(candSides.dRight - candSides.dLeft) > 0.15) {
+                    px = snapCandidate;
+                    py = candSides.y0;
+                }
+            }
+            const { dLeft, dRight, y0 } = func_evaluateOneSidedDerivatives(f, px);
+            if (isFinite(y0)) py = y0;
+
+            if (func_isMicroscopeVisible) {
+                const aInput = document.getElementById('microscopeA');
+                if (aInput) {
+                    aInput.value = px.toFixed(2);
+                    func_updateMicroscopePlot();
+                }
+            }
+
+            // 좌미분계수와 우미분계수가 다를 때(첨점·꺾인점): 좌접선(초록 반직선)과 우접선(주황 반직선)을 동시에 표시
+            if (isFinite(dLeft) && isFinite(dRight) && Math.abs(dRight - dLeft) > 0.15) {
+                const leftRay = {
+                    type: 'line', x0: px - 10, y0: py - dLeft * 10, x1: px, y1: py,
+                    line: { color: '#16a34a', width: 3, dash: 'dash' }
+                };
+                const rightRay = {
+                    type: 'line', x0: px, y0: py, x1: px + 10, y1: py + dRight * 10,
+                    line: { color: '#ea580c', width: 3, dash: 'dash' }
+                };
+                const annotation = {
+                    x: px, y: py,
+                    text: `⚠️ <b>첨점·미분불가능 (x = ${px.toFixed(2)})</b><br>좌미분계수 f'₋(${px.toFixed(2)}) = ${dLeft.toFixed(2)} ≠ 우미분계수 f'₊(${px.toFixed(2)}) = ${dRight.toFixed(2)}`,
+                    showarrow: true, arrowhead: 2, ax: 0, ay: -54,
+                    font: { size: 13, color: '#fff' }, bgcolor: '#991b1b', bordercolor: '#f87171', borderpad: 6, borderwidth: 2
+                };
+                Plotly.relayout('graphPlot', { shapes: [leftRay, rightRay], annotations: [annotation] });
+                return;
+            }
+        }
+
+        let m = 0;
         if (isImplicit) { m = func_evaluateImplicitDerivative(f, px, py); } 
         else if (isInverse) { const origM = func_evaluateDerivative(f, py); if (Math.abs(origM) < 1e-8 || isNaN(origM)) return; m = 1 / origM; } 
         else { m = func_evaluateDerivative(f, px); }
