@@ -51,6 +51,8 @@
         .preset-bar { display: flex; align-items: center; gap: 5px; flex-wrap: wrap; background: #f8fafc; padding: 6px 10px; border-radius: 8px; border: 1px solid #e2e8f0; margin-bottom: 8px; }
         .preset-chip { padding: 3px 8px; font-size: 0.76rem; font-weight: 600; border-radius: 999px; background: #ffffff; color: #334155; border: 1px solid #cbd5e1; cursor: pointer; transition: all 0.12s; white-space: nowrap; }
         .preset-chip:hover { background: #eff6ff; color: #1d4ed8; border-color: #93c5fd; }
+        .scenario-chip { padding: 3px 10px; font-size: 0.76rem; font-weight: 800; border-radius: 999px; background: linear-gradient(135deg, #eef2ff 0%, #e0e7ff 100%); color: #3730a3; border: 1.5px solid #818cf8; cursor: pointer; transition: all 0.15s; white-space: nowrap; box-shadow: 0 1px 2px rgba(79,70,229,0.08); }
+        .scenario-chip:hover { background: #4f46e5; color: #ffffff; border-color: #4338ca; transform: translateY(-1px); }
 
         .functions-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(360px, 1fr)); gap: 8px; margin-bottom: 8px; }
         .func-card { background: #fff; border: 1.5px solid #cbd5e1; border-radius: 8px; padding: 7px 10px; box-shadow: 0 1px 3px rgba(0,0,0,0.02); position: relative; transition: all 0.15s; border-left-width: 5px; }
@@ -64,9 +66,13 @@
         .btn-move-select { background: #f1f5f9; color: #334155; border: 1px solid #cbd5e1; border-radius: 4px; padding: 2px 6px; cursor: pointer; font-size: 0.72rem; font-weight: 700; transition: all 0.15s; }
         .btn-move-select.active { background: #f59e0b; color: white; border-color: #d97706; }
         
-        .custom-expr-row { display: flex; flex-direction: column; align-items: flex-start; gap: 3px; width: 100%; color: #1e293b; }
+        .custom-expr-row { display: flex; flex-direction: column; align-items: flex-start; gap: 4px; width: 100%; color: #1e293b; }
         .custom-expr-row input[type="text"] { width: 100%; font-family: 'JetBrains Mono', monospace; box-sizing: border-box; padding: 5px 8px; border: 1px solid #cbd5e1; border-radius: 5px; font-size: 0.9rem; }
         .custom-expr-row input[type="text"]:focus { border-color: #3b82f6; outline: 0; box-shadow: 0 0 0 3px rgba(59,130,246,0.2); }
+        .math-preview-box { width: 100%; min-height: 28px; display: flex; align-items: center; justify-content: space-between; gap: 8px; background: #f8fafc; border: 1px dashed #cbd5e1; border-radius: 6px; padding: 3px 9px; font-size: 0.84rem; color: #0f172a; overflow-x: auto; }
+        .math-preview-label { font-size: 0.68rem; font-weight: 800; color: #64748b; background: #e2e8f0; padding: 1px 6px; border-radius: 4px; white-space: nowrap; flex-shrink: 0; }
+        .direct-drag-banner { display: none; align-items: center; justify-content: space-between; gap: 8px; flex-wrap: wrap; background: linear-gradient(90deg, #eff6ff 0%, #f0fdf4 100%); border: 1.5px solid #93c5fd; border-radius: 8px; padding: 5px 12px; margin-bottom: 6px; font-size: 0.78rem; font-weight: 700; color: #1e3a8a; }
+        .direct-drag-banner.visible { display: flex; }
         
         .switch { position: relative; display: inline-block; width: 34px; height: 18px; }
         .switch input { opacity: 0; width: 0; height: 0; }
@@ -190,10 +196,20 @@
                         <span>🛠️ 분석·미적분 도구 메뉴</span>
                         <span id="toolbarMenuArrow" style="font-size:0.72rem; background:#334155; padding:1px 6px; border-radius:4px;">▼ 펼치기</span>
                     </button>
-                    <button id="easyTermToggleBtn" onclick="func_toggleEasyTermMode()" title="고등 미적분 기호 옆에 중학교 수학 개념(기울기, 직사각형 넓이 등)으로 풀어쓴 쉬운 설명을 함께 표시합니다" style="display:flex; align-items:center; gap:4px; padding:4px 9px; font-size:0.76rem; font-weight:800; border-radius:6px; border:1.5px solid #f59e0b; background:#fffbeb; color:#b45309; cursor:pointer; transition:all 0.15s;">
-                        <span>💬 중학생 쉬운 말: ON</span>
+                    <button id="singleToolModeBtn" onclick="func_toggleSingleToolMode()" title="켜두면 새 미적분 탐색 도구를 열 때 이전에 열려 있던 패널을 자동으로 닫아 화면이 복잡해지는 것을 막아줍니다" style="display:flex; align-items:center; gap:4px; padding:4px 9px; font-size:0.75rem; font-weight:800; border-radius:6px; border:1.5px solid #4f46e5; background:#eef2ff; color:#3730a3; cursor:pointer; transition:all 0.15s;">
+                        <span>🎯 단독 집중 모드: ON</span>
                     </button>
+                    <button id="directDragToggleBtn" onclick="func_toggleDirectDragMode()" title="켜두면 그래프 위의 점(A, B, P, 현미경)이나 정적분 구간 경계선(a, b), 극한 보조선(a, a±h)을 마우스나 손가락으로 직접 잡고 드래그하여 조작할 수 있습니다" style="display:flex; align-items:center; gap:4px; padding:4px 9px; font-size:0.75rem; font-weight:800; border-radius:6px; border:1.5px solid #059669; background:#ecfdf5; color:#065f46; cursor:pointer; transition:all 0.15s;">
+                        <span>🖐️ 그래프 직접 드래그: ON</span>
+                    </button>
+                    <button id="easyTermToggleBtn" onclick="func_toggleEasyTermMode()" title="고등 미적분 기호 옆에 중학교 수학 개념(기울기, 직사각형 넓이 등)으로 풀어쓴 쉬운 설명을 함께 표시합니다" style="display:flex; align-items:center; gap:4px; padding:4px 9px; font-size:0.76rem; font-weight:800; border-radius:6px; border:1.5px solid #f59e0b; background:#fffbeb; color:#b45309; cursor:pointer; transition:all 0.15s;">
+                        <span>💬 쉬운 설명: ON</span>
+                    </button>
+                    <span id="planeTitle" style="font-size:0.74rem; font-weight:800; padding:2px 8px; border-radius:999px; background:#f1f5f9; color:#334155; border:1px solid #cbd5e1;">실평면 함수 그래프</span>
                     <span id="activeToolsBadge" style="display:none; font-size:0.74rem; font-weight:700; padding:2px 8px; border-radius:999px; background:#dbeafe; color:#1e40af; border:1px solid #93c5fd;"></span>
+                    <button id="closeAllToolsBtn" onclick="func_closeAllExplorerPanels()" style="display:none; align-items:center; gap:3px; padding:2px 8px; font-size:0.72rem; font-weight:800; border-radius:999px; background:#fee2e2; color:#b91c1c; border:1px solid #fca5a5; cursor:pointer;" title="열려 있는 미적분 탐색 패널을 모두 닫습니다">
+                        ✕ 도구 모두 닫기
+                    </button>
                 </div>
 
                 <div id="toolsMenuDrawer" style="display:none; width:100%; align-items:center; flex-wrap:wrap; gap:5px; padding-top:6px; margin-top:4px; border-top:1px dashed #cbd5e1;">
@@ -245,6 +261,10 @@
                     <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
                         <span style="font-size:0.95rem; font-weight:800; color:#1e3a8a;">🎯 좌극한 · 우극한 및 연속성 탐색기</span>
                         <span id="limitVerdictBox" style="font-size:0.8rem; font-weight:800; padding:3px 10px; border-radius:999px; background:#dbeafe; color:#1e40af; border:1px solid #93c5fd;">판정 대기 중</span>
+                        <label style="font-size:0.75rem; font-weight:800; color:#1e40af; background:#dbeafe; padding:2px 8px; border-radius:999px; border:1px solid #93c5fd; cursor:pointer; display:flex; align-items:center; gap:4px;" title="곡선 위를 따라 목표 지점으로 다가가는 양방향 발자국과 목표 극한값 주변의 허용 오차 띠(ε-δ 터널)를 표시합니다">
+                            <input type="checkbox" id="limitBandChk" checked onchange="func_updateAll()">
+                            <span>👣 수렴 발자국 &amp; 허용 오차 띠(ε-δ 터널) 표시</span>
+                        </label>
                     </div>
                     <div style="display:flex; align-items:center; gap:6px; flex-wrap:wrap;">
                         <label style="font-size:0.78rem; font-weight:800; color:#1e3a8a; display:flex; align-items:center; gap:4px; background:#dbeafe; padding:3px 8px; border-radius:7px; border:1px solid #93c5fd;">
@@ -284,7 +304,7 @@
                     <tbody id="limitTableBody"></tbody>
                 </table>
                 <div class="easy-term-hint" style="margin-top:5px; font-size:0.76rem; color:#1e40af; background:#dbeafe; padding:4px 9px; border-radius:6px; font-weight:700;">
-                    💡 <b>중학생 쉬운 원리:</b> 그 점에 딱 도착하지 않더라도(구멍 뚫린 점 ○이어도), <b>양옆에서 한없이 다가갈 때 가리키는 목표 높이</b>가 같으면 그것이 바로 <b>극한값</b>입니다!
+                    💡 <b>쉬운 설명:</b> 그 점에 딱 도착하지 않더라도(구멍 뚫린 점 ○이어도), <b>양옆에서 한없이 다가갈 때 가리키는 목표 높이</b>가 같으면 그것이 바로 <b>극한값</b>입니다. (그래프 위의 파란·주황 점이나 목표 수직선을 직접 드래그해 보세요)
                 </div>
             </div>
 
@@ -293,6 +313,10 @@
                 <div class="calc-explorer-header">
                     <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
                         <span style="font-size:0.88rem; font-weight:800; color:#881337;">📐 평균변화율(할선 AB) → 미분계수(접선) 수렴 탐색기</span>
+                        <label style="font-size:0.75rem; font-weight:800; color:#9f1239; background:#ffe4e6; padding:2px 8px; border-radius:999px; border:1px solid #fda4af; cursor:pointer; display:flex; align-items:center; gap:4px;" title="Δx가 0으로 줄어들 때 할선이 접선으로 회전하는 잔상 부채꼴과 실제 변화량(Δy) 대 접선 변화량(dy)의 차이를 표시합니다">
+                            <input type="checkbox" id="secantGhostChk" checked onchange="func_updateAll()">
+                            <span>🌀 할선 회전 잔상 &amp; Δy vs dy 비교 표시</span>
+                        </label>
                     </div>
                     <div style="display:flex; align-items:center; gap:6px; flex-wrap:wrap;">
                         <label style="font-size:0.78rem; font-weight:800; color:#881337; display:flex; align-items:center; gap:4px; background:#ffe4e6; padding:3px 8px; border-radius:7px; border:1px solid #fda4af;">
@@ -326,7 +350,7 @@
                     <div id="secantResultBox" style="background:#fff; padding:5px 12px; border-radius:6px; border:1px solid #fecdd3; font-family:'JetBrains Mono',monospace; font-size:0.82rem; color:#0f172a; width:100%;"></div>
                 </div>
                 <div class="easy-term-hint" style="margin-top:5px; font-size:0.76rem; color:#881337; background:#ffe4e6; padding:4px 9px; border-radius:6px; font-weight:700;">
-                    💡 <b>중학생 쉬운 원리:</b> 중2 때 배운 <b>두 점 사이의 기울기(y증가량 ÷ x증가량 = 평균변화율)</b>에서 두 점 사이 간격(Δx)을 0으로 좁히면, 한 점에서의 <b>순간 기울기(미분계수 = 접선 기울기)</b>가 됩니다!
+                    💡 <b>쉬운 설명:</b> 중2 때 배운 <b>두 점 사이의 기울기(y증가량 ÷ x증가량 = 평균변화율)</b>에서 두 점 사이 간격(Δx)을 0으로 좁히면, 한 점에서의 <b>순간 기울기(미분계수 = 접선 기울기)</b>가 됩니다. (그래프 위의 <b>점 A</b>나 <b>점 B</b>를 직접 드래그해 보세요)
                 </div>
             </div>
 
@@ -345,12 +369,12 @@
                     </div>
                 </div>
                 <div class="calc-explorer-controls" style="margin-bottom:5px;">
-                    <label>대상 함수: <select id="microscopeFuncSelect" onchange="func_updateMicroscopePlot()"></select></label>
-                    <label>관찰 지점 x = <input type="number" id="microscopeA" value="1" step="0.1" style="width:74px;" oninput="func_updateMicroscopePlot()"></label>
+                    <label>대상 함수: <select id="microscopeFuncSelect" onchange="func_updateMicroscopePlot(); func_updateAll();"></select></label>
+                    <label>관찰 지점 x = <input type="number" id="microscopeA" value="1" step="0.1" style="width:74px;" oninput="func_updateMicroscopePlot(); func_updateAll(true);"></label>
                 </div>
                 <div id="microscopePlot" style="width:100%; height:200px; background:#fff; border-radius:8px; border:1px solid #c7d2fe;"></div>
                 <div class="easy-term-hint" style="margin-top:5px; font-size:0.76rem; color:#3730a3; background:#e0e7ff; padding:4px 9px; border-radius:6px; font-weight:700;">
-                    💡 <b>중학생 쉬운 원리:</b> 둥근 지구 땅이 우리 눈엔 평평한 직선처럼 보이듯, 매끄러운 곡선은 <b>돋보기로 크게 확대할수록 직선(접선)과 똑같아집니다(미분가능)</b>. 반대로 뾰족한 점은 아무리 확대해도 꺾여 있어 한 직선이 되지 않습니다!
+                    💡 <b>쉬운 설명:</b> 둥근 지구 땅이 우리 눈엔 평평한 직선처럼 보이듯, 매끄러운 곡선은 <b>돋보기로 크게 확대할수록 직선(접선)과 똑같아집니다(미분가능)</b>. 반대로 뾰족한 점은 아무리 확대해도 꺾여 있어 한 직선이 되지 않습니다. (아래 메인 그래프의 <b>🔍 관찰 지점 마커</b>를 직접 드래그해 보세요)
                 </div>
             </div>
 
@@ -399,7 +423,7 @@
                     <div id="polygonResultBox" style="background:#fff; padding:5px 12px; border-radius:6px; border:1px solid #fed7aa; font-family:'JetBrains Mono',monospace; font-size:0.8rem; color:#0f172a;"></div>
                 </div>
                 <div class="easy-term-hint" style="margin-top:5px; font-size:0.76rem; color:#9a3412; background:#ffedd5; padding:4px 9px; border-radius:6px; font-weight:700;">
-                    💡 <b>중학생 쉬운 원리:</b> 곡선인 원의 넓이를 구하기 어려울 때, 원 안팎에 우리가 넓이를 아는 <b>정다각형(삼각형 N개)</b>을 넣고 꼭짓점 수 N을 한없이 늘리면(<b>극한</b>) 다각형이 곧 원이 됩니다!
+                    💡 <b>쉬운 설명:</b> 곡선인 원의 넓이를 구하기 어려울 때, 원 안팎에 우리가 넓이를 아는 <b>정다각형(삼각형 N개)</b>을 넣고 꼭짓점 수 N을 한없이 늘리면(<b>극한</b>) 다각형이 곧 원이 됩니다.
                 </div>
             </div>
 
@@ -409,6 +433,10 @@
                     <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
                         <span style="font-size:0.92rem; font-weight:800; color:#854d0e;">🎢 기울기의 자취(도함수) 탐색기 (곡선의 기울기가 도함수가 되는 과정)</span>
                         <span id="slopeWalkVerdictBadge" style="font-size:0.78rem; font-weight:800; padding:3px 10px; border-radius:999px; background:#fef9c3; color:#854d0e; border:1px solid #fde047;">곡선 위를 따라 이동하며 (x, 순간 기울기)의 자취를 그립니다</span>
+                        <label style="font-size:0.75rem; font-weight:800; color:#854d0e; background:#fef9c3; padding:2px 8px; border-radius:999px; border:1px solid #fde047; cursor:pointer; display:flex; align-items:center; gap:4px;" title="접선의 단위 기울기 삼각형(가로 1 : 세로 f'(x))과 도함수의 부호(증가+/감소-/극값0) 영역을 함께 표시합니다">
+                            <input type="checkbox" id="slopeSignBandChk" checked onchange="func_updateAll()">
+                            <span>🌈 단위 기울기 삼각형 &amp; 증감(±)·극값(0) 영역 표시</span>
+                        </label>
                     </div>
                     <div style="display:flex; align-items:center; gap:6px; flex-wrap:wrap;">
                         <label style="font-size:0.78rem; font-weight:800; color:#854d0e; display:flex; align-items:center; gap:4px; background:#fef9c3; padding:3px 8px; border-radius:7px; border:1px solid #fde047;">
@@ -435,7 +463,7 @@
                     <div id="slopeWalkResultBox" style="background:#fff; padding:5px 12px; border-radius:6px; border:1px solid #fef08a; font-family:'JetBrains Mono',monospace; font-size:0.8rem; color:#0f172a;"></div>
                 </div>
                 <div class="easy-term-hint" style="margin-top:5px; font-size:0.76rem; color:#854d0e; background:#fef9c3; padding:4px 9px; border-radius:6px; font-weight:700;">
-                    💡 <b>중학생 쉬운 원리:</b> 곡선 위에서 <b>오르막길(기울기 +)</b>일 때는 점이 x축 위에 찍히고, <b>산꼭대기·골짜기(기울기 0)</b>에서는 x축(0)에 찍히며, <b>내리막길(기울기 -)</b>일 때는 x축 아래에 찍힙니다. 이 점들이 지나간 흔적(<b>기울기의 자취</b>)이 바로 <b>도함수</b>입니다!
+                    💡 <b>쉬운 설명:</b> 곡선 위에서 <b>오르막길(기울기 +)</b>일 때는 점이 x축 위에 찍히고, <b>산꼭대기·골짜기(기울기 0)</b>에서는 x축(0)에 찍히며, <b>내리막길(기울기 -)</b>일 때는 x축 아래에 찍힙니다. 이 점들이 지나간 흔적(<b>기울기의 자취</b>)이 바로 <b>도함수</b>입니다. (그래프 위의 <b>점 P</b>나 <b>자취 점 Q</b>를 직접 드래그해 보세요)
                 </div>
             </div>
 
@@ -444,9 +472,13 @@
                 <div class="calc-explorer-header">
                     <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
                         <span style="font-size:0.92rem; font-weight:800; color:#065f46;">∫ 정적분 &amp; 🧱 직사각형 블록 쪼개기 (구분구적법) 탐색기</span>
-                        <label style="font-size:0.76rem; font-weight:800; color:#0f766e; background:#ccfbf1; padding:2px 8px; border-radius:999px; border:1px solid #5eead4; cursor:pointer; display:flex; align-items:center; gap:4px;" title="시작점 a부터 각 x까지 색칠된 넓이의 누적합 S(x)를 그래프로 그려 미분과 적분이 거꾸로(역연산) 관계임을 확인합니다">
+                        <label style="font-size:0.76rem; font-weight:800; color:#0f766e; background:#ccfbf1; padding:2px 8px; border-radius:999px; border:1px solid #5eead4; cursor:pointer; display:flex; align-items:center; gap:4px;" title="시작점 a부터 각 x까지 색칠된 넓이의 누적합 S(x)와 S'(x)=f(x) 접선 관계를 표시하여 미분과 적분이 역연산임을 확인합니다">
                             <input type="checkbox" id="integralAccumChk" checked onchange="func_updateAll()">
-                            <span>🪣 넓이 누적 그래프 S(x) 표시 (미분↔적분 역연산)</span>
+                            <span>🪣 넓이 누적 S(x) &amp; S'(x)=f(x) 역연산 표시</span>
+                        </label>
+                        <label style="font-size:0.75rem; font-weight:800; color:#b45309; background:#fef3c7; padding:2px 8px; border-radius:999px; border:1px solid #fcd34d; cursor:pointer; display:flex; align-items:center; gap:4px;" title="직사각형 블록과 실제 곡선 사이의 빈틈·초과 오차 조각을 주황색으로 강조 표시합니다">
+                            <input type="checkbox" id="integralErrorShadeChk" checked onchange="func_updateAll()">
+                            <span>🔍 빈틈·초과 오차 조각 강조</span>
                         </label>
                     </div>
                     <div style="display:flex; align-items:center; gap:6px; flex-wrap:wrap;">
@@ -480,6 +512,9 @@
                             <option value="left" selected>🧱 직사각형 블록 (왼쪽 높이)</option>
                             <option value="mid">🧱 직사각형 블록 (가운데 높이)</option>
                             <option value="right">🧱 직사각형 블록 (오른쪽 높이)</option>
+                            <option value="upper">📈 상합 (구간 최댓값 기둥)</option>
+                            <option value="lower">📉 하합 (구간 최솟값 기둥)</option>
+                            <option value="compare_ul">⚖️ 상합·하합 동시 비교 (넓이 샌드위치)</option>
                             <option value="trap">📐 사다리꼴 블록</option>
                             <option value="exact">✨ 매끄러운 곡선 넓이만</option>
                         </select>
@@ -493,7 +528,7 @@
                     </div>
                 </div>
                 <div class="easy-term-hint" style="margin-top:5px; font-size:0.76rem; color:#065f46; background:#d1fae5; padding:4px 9px; border-radius:6px; font-weight:700;">
-                    💡 <b>중학생 쉬운 원리:</b> 휘어진 곡선 아래를 우리가 넓이 공식(가로×세로)을 아는 <b>직사각형 막대 N개</b>로 쪼개어 더한 뒤, 막대를 한없이 얇게 쪼개면(<b>N → ∞ 극한</b>) 튀어나온 빈틈 오차가 0이 되면서 정확한 곡선 넓이(<b>적분</b>)가 됩니다!
+                    💡 <b>쉬운 설명:</b> 휘어진 곡선 아래를 우리가 넓이 공식(가로×세로)을 아는 <b>직사각형 막대 N개</b>로 쪼개어 더한 뒤, 막대를 한없이 얇게 쪼개면(<b>N → ∞ 극한</b>) 튀어나온 빈틈 오차가 0이 되면서 정확한 곡선 넓이(<b>적분</b>)가 됩니다. (그래프의 <b>구간 경계선 a, b 핸들</b>을 좌우로 직접 드래그해 보세요)
                 </div>
             </div>
 
@@ -522,6 +557,10 @@
             </div>
 
             <div class="workspace">
+                <div id="directDragHintBanner" class="direct-drag-banner">
+                    <span id="directDragHintText">🖐️ 직접 드래그 안내</span>
+                    <span style="font-size:0.72rem; color:#475569;">마우스를 조작점이나 경계선에 올리면 커서가 바뀝니다</span>
+                </div>
                 <div class="graph-wrapper">
                     <div class="zoom-controls">
                         <button id="deselectBtn" class="zoom-btn-text" style="display: none;" onclick="func_deselectGraph()">✥ 이동 선택 해제</button>
@@ -1087,7 +1126,14 @@
         if (appId === 'func') {
             btnFunc.className = "nav-btn active"; btnPhys.className = "nav-btn inactive";
             appFunc.classList.add('active'); appPhys.classList.remove('active');
-            if(window.Plotly && document.getElementById('graphPlot')) { Plotly.Plots.resize('graphPlot'); }
+            if (phys_audioCtx && phys_audioCtx.state === 'running') {
+                if (phys_engineGain) phys_engineGain.gain.setTargetAtTime(0, phys_audioCtx.currentTime, 0.02);
+                phys_audioCtx.suspend().catch(() => {});
+            }
+            if (window.Plotly) {
+                if (document.getElementById('graphPlot')) Plotly.Plots.resize('graphPlot');
+                if (func_isMicroscopeVisible && document.getElementById('microscopePlot')) Plotly.Plots.resize('microscopePlot');
+            }
         } else {
             btnPhys.className = "nav-btn active"; btnFunc.className = "nav-btn inactive";
             appPhys.classList.add('active'); appFunc.classList.remove('active');
@@ -1101,8 +1147,11 @@
         if (btn) {
             btn.innerText = globalSoundMuted ? '🔇 사운드: OFF' : '🔊 사운드: ON';
         }
-        if (globalSoundMuted && phys_audioCtx && phys_engineGain) {
-            phys_engineGain.gain.setTargetAtTime(0, phys_audioCtx.currentTime, 0.05);
+        if (globalSoundMuted && phys_audioCtx) {
+            if (phys_engineGain) phys_engineGain.gain.setTargetAtTime(0, phys_audioCtx.currentTime, 0.02);
+            if (phys_audioCtx.state === 'running') phys_audioCtx.suspend().catch(() => {});
+        } else if (!globalSoundMuted && currentGlobalApp === 'phys' && phys_audioCtx && phys_audioCtx.state === 'suspended') {
+            phys_audioCtx.resume().catch(() => {});
         }
     }
     window.toggleGlobalSound = toggleGlobalSound;
@@ -1145,8 +1194,107 @@
     let func_showComplexMul = false;
     let func_showUnitCircle = false;
 
-    let func_isQuickInputOpen = true;
+    let func_isQuickInputOpen = false;
     let func_isToolbarOpen = false;
+    let func_isSingleToolMode = true; // 단독 집중 모드 (새 미적분 패널 열 때 기존 패널 자동 닫기)
+    let func_isAutoScenarioMode = true; // 예제 프리셋 클릭 시 맞춤 도구 자동 열기
+    let func_isDirectDragMode = true; // 그래프 위 조작점(A, B, P, 경계선 a/b 등) 직접 드래그 모드
+    let func_draggingHandle = null; // 현재 그래프 위에서 드래그 중인 조작 핸들 정보
+
+    function func_toggleSingleToolMode() {
+        func_isSingleToolMode = !func_isSingleToolMode;
+        const btn = document.getElementById('singleToolModeBtn');
+        if (btn) {
+            btn.innerHTML = `<span>🎯 단독 집중 모드: ${func_isSingleToolMode ? 'ON' : 'OFF'}</span>`;
+            btn.style.background = func_isSingleToolMode ? '#eef2ff' : '#f8fafc';
+            btn.style.borderColor = func_isSingleToolMode ? '#4f46e5' : '#cbd5e1';
+            btn.style.color = func_isSingleToolMode ? '#3730a3' : '#64748b';
+        }
+    }
+    window.func_toggleSingleToolMode = func_toggleSingleToolMode;
+
+    function func_toggleDirectDragMode() {
+        func_isDirectDragMode = !func_isDirectDragMode;
+        const btn = document.getElementById('directDragToggleBtn');
+        if (btn) {
+            btn.innerHTML = `<span>🖐️ 그래프 직접 드래그: ${func_isDirectDragMode ? 'ON' : 'OFF'}</span>`;
+            btn.style.background = func_isDirectDragMode ? '#ecfdf5' : '#f8fafc';
+            btn.style.borderColor = func_isDirectDragMode ? '#059669' : '#cbd5e1';
+            btn.style.color = func_isDirectDragMode ? '#065f46' : '#64748b';
+        }
+        func_updateToolbarMenuBadge();
+    }
+    window.func_toggleDirectDragMode = func_toggleDirectDragMode;
+
+    function func_toggleAutoScenarioMode() {
+        func_isAutoScenarioMode = !func_isAutoScenarioMode;
+        func_renderPresets();
+    }
+    window.func_toggleAutoScenarioMode = func_toggleAutoScenarioMode;
+
+    // 단독 집중 모드일 때 지정한 패널 외의 다른 미적분 탐색 패널들을 깔끔하게 닫는 헬퍼
+    function func_closeOtherExplorerPanels(keepPanelKey) {
+        if (keepPanelKey !== 'limit' && func_isLimitVisible) {
+            func_isLimitVisible = false;
+            const p = document.getElementById('limitControlPanel'), b = document.getElementById('limitModeBtn');
+            if (p) p.classList.remove('visible');
+            if (b) { b.classList.remove('active'); b.innerHTML = `<span>🎯</span> 좌·우극한: OFF`; }
+            if (func_limitAnimId) { cancelAnimationFrame(func_limitAnimId); func_limitAnimId = null; }
+        }
+        if (keepPanelKey !== 'polygon' && func_isPolygonVisible) {
+            func_isPolygonVisible = false;
+            const p = document.getElementById('polygonControlPanel'), b = document.getElementById('polygonModeBtn');
+            if (p) p.classList.remove('visible');
+            if (b) { b.classList.remove('active'); b.innerHTML = `<span>🛑</span> 다각형→원 극한(π): OFF`; }
+            if (func_polygonAnimId) { cancelAnimationFrame(func_polygonAnimId); func_polygonAnimId = null; }
+        }
+        if (keepPanelKey !== 'secant' && func_isSecantVisible) {
+            func_isSecantVisible = false;
+            const p = document.getElementById('secantControlPanel'), b = document.getElementById('secantModeBtn');
+            if (p) p.classList.remove('visible');
+            if (b) { b.classList.remove('active'); b.innerHTML = `<span>📐</span> 평균변화율(Δx→0): OFF`; }
+            if (func_secantAnimId) { cancelAnimationFrame(func_secantAnimId); func_secantAnimId = null; }
+        }
+        if (keepPanelKey !== 'slopeWalk' && func_isSlopeWalkVisible) {
+            func_isSlopeWalkVisible = false;
+            const p = document.getElementById('slopeWalkControlPanel'), b = document.getElementById('slopeWalkModeBtn');
+            if (p) p.classList.remove('visible');
+            if (b) { b.classList.remove('active'); b.innerHTML = `<span>🎢</span> 기울기의 자취(도함수): OFF`; }
+            if (func_slopeWalkAnimId) { cancelAnimationFrame(func_slopeWalkAnimId); func_slopeWalkAnimId = null; }
+        }
+        if (keepPanelKey !== 'microscope' && func_isMicroscopeVisible) {
+            func_isMicroscopeVisible = false;
+            const p = document.getElementById('microscopeControlPanel'), b = document.getElementById('microscopeModeBtn');
+            if (p) p.classList.remove('visible');
+            if (b) { b.classList.remove('active'); b.innerHTML = `<span>🔬</span> 미분 현미경: OFF`; }
+        }
+        if (keepPanelKey !== 'integral' && func_isIntegralVisible) {
+            func_isIntegralVisible = false;
+            const p = document.getElementById('integralControlPanel'), b = document.getElementById('integralModeBtn');
+            if (p) p.classList.remove('visible');
+            if (b) { b.classList.remove('active'); b.innerHTML = `<span>∫</span> 정적분·블록쪼개기: OFF`; }
+            if (func_integralAnimId) { cancelAnimationFrame(func_integralAnimId); func_integralAnimId = null; }
+        }
+    }
+
+    function func_closeAllExplorerPanels() {
+        func_closeOtherExplorerPanels('none');
+        if (func_isIntersectionVisible) {
+            func_isIntersectionVisible = false;
+            const p = document.getElementById('topInfoPanel'), b = document.getElementById('intersectToggleBtn');
+            if (p) p.classList.remove('visible');
+            if (b) b.classList.remove('active');
+        }
+        if (func_isTangentMode) {
+            func_isTangentMode = false;
+            const b = document.getElementById('tangentModeBtn');
+            if (b) { b.className = 'toggle-btn'; b.innerHTML = `<span>⤡</span> 실시간 접선: OFF`; }
+            Plotly.relayout('graphPlot', { shapes: [], annotations: [], hovermode: 'closest' });
+        }
+        func_updateToolbarMenuBadge();
+        func_updateAll();
+    }
+    window.func_closeAllExplorerPanels = func_closeAllExplorerPanels;
 
     function func_toggleToolbarMenu() {
         func_isToolbarOpen = !func_isToolbarOpen;
@@ -1160,9 +1308,13 @@
 
     function func_updateToolbarMenuBadge() {
         const badge = document.getElementById('activeToolsBadge');
+        const closeBtn = document.getElementById('closeAllToolsBtn');
+        const dragBanner = document.getElementById('directDragHintBanner');
+        const dragHintText = document.getElementById('directDragHintText');
         if (!badge) return;
         const hasComplex = func_functionsList.some(f => f.type === 'complex');
         const activeNames = [];
+        const dragHints = [];
         if (hasComplex) {
             if (func_showComplexSum) activeNames.push('덧셈 평행사변형');
             if (func_showComplexMul) activeNames.push('곱셈 회전·확대');
@@ -1170,20 +1322,45 @@
         } else {
             if (func_isIntersectionVisible) activeNames.push('교점·극값');
             if (func_isPolygonVisible) activeNames.push('다각형→원 극한');
-            if (func_isLimitVisible) activeNames.push('좌·우극한');
-            if (func_isSecantVisible) activeNames.push('평균변화율');
-            if (func_isSlopeWalkVisible) activeNames.push('기울기의 자취(도함수)');
+            if (func_isLimitVisible) {
+                activeNames.push('좌·우극한');
+                dragHints.push('[좌·우 접근점(x±h)] 또는 [목표선(x=a)]');
+            }
+            if (func_isSecantVisible) {
+                activeNames.push('평균변화율');
+                dragHints.push('[기준점 A] 또는 [점 B(Δx 조절)]');
+            }
+            if (func_isSlopeWalkVisible) {
+                activeNames.push('기울기의 자취(도함수)');
+                dragHints.push('[곡선 위 점 P] 또는 [자취 점 Q]');
+            }
             if (func_isTangentMode) activeNames.push('실시간 접선');
-            if (func_isMicroscopeVisible) activeNames.push('미분 현미경');
-            if (func_isIntegralVisible) activeNames.push('정적분·블록쪼개기');
+            if (func_isMicroscopeVisible) {
+                activeNames.push('미분 현미경');
+                dragHints.push('[🔍 현미경 관찰 지점 마커]');
+            }
+            if (func_isIntegralVisible) {
+                activeNames.push('정적분·블록쪼개기');
+                dragHints.push('[구간 시작선(◀a)] 또는 [구간 끝선(b▶)]');
+            }
             if (func_usePiTicks) activeNames.push('호도법 눈금');
         }
         if (activeNames.length > 0) {
             badge.style.display = 'inline-flex';
             badge.textContent = `켜진 도구(${activeNames.length}): ${activeNames.join(', ')}`;
+            if (closeBtn && !hasComplex) closeBtn.style.display = 'inline-flex';
         } else {
             badge.style.display = 'none';
             badge.textContent = '';
+            if (closeBtn) closeBtn.style.display = 'none';
+        }
+        if (dragBanner && dragHintText) {
+            if (!hasComplex && func_isDirectDragMode && dragHints.length > 0) {
+                dragBanner.classList.add('visible');
+                dragHintText.innerHTML = `🖐️ <b>그래프 위 직접 드래그 가능:</b> ${dragHints.join(' · ')}을(를) 마우스나 손가락으로 잡고 바로 움직여 보세요.`;
+            } else {
+                dragBanner.classList.remove('visible');
+            }
         }
     }
     window.func_updateToolbarMenuBadge = func_updateToolbarMenuBadge;
@@ -1192,7 +1369,7 @@
         func_isEasyTermMode = !func_isEasyTermMode;
         const btn = document.getElementById('easyTermToggleBtn');
         if (btn) {
-            btn.textContent = `💬 쉬운 말 설명: ${func_isEasyTermMode ? 'ON' : 'OFF'}`;
+            btn.textContent = `💬 쉬운 설명: ${func_isEasyTermMode ? 'ON' : 'OFF'}`;
             btn.style.background = func_isEasyTermMode ? '#fffbeb' : '#f8fafc';
             btn.style.borderColor = func_isEasyTermMode ? '#f59e0b' : '#cbd5e1';
             btn.style.color = func_isEasyTermMode ? '#b45309' : '#64748b';
@@ -1222,28 +1399,40 @@
     ];
 
     const REAL_PRESETS = [
-        { label: '이차함수 -x²+x', expr: '-x^2+x' },
-        { label: '이차함수 x(x-2)', expr: 'x(x-2)' },
-        { label: '삼차함수 x³-3x', expr: 'x^3 - 3x' },
-        { label: '0/0 극한 (x²-1)/(x-1)', expr: '(x^2 - 1)/(x - 1)' },
-        { label: '삼각극한 sin(x)/x', expr: 'sin(x)/x' },
-        { label: '구간함수 x<1 ? x² : 2x-1', expr: 'x < 1 ? x^2 : 2x - 1' },
-        { label: '첨점 비교 |x(x-2)|', expr: '|x(x - 2)|' },
-        { label: '복합 |x[x-2]|', expr: '|x[x - 2]|' },
-        { label: '절댓값 |x-1|+|x+1|', expr: '|x - 1| + |x + 1|' },
-        { label: '가우스 함수 [x]', expr: '[x]' },
-        { label: '소수부분 x-[x]', expr: 'x - [x]' },
+        { label: '이차함수 -x²+x', expr: '-x^2+x', tool: 'integral', a: 0, b: 1, n: 8 },
+        { label: '이차함수 x(x-2)', expr: 'x(x-2)', tool: 'secant', a: 1, dx: 1.0 },
+        { label: '삼차함수 x³-3x', expr: 'x^3 - 3x', tool: 'slopeWalk', x0: -2.2 },
+        { label: '0/0 극한 (x²-1)/(x-1)', expr: '(x^2 - 1)/(x - 1)', tool: 'limit', a: 1, h: 0.5 },
+        { label: '삼각극한 sin(x)/x', expr: 'sin(x)/x', tool: 'limit', a: 0, h: 0.5 },
+        { label: '구간함수 x<1 ? x² : 2x-1', expr: 'x < 1 ? x^2 : 2x - 1', tool: 'limit', a: 1, h: 0.5 },
+        { label: '첨점 비교 |x(x-2)|', expr: '|x(x - 2)|', tool: 'microscope', a: 2, zoom: 50, tangent: true },
+        { label: '복합 |x[x-2]|', expr: '|x[x - 2]|', tool: 'limit', a: 2, h: 0.45 },
+        { label: '절댓값 |x-1|+|x+1|', expr: '|x - 1| + |x + 1|', tool: 'microscope', a: 1, zoom: 50, tangent: true },
+        { label: '가우스 함수 [x]', expr: '[x]', tool: 'limit', a: 1, h: 0.45 },
+        { label: '소수부분 x-[x]', expr: 'x - [x]', tool: 'limit', a: 1, h: 0.45 },
         { label: '부등식 y ≥ x', expr: 'y ≥ x' },
         { label: '부등식 y ≤ -x²+x', expr: 'y ≤ -x^2+x' },
-        { label: '무리함수 √x', expr: 'sqrt(x)' },
-        { label: '세제곱근 x^(1/3)', expr: 'x^(1/3)' },
-        { label: '유리함수 1/x', expr: '1/x' },
-        { label: '지수함수 2^x', expr: '2^x' },
-        { label: '로그함수 log2(x)', expr: 'log2(x)' },
-        { label: '삼각함수 sin(x)', expr: 'sin(x)' },
-        { label: '마름모 |x|+|y|=4', expr: '|x| + |y| = 4' },
-        { label: '원의 방정식 x²+y²=9', expr: 'x^2 + y^2 = 9' },
+        { label: '무리함수 √x', expr: 'sqrt(x)', tool: 'secant', a: 1, dx: 1.0 },
+        { label: '세제곱근 x^(1/3)', expr: 'x^(1/3)', tool: 'microscope', a: 0, zoom: 50 },
+        { label: '유리함수 1/x', expr: '1/x', tool: 'limit', a: 0, h: 0.4 },
+        { label: '지수함수 2^x', expr: '2^x', tool: 'secant', a: 0, dx: 1.0 },
+        { label: '로그함수 log2(x)', expr: 'log2(x)', tool: 'secant', a: 1, dx: 1.0 },
+        { label: '삼각함수 sin(x)', expr: 'sin(x)', tool: 'slopeWalk', x0: -3.14 },
+        { label: '마름모 |x|+|y|=4', expr: '|x| + |y| = 4', tool: 'microscope', a: 0, zoom: 50 },
+        { label: '원의 방정식 x²+y²=9', expr: 'x^2 + y^2 = 9', tool: 'polygon', r: 3, n: 6 },
         { label: '원 내부 x²+y² ≤ 9', expr: 'x^2 + y^2 ≤ 9' }
+    ];
+
+    // 원클릭 개념 시나리오 (클릭 즉시 수식 세팅 + 해당 탐색 도구 오픈 + 최적 파라미터 자동 설정)
+    const SCENARIO_PRESETS = [
+        { label: '🎯 0/0 구멍 극한 체험', expr: '(x^2 - 1)/(x - 1)', tool: 'limit', a: 1, h: 0.5 },
+        { label: '🌊 삼각극한 sin(x)/x', expr: 'sin(x)/x', tool: 'limit', a: 0, h: 0.5 },
+        { label: '⚡ 가우스 점프 불연속', expr: '[x]', tool: 'limit', a: 1, h: 0.45 },
+        { label: '📐 할선→접선 수렴', expr: 'x(x - 2)', tool: 'secant', a: 1, dx: 1.2 },
+        { label: '🔬 첨점 현미경 확대', expr: '|x(x - 2)|', tool: 'microscope', a: 2, zoom: 50, tangent: true },
+        { label: '🎢 삼차함수 기울기 자취', expr: 'x^3 - 3x', tool: 'slopeWalk', x0: -2.2 },
+        { label: '🧱 이차함수 블록 적분', expr: '-x^2 + 4', tool: 'integral', a: -2, b: 2, n: 8 },
+        { label: '🛑 다각형→원 극한(π)', expr: 'x^2 + y^2 = 9', tool: 'polygon', r: 3, n: 6 }
     ];
 
     const COMPLEX_PRESETS = [
@@ -1276,6 +1465,7 @@
             inputEl.value = '';
             inputEl.focus();
         }
+        func_updateMathPreview(target.id);
         func_syncIntegralSelect();
         func_updateAll();
     }
@@ -1293,9 +1483,14 @@
                 <button onmousedown="event.preventDefault()" onclick="func_toggleQuickInputBar()" style="padding:2px 8px; font-size:0.74rem; font-weight:700; border-radius:5px; border:1px solid #cbd5e1; background:#ffffff; color:#334155; cursor:pointer;">
                     ${func_isQuickInputOpen ? '▲ 접기' : '▼ 펼치기'}
                 </button>
-                <button onmousedown="event.preventDefault()" onclick="func_clearActiveInput()" style="padding:2px 8px; font-size:0.74rem; font-weight:700; border-radius:5px; border:1px solid #fca5a5; background:#fef2f2; color:#dc2626; cursor:pointer; margin-right:4px;" title="현재 입력창의 수식을 비웁니다">
+                <button onmousedown="event.preventDefault()" onclick="func_clearActiveInput()" style="padding:2px 8px; font-size:0.74rem; font-weight:700; border-radius:5px; border:1px solid #fca5a5; background:#fef2f2; color:#dc2626; cursor:pointer;" title="현재 입력창의 수식을 비웁니다">
                     🧹 비우기
                 </button>
+                ${(func_isQuickInputOpen && !hasComplex) ? `
+                <button id="autoScenarioToggleBtn" onmousedown="event.preventDefault()" onclick="func_toggleAutoScenarioMode()" style="padding:2px 8px; font-size:0.74rem; font-weight:800; border-radius:5px; border:1px solid ${func_isAutoScenarioMode ? '#6366f1' : '#cbd5e1'}; background:${func_isAutoScenarioMode ? '#eef2ff' : '#ffffff'}; color:${func_isAutoScenarioMode ? '#4338ca' : '#64748b'}; cursor:pointer; margin-right:4px;" title="켜두면 아래 예제 클릭 시 그 수식을 가장 잘 이해할 수 있는 미적분 탐색 도구가 자동으로 함께 열립니다">
+                    🎓 예제 클릭 시 맞춤 도구 자동 열기: ${func_isAutoScenarioMode ? 'ON' : 'OFF'}
+                </button>
+                ` : ''}
         `;
 
         if (func_isQuickInputOpen && !hasComplex) {
@@ -1306,9 +1501,18 @@
         html += `</div>`;
 
         if (func_isQuickInputOpen) {
-            html += `<div style="width:100%; display:flex; align-items:center; gap:5px; flex-wrap:wrap; padding-top:3px; border-top:1px dashed #e2e8f0;">`;
             if (!hasComplex) {
-                html += `<span style="font-size:0.74rem; font-weight:700; color:#475569;">예제:</span>`;
+                html += `<div style="width:100%; display:flex; align-items:center; gap:5px; flex-wrap:wrap; padding-top:4px; border-top:1px dashed #e2e8f0;">`;
+                html += `<span style="font-size:0.74rem; font-weight:800; color:#4338ca;">🎓 원클릭 개념 시나리오:</span>`;
+                SCENARIO_PRESETS.forEach((sc, idx) => {
+                    html += `<button class="scenario-chip" onmousedown="event.preventDefault()" onclick="func_applyScenario(${idx})" title="클릭하면 '${sc.expr}' 수식 입력과 함께 맞춤 미적분 탐색 도구를 즉시 엽니다">${sc.label}</button>`;
+                });
+                html += `</div>`;
+            }
+
+            html += `<div style="width:100%; display:flex; align-items:center; gap:5px; flex-wrap:wrap; padding-top:4px; border-top:1px dashed #e2e8f0;">`;
+            if (!hasComplex) {
+                html += `<span style="font-size:0.74rem; font-weight:700; color:#475569;">수식 예제:</span>`;
             }
             list.forEach((item, idx) => {
                 html += `<button class="preset-chip" onmousedown="event.preventDefault()" onclick="func_applyPreset(${idx})">${item.label}</button>`;
@@ -1318,7 +1522,118 @@
         bar.innerHTML = html;
     }
 
-    function func_insertTextIntoTarget(snippet) {
+    // 프리셋 또는 시나리오에 지정된 미적분 탐색 도구를 자동으로 열고 목표 파라미터를 세팅
+    function func_activateToolForScenario(cfg, targetFuncId) {
+        if (!cfg || !cfg.tool) return;
+        func_closeOtherExplorerPanels(cfg.tool);
+        func_syncIntegralSelect();
+
+        if (cfg.tool === 'limit') {
+            func_isLimitVisible = true;
+            const panel = document.getElementById('limitControlPanel'), btn = document.getElementById('limitModeBtn');
+            if (panel) panel.classList.add('visible');
+            if (btn) { btn.classList.add('active'); btn.innerHTML = `<span>🎯</span> 좌·우극한: ON`; }
+            const sel = document.getElementById('limitFuncSelect');
+            if (sel && targetFuncId) sel.value = targetFuncId;
+            const aEl = document.getElementById('limitTargetA');
+            if (aEl && cfg.a !== undefined) aEl.value = String(cfg.a);
+            const hSlider = document.getElementById('limitHSlider'), hBadge = document.getElementById('limitHVal');
+            if (hSlider && cfg.h !== undefined) {
+                hSlider.value = String(cfg.h);
+                if (hBadge) hBadge.textContent = Number(cfg.h).toFixed(3);
+            }
+        } else if (cfg.tool === 'secant') {
+            func_isSecantVisible = true;
+            const panel = document.getElementById('secantControlPanel'), btn = document.getElementById('secantModeBtn');
+            if (panel) panel.classList.add('visible');
+            if (btn) { btn.classList.add('active'); btn.innerHTML = `<span>📐</span> 평균변화율(Δx→0): ON`; }
+            const sel = document.getElementById('secantFuncSelect');
+            if (sel && targetFuncId) sel.value = targetFuncId;
+            const aEl = document.getElementById('secantA');
+            if (aEl && cfg.a !== undefined) aEl.value = String(cfg.a);
+            const dxSlider = document.getElementById('secantDxSlider'), dxBadge = document.getElementById('secantDxVal');
+            if (dxSlider && cfg.dx !== undefined) {
+                dxSlider.value = String(cfg.dx);
+                if (dxBadge) dxBadge.textContent = (cfg.dx >= 0 ? '+' : '') + Number(cfg.dx).toFixed(2);
+            }
+            func_snapSecantYToCurve(true);
+        } else if (cfg.tool === 'microscope') {
+            func_isMicroscopeVisible = true;
+            const panel = document.getElementById('microscopeControlPanel'), btn = document.getElementById('microscopeModeBtn');
+            if (panel) panel.classList.add('visible');
+            if (btn) { btn.classList.add('active'); btn.innerHTML = `<span>🔬</span> 미분 현미경: ON`; }
+            const sel = document.getElementById('microscopeFuncSelect');
+            if (sel && targetFuncId) sel.value = targetFuncId;
+            const aEl = document.getElementById('microscopeA');
+            if (aEl && cfg.a !== undefined) aEl.value = String(cfg.a);
+            if (cfg.zoom) func_setMicroscopeZoom(cfg.zoom);
+            if (cfg.tangent && !func_isTangentMode) {
+                func_isTangentMode = true;
+                const tBtn = document.getElementById('tangentModeBtn');
+                if (tBtn) { tBtn.className = 'toggle-btn active'; tBtn.innerHTML = `<span>⤡</span> 실시간 접선: ON`; }
+            }
+            setTimeout(func_updateMicroscopePlot, 40);
+        } else if (cfg.tool === 'slopeWalk') {
+            func_isSlopeWalkVisible = true;
+            const panel = document.getElementById('slopeWalkControlPanel'), btn = document.getElementById('slopeWalkModeBtn');
+            if (panel) panel.classList.add('visible');
+            if (btn) { btn.classList.add('active'); btn.innerHTML = `<span>🎢</span> 기울기의 자취(도함수): ON`; }
+            const sel = document.getElementById('slopeWalkFuncSelect');
+            if (sel && targetFuncId) sel.value = targetFuncId;
+            const xSlider = document.getElementById('slopeWalkXSlider'), xBadge = document.getElementById('slopeWalkXVal');
+            if (xSlider && cfg.x0 !== undefined) {
+                xSlider.value = String(cfg.x0);
+                if (xBadge) xBadge.textContent = (cfg.x0 >= 0 ? '+' : '') + Number(cfg.x0).toFixed(2);
+            }
+        } else if (cfg.tool === 'integral') {
+            func_isIntegralVisible = true;
+            const panel = document.getElementById('integralControlPanel'), btn = document.getElementById('integralModeBtn');
+            if (panel) panel.classList.add('visible');
+            if (btn) { btn.classList.add('active'); btn.innerHTML = `<span>∫</span> 정적분·블록쪼개기: ON`; }
+            const sel = document.getElementById('integralFuncSelect');
+            if (sel && targetFuncId) sel.value = targetFuncId;
+            const aEl = document.getElementById('integralA'), bEl = document.getElementById('integralB');
+            if (aEl && cfg.a !== undefined) aEl.value = String(cfg.a);
+            if (bEl && cfg.b !== undefined) bEl.value = String(cfg.b);
+            const nSlider = document.getElementById('integralRectNSlider'), nBadge = document.getElementById('integralRectNVal');
+            if (nSlider && cfg.n !== undefined) {
+                nSlider.value = String(cfg.n);
+                if (nBadge) nBadge.textContent = String(cfg.n);
+            }
+        } else if (cfg.tool === 'polygon') {
+            func_isPolygonVisible = true;
+            const panel = document.getElementById('polygonControlPanel'), btn = document.getElementById('polygonModeBtn');
+            if (panel) panel.classList.add('visible');
+            if (btn) { btn.classList.add('active'); btn.innerHTML = `<span>🛑</span> 다각형→원 극한(π): ON`; }
+            const rSel = document.getElementById('polygonRadiusSelect');
+            if (rSel && cfg.r !== undefined) rSel.value = String(cfg.r);
+            if (cfg.n !== undefined) func_setPolygonN(cfg.n);
+        }
+        func_updateToolbarMenuBadge();
+    }
+
+    function func_applyScenario(idx) {
+        const sc = SCENARIO_PRESETS[idx];
+        if (!sc) return;
+        let target = func_functionsList.find(f => f.id === func_lastFocusedId && f.type === 'custom') || func_functionsList.find(f => f.type === 'custom');
+        if (!target) {
+            func_addRealMode();
+            target = func_functionsList[func_functionsList.length - 1];
+        }
+        target.expr = sc.expr;
+        target.baseExpr = sc.expr;
+        target.H = 0;
+        target.K = 0;
+        target.isInitialDefault = false;
+        const inputEl = document.getElementById(`input_${target.id}_expr`);
+        if (inputEl) inputEl.value = sc.expr;
+        func_updateMathPreview(target.id);
+        func_activateToolForScenario(sc, target.id);
+        func_updateAll();
+    }
+    window.func_applyScenario = func_applyScenario;
+
+    function func_insertTextIntoTarget(snippet, forceReplace = false) {
         const hasComplex = func_functionsList.some(f => f.type === 'complex');
         let target = func_functionsList.find(f => f.id === func_lastFocusedId) || func_functionsList.find(f => f.id === func_selectedFuncId) || func_functionsList[func_functionsList.length - 1];
         if (!target) {
@@ -1332,11 +1647,10 @@
             func_renderUI();
             inputEl = document.getElementById(`input_${target.id}_expr`);
         }
-        if (!inputEl) return;
+        if (!inputEl) return null;
 
-        // 카드를 막 생성한 직후(초기 기본값 상태)에서 완결된 수식 예제를 첫 클릭한 경우 기본값을 대체하고, 이후 클릭부터는 뒤에 계속 이어 붙임
         const isPureSymbol = /^(\^2|\^|≥|≤|>|<|\(\))$/.test(snippet);
-        if (target.isInitialDefault && !isPureSymbol) {
+        if ((forceReplace || target.isInitialDefault) && !isPureSymbol) {
             target.isInitialDefault = false;
             inputEl.value = snippet;
             target.expr = snippet;
@@ -1366,14 +1680,16 @@
         if (infoEl && target.type === 'complex') {
             infoEl.innerHTML = func_getComplexSummaryHTML(target.expr);
         }
+        func_updateMathPreview(target.id);
         func_syncIntegralSelect();
         func_updateAll();
+        return target;
     }
 
     function func_insertQuickSymbol(idx) {
         const item = QUICK_SYMBOLS_REAL[idx];
         if (!item) return;
-        func_insertTextIntoTarget(item.expr);
+        func_insertTextIntoTarget(item.expr, false);
     }
     window.func_insertQuickSymbol = func_insertQuickSymbol;
 
@@ -1382,7 +1698,12 @@
         const list = hasComplex ? COMPLEX_PRESETS : REAL_PRESETS;
         const preset = list[idx];
         if (!preset) return;
-        func_insertTextIntoTarget(preset.expr);
+        const isCompletePreset = !hasComplex && preset.expr.length > 2;
+        const target = func_insertTextIntoTarget(preset.expr, isCompletePreset);
+        if (!hasComplex && func_isAutoScenarioMode && preset.tool && target) {
+            func_activateToolForScenario(preset, target.id);
+            func_updateAll();
+        }
     }
     window.func_applyPreset = func_applyPreset;
 
@@ -1397,7 +1718,9 @@
     window.func_toggleIntersectionPanel = func_toggleIntersectionPanel;
 
     function func_toggleIntegralPanel() {
-        func_isIntegralVisible = !func_isIntegralVisible;
+        const willOpen = !func_isIntegralVisible;
+        if (willOpen && func_isSingleToolMode) func_closeOtherExplorerPanels('integral');
+        func_isIntegralVisible = willOpen;
         const panel = document.getElementById('integralControlPanel');
         const btn = document.getElementById('integralModeBtn');
         if (panel && btn) {
@@ -1488,7 +1811,9 @@
     window.func_resetIntegralAnim = func_resetIntegralAnim;
 
     function func_togglePolygonPanel() {
-        func_isPolygonVisible = !func_isPolygonVisible;
+        const willOpen = !func_isPolygonVisible;
+        if (willOpen && func_isSingleToolMode) func_closeOtherExplorerPanels('polygon');
+        func_isPolygonVisible = willOpen;
         const panel = document.getElementById('polygonControlPanel');
         const btn = document.getElementById('polygonModeBtn');
         if (panel && btn) {
@@ -1580,7 +1905,9 @@
     window.func_resetPolygonAnim = func_resetPolygonAnim;
 
     function func_toggleSlopeWalkPanel() {
-        func_isSlopeWalkVisible = !func_isSlopeWalkVisible;
+        const willOpen = !func_isSlopeWalkVisible;
+        if (willOpen && func_isSingleToolMode) func_closeOtherExplorerPanels('slopeWalk');
+        func_isSlopeWalkVisible = willOpen;
         const panel = document.getElementById('slopeWalkControlPanel');
         const btn = document.getElementById('slopeWalkModeBtn');
         if (panel && btn) {
@@ -1771,10 +2098,21 @@
         return str;
     }
 
-    // 수식이 양함수(예: "[x]", "y = [x]", "[x] = y", "f(x) = [x]", "y - [x] = 0", "(y - 2) = [x - 1]")인지 판별하고 x에 대한 우변 수식을 추출
+    const func_explicitExprCache = new Map();
+    const func_ineqParseCache = new Map();
+
+    // 수식이 양함수(예: "[x]", "y = [x]", "[x] = y", "f(x) = [x]", "y - [x] = 0", "(y - 2) = [x - 1]")인지 판별하고 x에 대한 우변 수식을 추출 (캐싱 적용)
     function func_extractExplicitYExpr(exprStr) {
         const clean = (exprStr || '').trim();
         if (!clean) return null;
+        if (func_explicitExprCache.has(clean)) return func_explicitExprCache.get(clean);
+        const res = _func_extractExplicitYExprUncached(clean);
+        if (func_explicitExprCache.size > 300) func_explicitExprCache.clear();
+        func_explicitExprCache.set(clean, res);
+        return res;
+    }
+
+    function _func_extractExplicitYExprUncached(clean) {
         const ineq = func_parseInequality(clean);
         if (ineq) {
             return ineq.isExplicitY ? ineq.explicitExpr : null;
@@ -1796,6 +2134,17 @@
         // 2) g(x) = y 또는 g(x) = f(x) (예: [x] = y)
         if (/^(y|f\s*\(\s*x\s*\))$/i.test(rawR) && !/\by\b/i.test(rawL)) {
             return rawL;
+        }
+        // 2-b) (y - k) = g(x) 또는 (y + k) = g(x) 형태의 평행이동 양함수 방정식 직접 추출
+        const yShiftL = rawL.match(/^y\s*([+-])\s*(-?[0-9.]+)$/i);
+        if (yShiftL && !/\by\b/i.test(rawR)) {
+            const kSign = yShiftL[1] === "-" ? "+" : "-";
+            return `(${rawR}) ${kSign} (${yShiftL[2]})`;
+        }
+        const yShiftR = rawR.match(/^y\s*([+-])\s*(-?[0-9.]+)$/i);
+        if (yShiftR && !/\by\b/i.test(rawL)) {
+            const kSign = yShiftR[1] === "-" ? "+" : "-";
+            return `(${rawL}) ${kSign} (${yShiftR[2]})`;
         }
         // 3) 이항 시 y = g(x) 로 정리되는 일차 양함수 방정식 (예: y - [x] = 0, [x] - y = 0, (y - 2) = [x - 1])
         const lTerms = func_splitTopLevelTerms(rawL);
@@ -1910,7 +2259,9 @@
     }
 
     function func_toggleLimitPanel() {
-        func_isLimitVisible = !func_isLimitVisible;
+        const willOpen = !func_isLimitVisible;
+        if (willOpen && func_isSingleToolMode) func_closeOtherExplorerPanels('limit');
+        func_isLimitVisible = willOpen;
         const panel = document.getElementById('limitControlPanel');
         const btn = document.getElementById('limitModeBtn');
         if (panel && btn) {
@@ -2073,7 +2424,9 @@
     window.func_toggleSecantClickPick = func_toggleSecantClickPick;
 
     function func_toggleSecantPanel() {
-        func_isSecantVisible = !func_isSecantVisible;
+        const willOpen = !func_isSecantVisible;
+        if (willOpen && func_isSingleToolMode) func_closeOtherExplorerPanels('secant');
+        func_isSecantVisible = willOpen;
         const panel = document.getElementById('secantControlPanel');
         const btn = document.getElementById('secantModeBtn');
         if (panel && btn) {
@@ -2172,7 +2525,9 @@
     window.func_animateSecantDx = func_animateSecantDx;
 
     function func_toggleMicroscopePanel() {
-        func_isMicroscopeVisible = !func_isMicroscopeVisible;
+        const willOpen = !func_isMicroscopeVisible;
+        if (willOpen && func_isSingleToolMode) func_closeOtherExplorerPanels('microscope');
+        func_isMicroscopeVisible = willOpen;
         const panel = document.getElementById('microscopeControlPanel');
         const btn = document.getElementById('microscopeModeBtn');
         if (panel && btn) {
@@ -2181,8 +2536,14 @@
             btn.innerHTML = `<span>🔬</span> 미분 현미경: ${func_isMicroscopeVisible ? 'ON' : 'OFF'}`;
         }
         func_syncIntegralSelect();
+        func_updateAll();
         if (func_isMicroscopeVisible) {
-            setTimeout(func_updateMicroscopePlot, 50);
+            setTimeout(() => {
+                func_updateMicroscopePlot();
+                if (window.Plotly && document.getElementById('microscopePlot')) {
+                    Plotly.Plots.resize('microscopePlot');
+                }
+            }, 50);
         }
     }
     window.func_toggleMicroscopePanel = func_toggleMicroscopePanel;
@@ -2194,6 +2555,7 @@
             if (b) b.classList.toggle('active', val === z);
         });
         func_updateMicroscopePlot();
+        func_updateAll(true);
     }
     window.func_setMicroscopeZoom = func_setMicroscopeZoom;
 
@@ -2298,26 +2660,51 @@
             xs.push(xi);
             ys.push(func_evaluateFunction(targetFunc, xi));
         }
-        const microTraces = [
-            { x: xs, y: ys, mode: 'lines', name: `곡선 f(x)`, line: { color: targetFunc.color, width: 3.5 } }
-        ];
+        const microTraces = [];
 
         const { dLeft, dRight } = func_evaluateOneSidedDerivatives(targetFunc, a);
         if (isFinite(dLeft) && isFinite(dRight) && Math.abs(dRight - dLeft) <= 0.12) {
             const m = 0.5 * (dLeft + dRight);
+            // 곡선과 접선 사이의 미세 오차 영역 색칠 및 최대 오차 계산
+            const tanYs = xs.map(xi => centerY + m * (xi - a));
+            let maxGap = 0;
+            const polyX = [], polyY = [];
+            for (let i = 0; i <= nPts; i++) {
+                if (isFinite(ys[i])) {
+                    const g = Math.abs(ys[i] - tanYs[i]);
+                    if (g > maxGap) maxGap = g;
+                    polyX.push(xs[i]);
+                    polyY.push(ys[i]);
+                }
+            }
+            for (let i = nPts; i >= 0; i--) {
+                if (isFinite(ys[i])) {
+                    polyX.push(xs[i]);
+                    polyY.push(tanYs[i]);
+                }
+            }
+            if (polyX.length > 4) {
+                microTraces.push({
+                    x: polyX, y: polyY, mode: 'lines', fill: 'toself',
+                    fillcolor: 'rgba(16, 185, 129, 0.18)', line: { width: 0, color: 'rgba(0,0,0,0)' },
+                    name: `곡선↔접선 오차 (최대 ${maxGap.toFixed(5)})`, hoverinfo: 'skip'
+                });
+            }
+            microTraces.push({ x: xs, y: ys, mode: 'lines', name: `곡선 f(x)`, line: { color: targetFunc.color, width: 3.5 } });
             microTraces.push({
                 x: [xMin, xMax],
                 y: [centerY + m * (xMin - a), centerY + m * (xMax - a)],
-                mode: 'lines', name: `접선 (기울기 ${m.toFixed(3)})`,
+                mode: 'lines', name: `접선 L(x) (기울기 ${m.toFixed(3)})`,
                 line: { color: '#10b981', width: 2.5, dash: 'dash' }
             });
             if (badgeEl) {
                 badgeEl.style.background = '#dcfce7';
                 badgeEl.style.color = '#166534';
                 badgeEl.style.borderColor = '#86efac';
-                badgeEl.textContent = `✅ 미분가능 (f'(${a}) = ${m.toFixed(3)}) — 확대할수록 곡선과 접선이 한 직선으로 일치합니다`;
+                badgeEl.textContent = `✅ 미분가능 (f'(${a}) = ${m.toFixed(3)} | ${func_microscopeZoom}× 창 내 최대 오차 |f(x)-L(x)| = ${maxGap.toFixed(5)})`;
             }
         } else if (isFinite(dLeft) && isFinite(dRight)) {
+            microTraces.push({ x: xs, y: ys, mode: 'lines', name: `곡선 f(x)`, line: { color: targetFunc.color, width: 3.5 } });
             microTraces.push({
                 x: [xMin, a],
                 y: [centerY + dLeft * (xMin - a), centerY],
@@ -2330,13 +2717,15 @@
                 mode: 'lines', name: `우접선 (f'₊=${dRight.toFixed(2)})`,
                 line: { color: '#ea580c', width: 2.5, dash: 'dash' }
             });
+            const degDiff = Math.abs((Math.atan(dRight) - Math.atan(dLeft)) * 180 / Math.PI);
             if (badgeEl) {
                 badgeEl.style.background = '#fef2f2';
                 badgeEl.style.color = '#991b1b';
                 badgeEl.style.borderColor = '#fca5a5';
-                badgeEl.textContent = `⚠️ 첨점·미분불가능 (좌미분계수 ${dLeft.toFixed(2)} ≠ 우미분계수 ${dRight.toFixed(2)}) — ${func_microscopeZoom}× 확대해도 꺾인 모서리가 펴지지 않습니다`;
+                badgeEl.textContent = `⚠️ 첨점·미분불가능 (좌미분계수 ${dLeft.toFixed(2)} ≠ 우미분계수 ${dRight.toFixed(2)} | 꺾인 각도 차이 ${degDiff.toFixed(1)}° 유지)`;
             }
         } else {
+            microTraces.push({ x: xs, y: ys, mode: 'lines', name: `곡선 f(x)`, line: { color: targetFunc.color, width: 3.5 } });
             if (badgeEl) {
                 badgeEl.style.background = '#fef3c7';
                 badgeEl.style.color = '#92400e';
@@ -2428,9 +2817,17 @@
         return `rgba(${(num >> 16) & 255}, ${(num >> 8) & 255}, ${num & 255}, ${alpha})`;
     }
 
-    // 부등식 파서: 이상(>=, =>, ≥), 이하(<=, =<, ≤), 초과(>), 미만(<) 인식
+    // 부등식 파서: 이상(>=, =>, ≥), 이하(<=, =<, ≤), 초과(>), 미만(<) 인식 (캐싱 적용)
     function func_parseInequality(expr) {
         let clean = (expr || '').trim();
+        if (func_ineqParseCache.has(clean)) return func_ineqParseCache.get(clean);
+        const res = _func_parseInequalityUncached(clean);
+        if (func_ineqParseCache.size > 300) func_ineqParseCache.clear();
+        func_ineqParseCache.set(clean, res);
+        return res;
+    }
+
+    function _func_parseInequalityUncached(clean) {
         if (clean.includes('?')) return null; // 구간별 조각함수(삼항연산자)는 부등식 영역 색칠이 아닌 일반 함수로 처리
         let m = clean.match(/^(.*?)(>=|=>|<=|=<|≥|≤|>|<)(.*)$/);
         if (!m) return null;
@@ -2446,63 +2843,93 @@
         let isExplicitY = false;
         let explicitOp = op;
         let explicitExpr = right;
-        if (left.toLowerCase() === 'y' && !/\by\b/i.test(right)) {
+        const strippedL = func_stripOuterParens(left);
+        const strippedR = func_stripOuterParens(right);
+        const ineqShiftL = strippedL.match(/^y\s*([+-])\s*(-?[0-9.]+)$/i);
+        const ineqShiftR = strippedR.match(/^y\s*([+-])\s*(-?[0-9.]+)$/i);
+        if (strippedL.toLowerCase() === 'y' && !/\by\b/i.test(right)) {
             isExplicitY = true;
             explicitOp = op;
             explicitExpr = right;
-        } else if (right.toLowerCase() === 'y' && !/\by\b/i.test(left)) {
+        } else if (ineqShiftL && !/\by\b/i.test(right)) {
+            isExplicitY = true;
+            explicitOp = op;
+            const kSign = ineqShiftL[1] === '-' ? '+' : '-';
+            explicitExpr = `(${right}) ${kSign} (${ineqShiftL[2]})`;
+        } else if (strippedR.toLowerCase() === 'y' && !/\by\b/i.test(left)) {
             isExplicitY = true;
             if (op === '>=') explicitOp = '<=';
             else if (op === '<=') explicitOp = '>=';
             else if (op === '>') explicitOp = '<';
             else if (op === '<') explicitOp = '>';
             explicitExpr = left;
+        } else if (ineqShiftR && !/\by\b/i.test(left)) {
+            isExplicitY = true;
+            if (op === '>=') explicitOp = '<=';
+            else if (op === '<=') explicitOp = '>=';
+            else if (op === '>') explicitOp = '<';
+            else if (op === '<') explicitOp = '>';
+            const kSign = ineqShiftR[1] === '-' ? '+' : '-';
+            explicitExpr = `(${left}) ${kSign} (${ineqShiftR[2]})`;
         }
         return { left, op, right, rawOp, isExplicitY, explicitOp, explicitExpr };
     }
 
+    // 수식 문자열 내의 변수 x, y 만 정확히 치환 (2x, 3y 등 계수가 붙은 경우 포함, exp·sin 등 함수명은 보호)
+    function func_replaceVarsXY(str, subX, subY) {
+        return (str || '').replace(
+            /(exp|sin|cos|tan|csc|sec|cot|asin|acos|atan|sinh|cosh|tanh|sqrt|abs|cbrt|floor|ceil|round|sign|sgn|log|ln|pi)|([xyXY])/gi,
+            function(match, fnToken, varToken) {
+                if (fnToken) return fnToken;
+                return varToken.toLowerCase() === 'x' ? subX : subY;
+            }
+        );
+    }
+
     function func_buildShiftedExpression(baseExpr, totalH, totalK) {
         let clean = (baseExpr || '').trim();
+        if (!clean) return '';
         let hVal = func_formatNumber(totalH), kVal = func_formatNumber(totalK);
+        if (Math.abs(hVal) <= 1e-4 && Math.abs(kVal) <= 1e-4) return clean;
         let subX = Math.abs(hVal) > 1e-4 ? (hVal > 0 ? `(x - ${hVal})` : `(x + ${Math.abs(hVal)})`) : `x`;
         let subY = Math.abs(kVal) > 1e-4 ? (kVal > 0 ? `(y - ${kVal})` : `(y + ${Math.abs(kVal)})`) : `y`;
 
         let ineq = func_parseInequality(clean);
         if (ineq) {
-            let L = ineq.left.replace(/X/g, 'x').replace(/Y/g, 'y');
-            let R = ineq.right.replace(/X/g, 'x').replace(/Y/g, 'y');
-            let newL = L.replace(/\bx\b/g, subX).replace(/\by\b/g, subY);
-            let newR = R.replace(/\bx\b/g, subX).replace(/\by\b/g, subY);
+            let newL = func_replaceVarsXY(ineq.left, subX, subY);
+            let newR = func_replaceVarsXY(ineq.right, subX, subY);
             return `${newL.trim()} ${ineq.rawOp} ${newR.trim()}`;
         } else if (clean.includes('=')) {
             let parts = clean.split('=');
             let rawL = parts[0].trim(), rawR = parts[1].trim();
-            let L = rawL.replace(/X/g, 'x').replace(/Y/g, 'y');
-            let R = rawR.replace(/X/g, 'x').replace(/Y/g, 'y');
-            if (/^(y|f\s*\(\s*x\s*\))$/i.test(func_stripOuterParens(L)) && !/\by\b/i.test(R)) {
-                let newR = R.replace(/\bx\b/g, subX);
+            // f(x) = ... 형태만 우변 + K 처리하고, y가 포함된 모든 식(예: y = x^2)은 x -> (x - H), y -> (y - K) 대입
+            if (/^f\s*\(\s*x\s*\)$/i.test(func_stripOuterParens(rawL)) && !/[yY]/.test(rawR)) {
+                let newR = func_replaceVarsXY(rawR, subX, subY);
                 if (Math.abs(kVal) > 1e-4) {
                     let signVal = kVal > 0 ? `+ ${kVal}` : `- ${Math.abs(kVal)}`;
-                    return `${rawL} = ${newR} ${signVal}`;
+                    return newR.includes('?') ? `${rawL} = (${newR}) ${signVal}` : `${rawL} = ${newR} ${signVal}`;
                 }
                 return `${rawL} = ${newR}`;
             }
-            if (/^(y|f\s*\(\s*x\s*\))$/i.test(func_stripOuterParens(R)) && !/\by\b/i.test(L)) {
-                let newL = L.replace(/\bx\b/g, subX);
+            if (/^f\s*\(\s*x\s*\)$/i.test(func_stripOuterParens(rawR)) && !/[yY]/.test(rawL)) {
+                let newL = func_replaceVarsXY(rawL, subX, subY);
                 if (Math.abs(kVal) > 1e-4) {
                     let signVal = kVal > 0 ? `+ ${kVal}` : `- ${Math.abs(kVal)}`;
-                    return `${newL} ${signVal} = ${rawR}`;
+                    return newL.includes('?') ? `(${newL}) ${signVal} = ${rawR}` : `${newL} ${signVal} = ${rawR}`;
                 }
                 return `${newL} = ${rawR}`;
             }
-            let newL = L.replace(/\bx\b/g, subX).replace(/\by\b/g, subY); let newR = R.replace(/\bx\b/g, subX).replace(/\by\b/g, subY);
+            let newL = func_replaceVarsXY(rawL, subX, subY);
+            let newR = func_replaceVarsXY(rawR, subX, subY);
             return `${newL.trim()} = ${newR.trim()}`;
-        } else if (clean.toLowerCase().includes('y')) {
-            let L = clean.replace(/X/g, 'x').replace(/Y/g, 'y');
-            return L.replace(/\bx\b/g, subX).replace(/\by\b/g, subY);
+        } else if (/[yY]/.test(clean)) {
+            return func_replaceVarsXY(clean, subX, subY);
         } else {
-            let L = clean.replace(/X/g, 'x'); let newExpr = L.replace(/\bx\b/g, subX);
-            if (Math.abs(kVal) > 1e-4) { let signVal = kVal > 0 ? `+ ${kVal}` : `- ${Math.abs(kVal)}`; return `${newExpr} ${signVal}`; }
+            let newExpr = func_replaceVarsXY(clean, subX, subY);
+            if (Math.abs(kVal) > 1e-4) {
+                let signVal = kVal > 0 ? `+ ${kVal}` : `- ${Math.abs(kVal)}`;
+                return newExpr.includes('?') ? `(${newExpr}) ${signVal}` : `${newExpr} ${signVal}`;
+            }
             return newExpr;
         }
     }
@@ -2645,6 +3072,111 @@
     }
     window.func_toggleSelectById = func_toggleSelectById;
 
+    // 평문 수식 문자열을 교과서 형태의 LaTeX 수식으로 변환하는 헬퍼
+    function func_convertPlainMathFragmentToLatex(rawStr) {
+        let s = (rawStr || '').trim();
+        if (!s) return '';
+
+        // 1) 삼항 연산자(구간함수): cond ? expr1 : expr2
+        const qIdx = s.indexOf('?');
+        const cIdx = s.lastIndexOf(':');
+        if (qIdx !== -1 && cIdx > qIdx) {
+            const cond = func_convertPlainMathFragmentToLatex(s.slice(0, qIdx));
+            const branch1 = func_convertPlainMathFragmentToLatex(s.slice(qIdx + 1, cIdx));
+            const branch2 = func_convertPlainMathFragmentToLatex(s.slice(cIdx + 1));
+            return `\\begin{cases} ${branch1} & (${cond}) \\\\ ${branch2} & (\\text{그 외}) \\end{cases}`;
+        }
+
+        // 2) 가우스 기호 [ ... ] -> \lfloor ... \rfloor
+        let guard = 0;
+        while (/\[([^\[\]]+)\]/.test(s) && guard < 10) {
+            s = s.replace(/\[([^\[\]]+)\]/g, '\\lfloor $1 \\rfloor');
+            guard++;
+        }
+
+        // 3) 절댓값 기호 | ... | -> \left| ... \right|
+        guard = 0;
+        while (/\|([^|]+)\|/.test(s) && guard < 10) {
+            s = s.replace(/\|([^|]+)\|/g, '\\left|$1\\right|');
+            guard++;
+        }
+
+        // 4) 분수 지수 x^(p/q) -> \sqrt[q]{x^{p}} 또는 x^{p/q}
+        s = s.replace(/\(([^()]+)\)\s*\^\s*\(\s*1\s*\/\s*(\d+)\s*\)/g, '\\sqrt[$2]{$1}');
+        s = s.replace(/\b([a-zA-Z0-9]+)\s*\^\s*\(\s*1\s*\/\s*(\d+)\s*\)/g, '\\sqrt[$2]{$1}');
+        s = s.replace(/\(([^()]+)\)\s*\^\s*\(\s*(-?\d+)\s*\/\s*(\d+)\s*\)/g, '\\left($1\\right)^{\\frac{$2}{$3}}');
+        s = s.replace(/\b([a-zA-Z0-9]+)\s*\^\s*\(\s*(-?\d+)\s*\/\s*(\d+)\s*\)/g, '$1^{\\frac{$2}{$3}}');
+
+        // 5) 제곱근 sqrt(...) -> \sqrt{...}
+        guard = 0;
+        while (/\bsqrt\s*\(([^()]+)\)/i.test(s) && guard < 10) {
+            s = s.replace(/\bsqrt\s*\(([^()]+)\)/gi, '\\sqrt{$1}');
+            guard++;
+        }
+
+        // 6) 로그 log2(x) -> \log_{2}(x)
+        s = s.replace(/\blog([0-9.]+)\s*\(([^()]+)\)/gi, '\\log_{$1}\\left($2\\right)');
+        s = s.replace(/\b(sin|cos|tan|csc|sec|cot|ln|log)\s*\(/gi, '\\$1(');
+
+        // 7) 괄호 분수 (A)/(B) 및 단순 분수 A/B -> \frac{A}{B}
+        s = s.replace(/\(([^()]+)\)\s*\/\s*\(([^()]+)\)/g, '\\frac{$1}{$2}');
+        s = s.replace(/\(([^()]+)\)\s*\/\s*([a-zA-Z0-9_.]+)/g, '\\frac{$1}{$2}');
+        s = s.replace(/(\\?[a-zA-Z0-9_.\^]+(?:\([^()]+\))?)\s*\/\s*\(([^()]+)\)/g, '\\frac{$1}{$2}');
+        s = s.replace(/\b([a-zA-Z0-9_.]+)\s*\/\s*([a-zA-Z0-9_.]+)\b/g, '\\frac{$1}{$2}');
+
+        // 8) 거듭제곱 ^( ... ) 및 ^n
+        s = s.replace(/\^\s*\(([^()]+)\)/g, '^{$1}');
+        s = s.replace(/\^\s*(-?[0-9a-zA-Z.]+)/g, '^{$1}');
+
+        // 9) 기호 치환
+        s = s.replace(/>=|=>|≥/g, ' \\ge ')
+             .replace(/<=|=<|≤/g, ' \\le ')
+             .replace(/\bpi\b|π/gi, '\\pi ')
+             .replace(/\*/g, ' \\cdot ');
+        return s;
+    }
+
+    function func_exprToLatex(func, idx) {
+        if (!func) return '';
+        const raw = (func.expr || '').trim();
+        if (!raw) return '\\text{수식을 입력해 주세요}';
+        if (func.type === 'complex') {
+            return `z_{${idx}} = ${func_convertPlainMathFragmentToLatex(raw)}`;
+        }
+        const ineq = func_parseInequality(raw);
+        if (ineq) {
+            return `${func_convertPlainMathFragmentToLatex(ineq.left)} ${ineq.op === '>=' ? '\\ge' : (ineq.op === '<=' ? '\\le' : ineq.op)} ${func_convertPlainMathFragmentToLatex(ineq.right)}`;
+        }
+        if (raw.includes('=')) {
+            const parts = raw.split('=');
+            if (parts.length === 2) {
+                return `${func_convertPlainMathFragmentToLatex(parts[0])} = ${func_convertPlainMathFragmentToLatex(parts[1])}`;
+            }
+        }
+        if (func_isImplicitFunc(func)) {
+            return `${func_convertPlainMathFragmentToLatex(raw)} = 0`;
+        }
+        const expExpr = func_extractExplicitYExpr(raw);
+        const body = expExpr !== null ? expExpr : raw;
+        return `f_{${idx}}(x) = ${func_convertPlainMathFragmentToLatex(body)}`;
+    }
+
+    function func_updateMathPreview(funcId, skipTypeset = false) {
+        const func = func_functionsList.find(f => f.id === funcId);
+        if (!func) return;
+        const sameType = func_functionsList.filter(x => x.type === func.type);
+        const idx = sameType.indexOf(func) + 1;
+        const previewEl = document.getElementById(`mpreview_${funcId}`);
+        if (!previewEl) return;
+        const latex = func_exprToLatex(func, idx);
+        if (skipTypeset) return;
+        previewEl.innerHTML = `<span class="math-preview-label">수식</span><span class="math-preview-render">$${latex}$</span>`;
+        if (window.MathJax && typeof MathJax.typesetPromise === 'function') {
+            MathJax.typesetPromise([previewEl]).catch(() => {});
+        }
+    }
+    window.func_updateMathPreview = func_updateMathPreview;
+
     function func_updateState(id, field, value) {
         const func = func_functionsList.find(f => f.id === id); if (!func) return;
         if (field === 'visible') func.visible = value;
@@ -2655,23 +3187,54 @@
         else if (field === 'color') { func.color = value; document.getElementById(`card_${id}`).style.borderLeftColor = value; } 
         else if (field === 'expr') {
             func.expr = value; func.baseExpr = value; func.H = 0; func.K = 0; func.isInitialDefault = false;
+            const elH = document.getElementById(`shiftH_${id}`);
+            const elK = document.getElementById(`shiftK_${id}`);
+            if (elH) elH.value = '0';
+            if (elK) elK.value = '0';
             const infoEl = document.getElementById(`cinfo_${id}`);
             if (infoEl && func.type === 'complex') {
                 infoEl.innerHTML = func_getComplexSummaryHTML(func.expr);
             }
+            func_updateMathPreview(id);
             func_syncIntegralSelect();
         }
         func_updateAll();
     }
     window.func_updateState = func_updateState;
 
-    function func_syncInputValues(func) {
+    function func_setTranslationHK(id, newH, newK) {
+        const func = func_functionsList.find(f => f.id === id);
+        if (!func || func.type !== 'custom') return;
+        const hNum = isFinite(parseFloat(newH)) ? func_formatNumber(parseFloat(newH)) : 0;
+        const kNum = isFinite(parseFloat(newK)) ? func_formatNumber(parseFloat(newK)) : 0;
+        if (!func.baseExpr) func.baseExpr = func.expr;
+        func.H = hNum;
+        func.K = kNum;
+        func.isInitialDefault = false;
+        func.expr = func_buildShiftedExpression(func.baseExpr, func.H, func.K);
+        func_syncInputValues(func, false);
+        func_syncIntegralSelect();
+        func_updateAll(false);
+    }
+    window.func_setTranslationHK = func_setTranslationHK;
+
+    function func_resetTranslationHK(id) {
+        func_setTranslationHK(id, 0, 0);
+    }
+    window.func_resetTranslationHK = func_resetTranslationHK;
+
+    function func_syncInputValues(func, skipTypeset = false) {
         let elExpr = document.getElementById(`input_${func.id}_expr`); 
         if (elExpr) elExpr.value = func.expr;
+        let elH = document.getElementById(`shiftH_${func.id}`);
+        let elK = document.getElementById(`shiftK_${func.id}`);
+        if (elH) elH.value = String(func_formatNumber(func.H || 0));
+        if (elK) elK.value = String(func_formatNumber(func.K || 0));
         let infoEl = document.getElementById(`cinfo_${func.id}`);
         if (infoEl && func.type === 'complex') {
             infoEl.innerHTML = func_getComplexSummaryHTML(func.expr);
         }
+        func_updateMathPreview(func.id, skipTypeset);
     }
 
     function evaluateComplexExpression(exprStr) {
@@ -2785,6 +3348,7 @@
             card.className = 'func-card' + (isSelected ? ' selected' : '');
             card.id = `card_${func.id}`; card.style.borderLeftColor = func.color;
             let typeName = func.type === 'complex' ? `z<sub>${idx + 1}</sub>` : `f<sub>${idx + 1}</sub>`;
+            const previewLatex = func_exprToLatex(func, idx + 1);
 
             let innerHTML = `
                 <div class="func-card-header">
@@ -2821,20 +3385,43 @@
                 innerHTML += `
                     <div class="custom-expr-row">
                         <input type="text" inputmode="text" autocorrect="off" autocapitalize="none" spellcheck="false" id="input_${func.id}_expr" value="${func.expr}" onfocus="func_lastFocusedId='${func.id}'" onclick="func_lastFocusedId='${func.id}'; (func_functionsList.find(f=>f.id==='${func.id}')||{}).isInitialDefault=false;" oninput="func_updateState('${func.id}', 'expr', this.value)" placeholder="복소수 식 입력 (예: 3+2i, (1+i)^2, i^3)">
+                        <div id="mpreview_${func.id}" class="math-preview-box">
+                            <span class="math-preview-label">수식</span>
+                            <span class="math-preview-render">$${previewLatex}$</span>
+                        </div>
                         <div id="cinfo_${func.id}" style="font-size:0.76rem; color:#334155; background:#f8fafc; padding:3px 7px; border-radius:4px; width:100%; border:1px solid #e2e8f0;">
                             ${func_getComplexSummaryHTML(func.expr)}
                         </div>
                     </div>
                 `;
             } else {
+                const curH = func_formatNumber(func.H || 0);
+                const curK = func_formatNumber(func.K || 0);
                 innerHTML += `
                     <div class="custom-expr-row">
                         <input type="text" inputmode="text" autocorrect="off" autocapitalize="none" spellcheck="false" id="input_${func.id}_expr" value="${func.expr}" onfocus="func_lastFocusedId='${func.id}'" onclick="func_lastFocusedId='${func.id}'; (func_functionsList.find(f=>f.id==='${func.id}')||{}).isInitialDefault=false;" oninput="func_updateState('${func.id}', 'expr', this.value)" placeholder="수식 입력 (예: -x^2+x, |x[x-2]|, y>=x, x<1 ? x^2 : 2x-1)">
+                        <div style="display:flex; align-items:center; gap:6px; flex-wrap:wrap; width:100%; background:#f8fafc; border:1px solid #e2e8f0; border-radius:5px; padding:3px 7px; font-size:0.74rem; color:#334155;">
+                            <span style="font-weight:800; color:#475569;">✥ 평행이동:</span>
+                            <label style="display:flex; align-items:center; gap:3px; font-weight:700;">x축
+                                <input type="number" id="shiftH_${func.id}" value="${curH}" step="0.5" style="width:56px; padding:1px 4px; border:1px solid #cbd5e1; border-radius:4px; font-family:'JetBrains Mono',monospace; font-size:0.75rem; font-weight:700; text-align:center;" oninput="func_setTranslationHK('${func.id}', this.value, document.getElementById('shiftK_${func.id}').value)">
+                            </label>
+                            <label style="display:flex; align-items:center; gap:3px; font-weight:700;">y축
+                                <input type="number" id="shiftK_${func.id}" value="${curK}" step="0.5" style="width:56px; padding:1px 4px; border:1px solid #cbd5e1; border-radius:4px; font-family:'JetBrains Mono',monospace; font-size:0.75rem; font-weight:700; text-align:center;" oninput="func_setTranslationHK('${func.id}', document.getElementById('shiftH_${func.id}').value, this.value)">
+                            </label>
+                            <button type="button" onclick="func_resetTranslationHK('${func.id}')" style="padding:1px 6px; font-size:0.7rem; font-weight:700; border:1px solid #cbd5e1; border-radius:4px; background:#ffffff; color:#475569; cursor:pointer;" title="평행이동 초기화 (0, 0)">원위치</button>
+                        </div>
+                        <div id="mpreview_${func.id}" class="math-preview-box">
+                            <span class="math-preview-label">수식</span>
+                            <span class="math-preview-render">$${previewLatex}$</span>
+                        </div>
                     </div>
                 `;
             }
             card.innerHTML = innerHTML; grid.appendChild(card);
         });
+        if (window.MathJax && typeof MathJax.typesetPromise === 'function') {
+            MathJax.typesetPromise([grid]).catch(() => {});
+        }
     }
 
     const func_customMath = {
@@ -2903,66 +3490,75 @@
         return out;
     }
 
+    // 수식 문자열 -> 컴파일된 함수(new Function) 캐시 (드래그·애니메이션 시 60fps 보장)
+    const func_compiledExprCache = new Map();
+
     function func_evaluateCustomExpr(expr, rawX, rawY) {
         try {
             let x = rawX; let y = rawY !== undefined ? rawY : 0;
-            let cleanExpr = (expr || '')
-                .replace(/X/g, 'x')
-                .replace(/Y/g, 'y')
-                .replace(/÷/g, '/')
-                .replace(/×/g, '*')
-                .replace(/π/g, 'pi')
-                .replace(/²/g, '^2')
-                .replace(/³/g, '^3')
-                .replace(/√\s*\(/g, 'sqrt(')
-                .replace(/√\s*([a-zA-Z0-9_.]+)/g, 'sqrt($1)')
-                .replace(/=>|≥/g, '>=')
-                .replace(/=<|≤/g, '<=')
-                .replace(/[⌊⌋]/g, function(m) { return m === '⌊' ? '[' : ']'; });
+            const cacheKey = expr || '';
+            let fn = func_compiledExprCache.get(cacheKey);
+            if (!fn) {
+                let cleanExpr = cacheKey
+                    .replace(/X/g, 'x')
+                    .replace(/Y/g, 'y')
+                    .replace(/÷/g, '/')
+                    .replace(/×/g, '*')
+                    .replace(/π/g, 'pi')
+                    .replace(/²/g, '^2')
+                    .replace(/³/g, '^3')
+                    .replace(/√\s*\(/g, 'sqrt(')
+                    .replace(/√\s*([a-zA-Z0-9_.]+)/g, 'sqrt($1)')
+                    .replace(/=>|≥/g, '>=')
+                    .replace(/=<|≤/g, '<=')
+                    .replace(/[⌊⌋]/g, function(m) { return m === '⌊' ? '[' : ']'; });
 
-            // 1) 절댓값 기호 |...| 를 먼저 abs(...)로 변환 (내부에 [...] 가 있어도 괄호 깊이를 추적하여 정확히 매칭)
-            cleanExpr = func_convertAbsBars(cleanExpr);
+                // 1) 절댓값 기호 |...| 를 먼저 abs(...)로 변환
+                cleanExpr = func_convertAbsBars(cleanExpr);
 
-            // 2) 가우스 기호 [...] 앞뒤의 생략된 곱셈(*) 처리 (예: y = |x[x-2]| -> abs(x*[x-2]), [x][x] -> [x]*[x])
-            cleanExpr = cleanExpr.replace(/([0-9a-zA-Z)\]])\s*(?=\[)/g, '$1*');
-            cleanExpr = cleanExpr.replace(/\]\s*(?=[0-9a-zA-Z(\[])/g, ']*');
+                // 2) 가우스 기호 [...] 앞뒤의 생략된 곱셈(*) 처리
+                cleanExpr = cleanExpr.replace(/([0-9a-zA-Z)\]])\s*(?=\[)/g, '$1*');
+                cleanExpr = cleanExpr.replace(/\]\s*(?=[0-9a-zA-Z(\[])/g, ']*');
 
-            // 3) 가우스 기호 [...] 를 (floor(...)) 로 변환
-            let guard = 0;
-            while (/\[([^\[\]]+)\]/.test(cleanExpr) && guard < 12) {
-                cleanExpr = cleanExpr.replace(/\[([^\[\]]+)\]/g, '(floor($1))');
-                guard++;
+                // 3) 가우스 기호 [...] 를 (floor(...)) 로 변환
+                let guard = 0;
+                while (/\[([^\[\]]+)\]/.test(cleanExpr) && guard < 12) {
+                    cleanExpr = cleanExpr.replace(/\[([^\[\]]+)\]/g, '(floor($1))');
+                    guard++;
+                }
+
+                cleanExpr = cleanExpr.replace(/\blog([0-9.]+)\s*\(([^)]+)\)/gi, 'customMath.customLog($1, $2)');
+                cleanExpr = cleanExpr.replace(/\blog\s*\(([^)]+)\)/gi, 'customMath.customLog(10, $1)');
+                cleanExpr = cleanExpr.replace(/\bln\s*\(([^)]+)\)/gi, '((($1) > 0) ? Math.log($1) : NaN)');
+
+                // 4) 괄호·숫자·변수·상수 간 생략된 곱셈(*) 처리
+                cleanExpr = cleanExpr.replace(/\)\s*(?=[a-zA-Z0-9(])/g, ')*');
+                cleanExpr = cleanExpr.replace(/(^|[^a-zA-Z0-9_.])(\d+(?:\.\d+)?)\s*(?=[a-zA-Z(])/g, '$1$2*');
+                cleanExpr = cleanExpr.replace(/\b(x|y|pi|PI)\s*\(/g, '$1*(');
+                cleanExpr = cleanExpr.replace(/\b(x|y|pi|PI)\s*(?=(sin|cos|tan|csc|sec|cot|asin|acos|atan|sinh|cosh|tanh|exp|sqrt|abs|cbrt|floor|ceil|round|sign|sgn|log|ln|customMath|pi|PI|x|y)\b)/gi, '$1*');
+                cleanExpr = cleanExpr.replace(/\b(x)\s*(y)\b/g, '$1*$2');
+                cleanExpr = cleanExpr.replace(/\b(y)\s*(x)\b/g, '$1*$2');
+
+                cleanExpr = cleanExpr.replace(/\(([^()]+)\)\s*\^\s*\(\s*(-?\d+)\s*\/\s*(\d+)\s*\)/g, 'customMath.realFracPow(($1), $2, $3)');
+                cleanExpr = cleanExpr.replace(/\b(x|y)\s*\^\s*\(\s*(-?\d+)\s*\/\s*(\d+)\s*\)/g, 'customMath.realFracPow($1, $2, $3)');
+
+                // 지수 위치의 단항 음수 처리 및 일반 단항 음수 처리
+                cleanExpr = cleanExpr.replace(/\^\s*-\s*([a-zA-Z0-9_.]+|\([^()]+\))/g, '^((-1)*$1)');
+                cleanExpr = cleanExpr.replace(/(^|[+\-*/(=,?:<>])\s*-\s*(?=[a-zA-Z0-9_(])/g, '$1(-1)*');
+
+                cleanExpr = cleanExpr
+                    .replace(/\^/g, '**')
+                    .replace(/\b(csc|sec|cot|sgn)\b/gi, function(match) { return 'customMath.' + match.toLowerCase(); })
+                    .replace(/\b(sin|cos|tan|asin|acos|atan|sinh|cosh|tanh|exp|sqrt|abs|cbrt|floor|ceil|round|sign)\b/gi, function(match) { 
+                        return 'Math.' + match.toLowerCase(); 
+                    })
+                    .replace(/\b(pi|PI)\b/g, 'Math.PI')
+                    .replace(/\b(e|E)\b/g, 'Math.E');
+
+                fn = new Function('x', 'y', 'Math', 'customMath', 'return ' + cleanExpr);
+                if (func_compiledExprCache.size > 300) func_compiledExprCache.clear();
+                func_compiledExprCache.set(cacheKey, fn);
             }
-
-            cleanExpr = cleanExpr.replace(/\blog([0-9.]+)\s*\(([^)]+)\)/gi, 'customMath.customLog($1, $2)');
-            cleanExpr = cleanExpr.replace(/\blog\s*\(([^)]+)\)/gi, 'customMath.customLog(10, $1)');
-            cleanExpr = cleanExpr.replace(/\bln\s*\(([^)]+)\)/gi, '((($1) > 0) ? Math.log($1) : NaN)');
-
-            // 4) 괄호·숫자·변수·상수 간 생략된 곱셈(*) 처리
-            cleanExpr = cleanExpr.replace(/\)\s*(?=[a-zA-Z0-9(])/g, ')*');
-            cleanExpr = cleanExpr.replace(/(^|[^a-zA-Z0-9_.])(\d+(?:\.\d+)?)\s*(?=[a-zA-Z(])/g, '$1$2*');
-            cleanExpr = cleanExpr.replace(/\b(x|y|pi|PI)\s*\(/g, '$1*(');
-            cleanExpr = cleanExpr.replace(/\b(x|y|pi|PI)\s*(?=(sin|cos|tan|csc|sec|cot|asin|acos|atan|sinh|cosh|tanh|exp|sqrt|abs|cbrt|floor|ceil|round|sign|sgn|log|ln|customMath|pi|PI|x|y)\b)/gi, '$1*');
-            cleanExpr = cleanExpr.replace(/\b(x)\s*(y)\b/g, '$1*$2');
-            cleanExpr = cleanExpr.replace(/\b(y)\s*(x)\b/g, '$1*$2');
-
-            cleanExpr = cleanExpr.replace(/\(([^()]+)\)\s*\^\s*\(\s*(-?\d+)\s*\/\s*(\d+)\s*\)/g, 'customMath.realFracPow(($1), $2, $3)');
-            cleanExpr = cleanExpr.replace(/\b(x|y)\s*\^\s*\(\s*(-?\d+)\s*\/\s*(\d+)\s*\)/g, 'customMath.realFracPow($1, $2, $3)');
-
-            // 지수 위치의 단항 음수 처리 (예: 2^-x -> 2^((-1)*x)) 및 일반 단항 음수 처리 (-x^2+x -> (-1)*x^2+x = -(x^2)+x)
-            cleanExpr = cleanExpr.replace(/\^\s*-\s*([a-zA-Z0-9_.]+|\([^()]+\))/g, '^((-1)*$1)');
-            cleanExpr = cleanExpr.replace(/(^|[+\-*/(=,?:<>])\s*-\s*(?=[a-zA-Z0-9_(])/g, '$1(-1)*');
-
-            cleanExpr = cleanExpr
-                .replace(/\^/g, '**')
-                .replace(/\b(csc|sec|cot|sgn)\b/gi, function(match) { return 'customMath.' + match.toLowerCase(); })
-                .replace(/\b(sin|cos|tan|asin|acos|atan|sinh|cosh|tanh|exp|sqrt|abs|cbrt|floor|ceil|round|sign)\b/gi, function(match) { 
-                    return 'Math.' + match.toLowerCase(); 
-                })
-                .replace(/\b(pi|PI)\b/g, 'Math.PI')
-                .replace(/\b(e|E)\b/g, 'Math.E');
-                
-            let fn = new Function('x', 'y', 'Math', 'customMath', 'return ' + cleanExpr);
             let val = fn(x, y, Math, func_customMath); 
             return (typeof val === 'number' && isFinite(val)) ? val : NaN;
         } catch (e) { return NaN; }
@@ -3480,7 +4076,7 @@
             }
         }
 
-        // 0-B) 정적분 넓이 색칠 & 직사각형 블록 쪼개기 (구분구적법) + 넓이 누적 함수 S(x)
+        // 0-B) 정적분 넓이 색칠 & 직사각형 블록 쪼개기 (구분구적법: 좌·우·중점·상합·하합·사다리꼴·오차조각) + 넓이 누적 함수 S(x) 및 S'(x)=f(x) 역연산 시각화
         if (func_isIntegralVisible && !visibleFunctions.some(f => f.type === 'complex')) {
             const selEl = document.getElementById('integralFuncSelect');
             const aEl = document.getElementById('integralA');
@@ -3488,6 +4084,7 @@
             const methodEl = document.getElementById('integralMethodSelect');
             const nSliderEl = document.getElementById('integralRectNSlider');
             const accumChkEl = document.getElementById('integralAccumChk');
+            const errShadeChkEl = document.getElementById('integralErrorShadeChk');
             const resEl = document.getElementById('integralResultText');
             const targetFunc = visibleFunctions.find(f => f.id === (selEl ? selEl.value : '')) || visibleFunctions.find(f => f.type === 'custom' && !func_isImplicitFunc(f));
             let aVal = aEl ? parseFloat(aEl.value) : 0;
@@ -3495,6 +4092,7 @@
             const method = methodEl ? methodEl.value : 'left';
             const rectN = nSliderEl ? Math.max(1, parseInt(nSliderEl.value, 10) || 10) : 10;
             const showAccum = accumChkEl ? accumChkEl.checked : false;
+            const showErrShade = errShadeChkEl ? errShadeChkEl.checked : true;
 
             if (targetFunc && isFinite(aVal) && isFinite(bVal)) {
                 const sgn = aVal <= bVal ? 1 : -1;
@@ -3540,18 +4138,56 @@
                     name: '음(-)의 정적분 영역', hoverinfo: 'skip'
                 });
 
-                // 직사각형/사다리꼴 블록 쪼개기 (구분구적법 시각화)
+                // 직사각형/사다리꼴/상합/하합 블록 쪼개기 (구분구적법 시각화)
                 let rectSum = signedSum;
+                let upperSum = signedSum, lowerSum = signedSum;
                 if (method !== 'exact' && high > low) {
                     const dx = (high - low) / rectN;
                     rectSum = 0;
+                    upperSum = 0;
+                    lowerSum = 0;
                     const posPolyX = [], posPolyY = [];
                     const negPolyX = [], negPolyY = [];
+                    const upperPolyX = [], upperPolyY = [];
+                    const lowerPolyX = [], lowerPolyY = [];
+                    const errPolyX = [], errPolyY = [];
+
+                    const sampleSubInterval = (x0, x1) => {
+                        let minV = Infinity, maxV = -Infinity;
+                        const subM = 6;
+                        for (let s = 0; s <= subM; s++) {
+                            const xs = x0 + (x1 - x0) * (s / subM);
+                            const ys = func_evaluateFunction(targetFunc, xs);
+                            if (isFinite(ys)) {
+                                if (ys < minV) minV = ys;
+                                if (ys > maxV) maxV = ys;
+                            }
+                        }
+                        if (!isFinite(minV)) minV = 0;
+                        if (!isFinite(maxV)) maxV = 0;
+                        return { minV, maxV };
+                    };
+
                     for (let i = 0; i < rectN; i++) {
                         const x0 = low + i * dx;
                         const x1 = x0 + dx;
                         let yLeft = 0, yRight = 0, boxArea = 0;
-                        if (method === 'left') {
+                        const { minV, maxV } = sampleSubInterval(x0, x1);
+                        upperSum += maxV * dx;
+                        lowerSum += minV * dx;
+
+                        if (method === 'compare_ul') {
+                            upperPolyX.push(x0, x0, x1, x1, x0, null);
+                            upperPolyY.push(0, maxV, maxV, 0, 0, null);
+                            lowerPolyX.push(x0, x0, x1, x1, x0, null);
+                            lowerPolyY.push(0, minV, minV, 0, 0, null);
+                            yLeft = maxV; yRight = maxV;
+                            boxArea = 0.5 * (maxV + minV) * dx;
+                        } else if (method === 'upper') {
+                            yLeft = maxV; yRight = maxV; boxArea = maxV * dx;
+                        } else if (method === 'lower') {
+                            yLeft = minV; yRight = minV; boxArea = minV * dx;
+                        } else if (method === 'left') {
                             const h = func_evaluateFunction(targetFunc, x0);
                             if (isFinite(h)) { yLeft = h; yRight = h; boxArea = h * dx; }
                         } else if (method === 'right') {
@@ -3568,76 +4204,197 @@
                             }
                         }
                         rectSum += boxArea;
-                        const avgH = 0.5 * (yLeft + yRight);
-                        if (avgH >= 0) {
-                            posPolyX.push(x0, x0, x1, x1, x0, null);
-                            posPolyY.push(0, yLeft, yRight, 0, 0, null);
-                        } else {
-                            negPolyX.push(x0, x0, x1, x1, x0, null);
-                            negPolyY.push(0, yLeft, yRight, 0, 0, null);
+
+                        if (method !== 'compare_ul') {
+                            const avgH = 0.5 * (yLeft + yRight);
+                            if (avgH >= 0) {
+                                posPolyX.push(x0, x0, x1, x1, x0, null);
+                                posPolyY.push(0, yLeft, yRight, 0, 0, null);
+                            } else {
+                                negPolyX.push(x0, x0, x1, x1, x0, null);
+                                negPolyY.push(0, yLeft, yRight, 0, 0, null);
+                            }
+                        }
+
+                        // 블록 상단과 실제 곡선 사이의 빈틈·초과 오차 조각(Error Triangle) 다각형 생성
+                        if (showErrShade && rectN <= 60) {
+                            const subK = 5;
+                            const cXs = [], cYs = [];
+                            for (let s = 0; s <= subK; s++) {
+                                const xs = x0 + dx * (s / subK);
+                                const ys = func_evaluateFunction(targetFunc, xs);
+                                cXs.push(xs);
+                                cYs.push(isFinite(ys) ? ys : 0);
+                            }
+                            if (method === 'compare_ul') {
+                                errPolyX.push(x0, x0, x1, x1, x0, null);
+                                errPolyY.push(minV, maxV, maxV, minV, minV, null);
+                            } else {
+                                for (let s = 0; s <= subK; s++) {
+                                    errPolyX.push(cXs[s]);
+                                    errPolyY.push(cYs[s]);
+                                }
+                                errPolyX.push(x1, x0, cXs[0], null);
+                                errPolyY.push(yRight, yLeft, cYs[0], null);
+                            }
                         }
                     }
                     rectSum *= sgn;
-                    if (posPolyX.length > 0) {
-                        traces.push({
-                            x: posPolyX, y: posPolyY, mode: 'lines', fill: 'toself',
-                            fillcolor: 'rgba(16, 185, 129, 0.32)',
-                            line: { color: '#059669', width: rectN > 50 ? 0.8 : 1.5 },
-                            name: `블록 쪼개기 (${rectN}개, +)`
-                        });
+                    upperSum *= sgn;
+                    lowerSum *= sgn;
+
+                    if (method === 'compare_ul') {
+                        if (upperPolyX.length > 0) {
+                            traces.push({
+                                x: upperPolyX, y: upperPolyY, mode: 'lines', fill: 'toself',
+                                fillcolor: 'rgba(2, 132, 199, 0.16)',
+                                line: { color: '#0284c7', width: 1.6, dash: 'dash' },
+                                name: `상합 U_${rectN} (${upperSum.toFixed(3)})`
+                            });
+                        }
+                        if (lowerPolyX.length > 0) {
+                            traces.push({
+                                x: lowerPolyX, y: lowerPolyY, mode: 'lines', fill: 'toself',
+                                fillcolor: 'rgba(16, 185, 129, 0.34)',
+                                line: { color: '#059669', width: 1.8 },
+                                name: `하합 L_${rectN} (${lowerSum.toFixed(3)})`
+                            });
+                        }
+                    } else {
+                        if (posPolyX.length > 0) {
+                            traces.push({
+                                x: posPolyX, y: posPolyY, mode: 'lines', fill: 'toself',
+                                fillcolor: 'rgba(16, 185, 129, 0.32)',
+                                line: { color: '#059669', width: rectN > 50 ? 0.8 : 1.5 },
+                                name: `블록 쪼개기 (${rectN}개, +)`
+                            });
+                        }
+                        if (negPolyX.length > 0) {
+                            traces.push({
+                                x: negPolyX, y: negPolyY, mode: 'lines', fill: 'toself',
+                                fillcolor: 'rgba(244, 63, 94, 0.32)',
+                                line: { color: '#e11d48', width: rectN > 50 ? 0.8 : 1.5 },
+                                name: `블록 쪼개기 (${rectN}개, -)`
+                            });
+                        }
                     }
-                    if (negPolyX.length > 0) {
+
+                    if (errPolyX.length > 0) {
                         traces.push({
-                            x: negPolyX, y: negPolyY, mode: 'lines', fill: 'toself',
-                            fillcolor: 'rgba(244, 63, 94, 0.32)',
-                            line: { color: '#e11d48', width: rectN > 50 ? 0.8 : 1.5 },
-                            name: `블록 쪼개기 (${rectN}개, -)`
+                            x: errPolyX, y: errPolyY, mode: 'lines', fill: 'toself',
+                            fillcolor: 'rgba(245, 158, 11, 0.42)',
+                            line: { color: '#d97706', width: 1 },
+                            name: method === 'compare_ul' ? '상합-하합 오차 띠' : '블록↔곡선 빈틈·초과 오차 조각'
                         });
                     }
                 }
 
-                // 넓이 누적 함수 S(x) = ∫_a^x f(t) dt 그래프
+                const yaBound = func_evaluateFunction(targetFunc, aVal);
+                const ybBound = func_evaluateFunction(targetFunc, bVal);
+
+                // 넓이 누적 함수 S(x) = ∫_a^x f(t) dt 그래프 및 미적분학의 기본정리 S'(b) = f(b) 접선 시각화
                 if (showAccum) {
-                    const accSteps = 140;
-                    const accDx = (maxX - minX) / accSteps;
-                    const accX = [], accY = [];
+                    const accSteps = 280;
+                    const gridMin = Math.min(minX, aVal);
+                    const gridMax = Math.max(maxX, aVal);
+                    const accDx = (gridMax - gridMin) / accSteps;
+                    const accX = new Array(accSteps + 1);
+                    const fVals = new Array(accSteps + 1);
+                    let aIdx = 0, minDistA = Infinity;
                     for (let i = 0; i <= accSteps; i++) {
-                        const xCur = minX + i * accDx;
-                        const subN = 24;
-                        const subH = (xCur - aVal) / subN;
-                        let sVal = 0;
-                        if (Math.abs(subH) > 1e-9) {
-                            for (let k = 0; k < subN; k++) {
-                                const t0 = aVal + k * subH;
-                                const t1 = t0 + subH;
-                                const f0 = func_evaluateFunction(targetFunc, t0);
-                                const f1 = func_evaluateFunction(targetFunc, t1);
-                                if (isFinite(f0) && isFinite(f1)) sVal += 0.5 * (f0 + f1) * subH;
-                            }
+                        const xi = gridMin + i * accDx;
+                        accX[i] = xi;
+                        fVals[i] = func_evaluateFunction(targetFunc, xi);
+                        const dA = Math.abs(xi - aVal);
+                        if (dA < minDistA) { minDistA = dA; aIdx = i; }
+                    }
+                    accX[aIdx] = aVal;
+                    fVals[aIdx] = func_evaluateFunction(targetFunc, aVal);
+
+                    const isStepTarget = /(\[|\]|\bfloor\b|\bceil\b|\bround\b|\bsgn\b|\bsign\b|\?)/i.test(targetFunc.expr || '');
+                    const stepSliceArea = (x0, x1, y0, y1) => {
+                        const dxSlice = x1 - x0;
+                        if (!isFinite(y0) && !isFinite(y1)) return 0;
+                        if (!isFinite(y0)) return y1 * dxSlice;
+                        if (!isFinite(y1)) return y0 * dxSlice;
+                        if (isStepTarget && Math.abs(y1 - y0) > 0.08) {
+                            const yMid = func_evaluateFunction(targetFunc, 0.5 * (x0 + x1));
+                            return (isFinite(yMid) ? yMid : y0) * dxSlice;
                         }
-                        accX.push(xCur);
-                        accY.push(sVal);
+                        return 0.5 * (y0 + y1) * dxSlice;
+                    };
+
+                    const accY = new Array(accSteps + 1).fill(0);
+                    for (let i = aIdx + 1; i <= accSteps; i++) {
+                        accY[i] = accY[i - 1] + stepSliceArea(accX[i - 1], accX[i], fVals[i - 1], fVals[i]);
+                    }
+                    for (let i = aIdx - 1; i >= 0; i--) {
+                        accY[i] = accY[i + 1] - stepSliceArea(accX[i], accX[i + 1], fVals[i], fVals[i + 1]);
                     }
                     traces.push({
                         x: accX, y: accY, mode: 'lines',
                         name: `넓이 누적 그래프 S(x) = ∫(${aVal}→x) f(t)dt`,
                         line: { color: '#7c3aed', width: 3, dash: 'dashdot' }
                     });
+
+                    // 미적분학의 기본정리(FTC): x = b 에서 S(x)의 접선 기울기 S'(b) = 원함수 높이 f(b) 시각적 연결
+                    if (isFinite(ybBound)) {
+                        const ftcSpan = 0.85;
+                        traces.push({
+                            x: [bVal - ftcSpan, bVal + ftcSpan],
+                            y: [signedSum - ybBound * ftcSpan, signedSum + ybBound * ftcSpan],
+                            mode: 'lines',
+                            name: `S(x)의 접선 (기울기 S'(${func_formatNumber(bVal)}) = f(${func_formatNumber(bVal)}) = ${ybBound.toFixed(2)})`,
+                            line: { color: '#9333ea', width: 3.2 }
+                        });
+                        traces.push({
+                            x: [bVal, bVal],
+                            y: [ybBound, signedSum],
+                            mode: 'lines',
+                            name: `미분↔적분 역연산 대응선 (S'(b)=f(b))`,
+                            line: { color: '#a855f7', width: 2, dash: 'dot' },
+                            hoverinfo: 'skip', showlegend: false
+                        });
+                    }
+
                     traces.push({
                         x: [bVal], y: [signedSum], mode: 'markers+text',
                         name: `S(${bVal}) = ${signedSum.toFixed(2)}`,
                         marker: { size: 11, color: '#7c3aed', symbol: 'diamond', line: { color: '#fff', width: 2 } },
-                        text: [`  누적 넓이 S(${bVal}) = ${signedSum.toFixed(2)}`],
+                        text: [`  누적 넓이 S(${func_formatNumber(bVal)})=${signedSum.toFixed(2)} [접선 기울기 S'=${isFinite(ybBound)?ybBound.toFixed(2):'0'}]`],
                         textposition: 'top right',
                         textfont: { size: 12, weight: 'bold', color: '#6d28d9' }
                     });
                 }
+
+                // 정적분 구간 경계선 (x = a, x = b) 드래그 가능 핸들 표시
+                traces.push({
+                    x: [aVal, aVal, null, bVal, bVal],
+                    y: [minY, maxY, null, minY, maxY],
+                    mode: 'lines',
+                    name: '적분 구간 경계선 (a, b 드래그 가능)',
+                    line: { color: '#059669', width: 2, dash: 'dot' },
+                    hoverinfo: 'skip', showlegend: false
+                });
+                traces.push({
+                    x: [aVal, bVal],
+                    y: [isFinite(yaBound) ? yaBound : 0, isFinite(ybBound) ? ybBound : 0],
+                    mode: 'markers+text',
+                    name: '적분 구간 핸들 (a, b)',
+                    marker: { size: 12, color: ['#047857', '#059669'], symbol: 'diamond', line: { color: '#fff', width: 2 } },
+                    text: [`◀ 시작 a=${func_formatNumber(aVal)} `, ` 끝 b=${func_formatNumber(bVal)} [높이 f(b)=${isFinite(ybBound)?ybBound.toFixed(2):'0'}] ▶`],
+                    textposition: ['top left', 'bottom right'],
+                    textfont: { size: 12, weight: 'bold', color: '#065f46' }
+                });
 
                 if (resEl) {
                     const errVal = Math.abs(rectSum - signedSum);
                     const easyTag = func_isEasyTermMode ? ' (막대 넓이 합)' : '';
                     if (method === 'exact') {
                         resEl.innerHTML = `정적분${easyTag} ∫f(x)dx = <b style="color:#047857">${signedSum.toFixed(4)}</b> &nbsp;|&nbsp; 순수 넓이 ∫|f(x)|dx = <b>${absSum.toFixed(4)}</b>`;
+                    } else if (method === 'compare_ul') {
+                        const ulGap = Math.abs(upperSum - lowerSum);
+                        resEl.innerHTML = `하합 L<sub>${rectN}</sub> = <b style="color:#059669">${lowerSum.toFixed(4)}</b> &le; 실제 정적분 = <b style="color:#047857">${signedSum.toFixed(4)}</b> &le; 상합 U<sub>${rectN}</sub> = <b style="color:#0284c7">${upperSum.toFixed(4)}</b> &nbsp;|&nbsp; 상합-하합 차이 = <b style="color:#d97706">${ulGap.toFixed(4)}</b>`;
                     } else {
                         resEl.innerHTML = `블록 ${rectN}개 합 = <b style="color:#0284c7">${rectSum.toFixed(4)}</b> &nbsp;|&nbsp; 실제 정적분${easyTag} = <b style="color:#047857">${signedSum.toFixed(4)}</b> &nbsp;|&nbsp; 빈틈 오차 = <b style="color:#e11d48">${errVal.toFixed(4)}</b>`;
                     }
@@ -3645,17 +4402,56 @@
             }
         }
 
-        // 1) 좌극한·우극한 양방향 접근 탐색기 시각화
+        // 0-C) 미분 현미경 모드가 켜져 있을 때 메인 그래프 위에 돋보기 확대 시야 박스(Zoom Box) 및 관찰 지점(x = a) 드래그 마커 표시
+        if (func_isMicroscopeVisible && !visibleFunctions.some(f => f.type === 'complex')) {
+            const selEl = document.getElementById('microscopeFuncSelect');
+            const aEl = document.getElementById('microscopeA');
+            const targetFunc = visibleFunctions.find(f => f.id === (selEl ? selEl.value : '')) || visibleFunctions.find(f => f.type === 'custom');
+            const aVal = aEl && isFinite(parseFloat(aEl.value)) ? parseFloat(aEl.value) : 1;
+            if (targetFunc) {
+                let yMicro = 0;
+                if (func_isImplicitFunc(targetFunc)) {
+                    const rts = func_findImplicitYRoots(targetFunc, aVal, minY, maxY, 150);
+                    yMicro = rts.length > 0 ? rts[rts.length - 1] : 0;
+                } else {
+                    const ya = func_evaluateFunction(targetFunc, aVal);
+                    const lLim = func_evaluateFunction(targetFunc, aVal - 1e-5);
+                    yMicro = isFinite(ya) ? ya : (isFinite(lLim) ? lLim : 0);
+                }
+                const boxSpan = Math.max(4.0 / func_microscopeZoom, 0.12);
+                traces.push({
+                    x: [aVal - boxSpan, aVal + boxSpan, aVal + boxSpan, aVal - boxSpan, aVal - boxSpan],
+                    y: [yMicro - boxSpan, yMicro - boxSpan, yMicro + boxSpan, yMicro + boxSpan, yMicro - boxSpan],
+                    mode: 'lines', fill: 'toself',
+                    fillcolor: 'rgba(79, 70, 229, 0.10)',
+                    line: { color: '#4f46e5', width: 2, dash: 'dot' },
+                    name: `🔬 현미경 ${func_microscopeZoom}× 확대 시야`,
+                    hoverinfo: 'skip'
+                });
+                traces.push({
+                    x: [aVal], y: [yMicro], mode: 'markers+text',
+                    name: `🔬 현미경 관찰점 (x=${func_formatNumber(aVal)})`,
+                    marker: { size: 15, color: 'rgba(79, 70, 229, 0.25)', symbol: 'circle', line: { color: '#4f46e5', width: 3 } },
+                    text: [`  🔍 현미경 관찰점 (${func_formatNumber(aVal)}, ${yMicro.toFixed(2)})`],
+                    textposition: 'top right',
+                    textfont: { size: 12, weight: 'bold', color: '#3730a3' }
+                });
+            }
+        }
+
+        // 1) 좌극한·우극한 양방향 접근 탐색기 시각화 (양방향 수렴 발자국, ε-δ 허용 오차 터널, 구멍/점프 단차 하이라이트)
         if (func_isLimitVisible && !visibleFunctions.some(f => f.type === 'complex')) {
             const selEl = document.getElementById('limitFuncSelect');
             const aEl = document.getElementById('limitTargetA');
             const hEl = document.getElementById('limitHSlider');
+            const bandChkEl = document.getElementById('limitBandChk');
             const verdictEl = document.getElementById('limitVerdictBox');
             const summaryEl = document.getElementById('limitSummaryReadout');
             const tbodyEl = document.getElementById('limitTableBody');
             const targetFunc = visibleFunctions.find(f => f.id === (selEl ? selEl.value : '')) || visibleFunctions.find(f => f.type === 'custom' && !func_isImplicitFunc(f));
             const aVal = aEl && isFinite(parseFloat(aEl.value)) ? parseFloat(aEl.value) : 1;
             const hVal = hEl && isFinite(parseFloat(hEl.value)) ? Math.max(0.001, parseFloat(hEl.value)) : 0.5;
+            const showBandAndTrail = bandChkEl ? bandChkEl.checked : true;
 
             if (targetFunc) {
                 const xL = aVal - hVal, xR = aVal + hVal;
@@ -3664,11 +4460,80 @@
                 const ya = func_evaluateFunction(targetFunc, aVal);
                 const limL = func_evaluateFunction(targetFunc, aVal - 1e-5);
                 const limR = func_evaluateFunction(targetFunc, aVal + 1e-5);
+                const hasFiniteLim = isFinite(limL) && isFinite(limR) && Math.abs(limL) < 1e4 && Math.abs(limR) < 1e4;
+                const isSameLim = hasFiniteLim && Math.abs(limL - limR) < 1e-2;
+                const Lval = isSameLim ? 0.5 * (limL + limR) : NaN;
+
+                // (1-a) ε-δ 근방 띠(허용 오차 터널) 및 양방향 접근 발자국(Ghost Trail)
+                if (showBandAndTrail) {
+                    // δ = h 수직 근방 띠 [a - h, a + h]
+                    traces.push({
+                        x: [xL, xR, xR, xL, xL],
+                        y: [minY, minY, maxY, maxY, minY],
+                        mode: 'lines', fill: 'toself',
+                        fillcolor: 'rgba(59, 130, 246, 0.06)',
+                        line: { color: 'rgba(59, 130, 246, 0.28)', width: 1, dash: 'dot' },
+                        name: `x 근방 폭 (a±h, h=${hVal.toFixed(3)})`,
+                        hoverinfo: 'skip'
+                    });
+
+                    // 극한값 L이 존재할 때 ε 수평 허용 오차 터널 [L - ε, L + ε]
+                    if (isSameLim && isFinite(Lval)) {
+                        const epsL = isFinite(yL) ? Math.abs(yL - Lval) : 0;
+                        const epsR = isFinite(yR) ? Math.abs(yR - Lval) : 0;
+                        const eps = Math.max(epsL, epsR, 0.04);
+                        if (eps < spanY * 1.2) {
+                            traces.push({
+                                x: [minX, maxX, maxX, minX, minX],
+                                y: [Lval - eps, Lval - eps, Lval + eps, Lval + eps, Lval - eps],
+                                mode: 'lines', fill: 'toself',
+                                fillcolor: 'rgba(16, 185, 129, 0.09)',
+                                line: { color: 'rgba(16, 185, 129, 0.4)', width: 1, dash: 'dot' },
+                                name: `목표 높이 오차 터널 (L±${eps.toFixed(3)})`,
+                                hoverinfo: 'skip'
+                            });
+                        }
+                    }
+
+                    // 곡선 위 양방향 수렴 발자국 (Ghost Dots: 0.72h, 0.45h, 0.2h)
+                    const ratios = [0.72, 0.45, 0.20];
+                    const trailLX = [], trailLY = [], trailRX = [], trailRY = [];
+                    ratios.forEach(rt => {
+                        const txl = aVal - hVal * rt, txr = aVal + hVal * rt;
+                        const tyl = func_evaluateFunction(targetFunc, txl);
+                        const tyr = func_evaluateFunction(targetFunc, txr);
+                        if (isFinite(tyl)) { trailLX.push(txl); trailLY.push(tyl); }
+                        if (isFinite(tyr)) { trailRX.push(txr); trailRY.push(tyr); }
+                    });
+                    if (trailLX.length > 0) {
+                        traces.push({
+                            x: trailLX, y: trailLY, mode: 'markers', name: '좌측 수렴 궤적 (x→a⁻)',
+                            marker: { size: [7, 8, 9], color: 'rgba(37, 99, 235, 0.45)', symbol: 'circle', line: { color: '#2563eb', width: 1.2 } },
+                            hoverinfo: 'skip', showlegend: false
+                        });
+                    }
+                    if (trailRX.length > 0) {
+                        traces.push({
+                            x: trailRX, y: trailRY, mode: 'markers', name: '우측 수렴 궤적 (x→a⁺)',
+                            marker: { size: [7, 8, 9], color: 'rgba(234, 88, 12, 0.45)', symbol: 'circle', line: { color: '#ea580c', width: 1.2 } },
+                            hoverinfo: 'skip', showlegend: false
+                        });
+                    }
+                }
 
                 // 목표 지점 x = a 보조선
                 traces.push({
                     x: [aVal, aVal], y: [minY, maxY], mode: 'lines', name: `목표 x = ${aVal}`,
-                    line: { color: '#64748b', width: 1.5, dash: 'dot' }, hoverinfo: 'skip', showlegend: false
+                    line: { color: '#64748b', width: 1.8, dash: 'dot' }, hoverinfo: 'skip', showlegend: false
+                });
+
+                // X축 위의 양방향 접근 화살표 마커 (xL -> a <- xR)
+                traces.push({
+                    x: [xL, xR], y: [0, 0], mode: 'markers+text', name: 'x축 양방향 접근',
+                    marker: { size: 10, color: ['#2563eb', '#ea580c'], symbol: ['triangle-right', 'triangle-left'] },
+                    text: [`a-h ▶`, `◀ a+h`], textposition: ['bottom left', 'bottom right'],
+                    textfont: { size: 11, weight: 'bold', color: ['#1d4ed8', '#c2410c'] },
+                    hoverinfo: 'skip', showlegend: false
                 });
 
                 if (isFinite(yL)) {
@@ -3696,6 +4561,35 @@
                     });
                 }
 
+                // 목표 지점 x = a 에서의 목표 극한점(L) 또는 좌·우극한 점프 단차 하이라이트
+                if (isSameLim && isFinite(Lval)) {
+                    const isHole = !isFinite(ya) || Math.abs(ya - Lval) > 1e-2;
+                    traces.push({
+                        x: [aVal], y: [Lval], mode: 'markers+text',
+                        name: isHole ? `목표 극한점 ○ (${aVal}, ${Lval.toFixed(2)})` : `연속·극한점 ● (${aVal}, ${Lval.toFixed(2)})`,
+                        marker: {
+                            size: 14,
+                            color: isHole ? '#ffffff' : '#10b981',
+                            symbol: 'circle',
+                            line: { color: isHole ? '#dc2626' : '#047857', width: 3 }
+                        },
+                        text: [`  🎯 목표 극한높이 L = ${Lval.toFixed(3)}${isHole ? ' (구멍 ○)' : ' (연속 ●)'}`],
+                        textposition: 'top right',
+                        textfont: { size: 12, weight: 'bold', color: isHole ? '#b91c1c' : '#065f46' }
+                    });
+                } else if (hasFiniteLim && Math.abs(limL - limR) >= 1e-2) {
+                    const jumpGap = Math.abs(limR - limL);
+                    traces.push({
+                        x: [aVal, aVal], y: [limL, limR], mode: 'lines+markers+text',
+                        name: `점프 불연속 단차 (|L⁺-L⁻|=${jumpGap.toFixed(2)})`,
+                        line: { color: '#e11d48', width: 3, dash: 'dot' },
+                        marker: { size: 11, color: ['#ffffff', '#ffffff'], symbol: 'circle', line: { color: ['#2563eb', '#ea580c'], width: 3 } },
+                        text: [`  좌극한 L⁻=${limL.toFixed(2)}`, `  우극한 L⁺=${limR.toFixed(2)} (점프 단차 ${jumpGap.toFixed(2)})`],
+                        textposition: ['bottom left', 'top right'],
+                        textfont: { size: 12, weight: 'bold', color: '#be123c' }
+                    });
+                }
+
                 if (summaryEl) {
                     const strL = isFinite(limL) ? limL.toFixed(4) : '발산/미정의';
                     const strR = isFinite(limR) ? limR.toFixed(4) : '발산/미정의';
@@ -3704,9 +4598,8 @@
                 }
 
                 if (verdictEl) {
-                    const hasFiniteLim = isFinite(limL) && isFinite(limR) && Math.abs(limL) < 1e4 && Math.abs(limR) < 1e4;
-                    if (hasFiniteLim && Math.abs(limL - limR) < 1e-2) {
-                        const L = 0.5 * (limL + limR);
+                    if (isSameLim) {
+                        const L = Lval;
                         if (isFinite(ya) && Math.abs(ya - L) < 1e-2) {
                             verdictEl.style.background = '#dcfce7'; verdictEl.style.color = '#166534'; verdictEl.style.borderColor = '#86efac';
                             verdictEl.textContent = `✅ 연속: 좌극한(${L.toFixed(2)}) = 우극한(${L.toFixed(2)}) = f(${aVal})`;
@@ -3743,18 +4636,20 @@
             }
         }
 
-        // 2) 평균변화율(할선) -> 미분계수(접선) 수렴 탐색기 시각화 (양함수 & 음함수 및 기준점 (x, y) 검증 포함)
+        // 2) 평균변화율(할선) -> 미분계수(접선) 수렴 탐색기 시각화 (할선 회전 잔상 부채꼴, Δx·Δy 직각삼각형 라벨, Δy vs dy 비교 포함)
         if (func_isSecantVisible && !visibleFunctions.some(f => f.type === 'complex')) {
             const selEl = document.getElementById('secantFuncSelect');
             const aEl = document.getElementById('secantA');
             const yEl = document.getElementById('secantY');
             const dxEl = document.getElementById('secantDxSlider');
+            const ghostChkEl = document.getElementById('secantGhostChk');
             const resBox = document.getElementById('secantResultBox');
             const targetFunc = visibleFunctions.find(f => f.id === (selEl ? selEl.value : '')) || visibleFunctions.find(f => f.type === 'custom');
             const rawX = aEl ? parseFloat(aEl.value) : NaN;
             const rawY = yEl ? parseFloat(yEl.value) : NaN;
             let dxVal = dxEl && isFinite(parseFloat(dxEl.value)) ? parseFloat(dxEl.value) : 1.0;
             if (Math.abs(dxVal) < 0.01) dxVal = dxVal >= 0 ? 0.01 : -0.01;
+            const showGhostAndDy = ghostChkEl ? ghostChkEl.checked : true;
 
             if (targetFunc) {
                 const isImp = func_isImplicitFunc(targetFunc);
@@ -3830,7 +4725,7 @@
                     if (resBox) {
                         resBox.style.background = '#fef2f2';
                         resBox.style.borderColor = '#f87171';
-                        resBox.innerHTML = `<span style="color:#b91c1c; font-weight:800;">⚠️ 입력하신 좌표 (${isFinite(rawX)?rawX:'?'}, ${isFinite(rawY)?rawY:'?'})는 그래프 위에 없는 점입니다! 그래프 위의 좌표를 다시 입력해 주세요.</span> &nbsp;|&nbsp; <span style="color:#0f172a;">${validYHint} (<b>[🎯 곡선 위 y값 맞춤]</b>을 누르거나 <b>그래프 위의 점을 클릭</b>하세요)</span>`;
+                        resBox.innerHTML = `<span style="color:#b91c1c; font-weight:800;">⚠️ 입력하신 좌표 (${isFinite(rawX)?rawX:'?'}, ${isFinite(rawY)?rawY:'?'})는 그래프 위에 없는 점입니다. 그래프 위의 좌표를 다시 입력해 주세요.</span> &nbsp;|&nbsp; <span style="color:#0f172a;">${validYHint} (<b>[🎯 곡선 위 y값 맞춤]</b>을 누르거나 <b>그래프 위의 점을 클릭</b>하세요)</span>`;
                     }
                 } else {
                     if (resBox) {
@@ -3860,7 +4755,6 @@
                         // xA -> xb 까지 같은 가지를 따라가며 yb 탐색
                         const bRoots = func_findImplicitYRoots(targetFunc, xb, minY - 15, maxY + 15, 220);
                         if (bRoots.length > 0) {
-                            // 기준점 yA와 같은 부호/가지에 있는 근 우선 선택
                             let bestYb = bRoots[0];
                             const expectedY = isFinite(mTan) ? (yA + mTan * dxVal) : yA;
                             bRoots.forEach(r => {
@@ -3877,11 +4771,62 @@
                         const dyVal = yb - yA;
                         const mSec = dyVal / dxVal;
 
-                        // 직각삼각형 밑변 Δx, 높이 Δy 보조선
+                        // (2-a) 할선이 접선으로 회전하며 수렴하는 과정의 잔상 부채꼴 (Ghost Secant Fan)
+                        if (showGhostAndDy && !isImp && Math.abs(dxVal) > 0.08) {
+                            const ghostRatios = [0.68, 0.42, 0.18];
+                            ghostRatios.forEach((gr, gIdx) => {
+                                const gDx = dxVal * gr;
+                                const gXb = xA + gDx;
+                                const gYb = func_evaluateFunction(targetFunc, gXb);
+                                if (isFinite(gYb)) {
+                                    const gSlope = (gYb - yA) / gDx;
+                                    const alpha = 0.16 + gIdx * 0.08;
+                                    traces.push({
+                                        x: [minX, maxX],
+                                        y: [yA + gSlope * (minX - xA), yA + gSlope * (maxX - xA)],
+                                        mode: 'lines',
+                                        name: gIdx === 0 ? '할선→접선 회전 잔상' : '할선 회전 잔상',
+                                        showlegend: gIdx === 0,
+                                        line: { color: `rgba(225, 29, 72, ${alpha})`, width: 1.5, dash: 'dot' },
+                                        hoverinfo: 'skip'
+                                    });
+                                }
+                            });
+                        }
+
+                        // (2-b) 평균변화율 직각삼각형 색칠 및 밑변(Δx)·높이(Δy) 수치 직접 표시
                         traces.push({
-                            x: [xA, xb, xb], y: [yA, yA, yb], mode: 'lines', name: '증분 Δx, Δy',
-                            line: { color: '#64748b', width: 2, dash: 'dot' }, hoverinfo: 'skip'
+                            x: [xA, xb, xb, xA], y: [yA, yA, yb, yA],
+                            mode: 'lines', fill: 'toself',
+                            fillcolor: 'rgba(225, 29, 72, 0.10)',
+                            line: { color: '#64748b', width: 2, dash: 'dot' },
+                            name: '증분 직각삼각형 (Δx, Δy)', hoverinfo: 'skip'
                         });
+                        traces.push({
+                            x: [0.5 * (xA + xb), xb],
+                            y: [yA, 0.5 * (yA + yb)],
+                            mode: 'text',
+                            text: [`Δx = ${dxVal >= 0 ? '+' : ''}${dxVal.toFixed(2)}`, `  Δy = ${dyVal >= 0 ? '+' : ''}${dyVal.toFixed(2)}`],
+                            textposition: [dyVal >= 0 ? 'bottom center' : 'top center', dxVal >= 0 ? 'middle right' : 'middle left'],
+                            textfont: { size: 12, weight: 'bold', color: ['#334155', '#be123c'] },
+                            hoverinfo: 'skip', showlegend: false
+                        });
+
+                        // (2-c) 접선 변화량 dy = f'(a)Δx 마커 및 Δy vs dy 오차 비교 표시
+                        if (showGhostAndDy && !isVerticalTan && isDiff && isFinite(mTan) && Math.abs(dxVal) > 0.05) {
+                            const yTanAtB = yA + mTan * dxVal;
+                            const dyLinear = mTan * dxVal;
+                            traces.push({
+                                x: [xb, xb], y: [yA, yTanAtB],
+                                mode: 'lines+markers+text',
+                                name: `접선 변화량 dy = ${dyLinear >= 0 ? '+' : ''}${dyLinear.toFixed(3)}`,
+                                line: { color: '#059669', width: 2.2, dash: 'dashdot' },
+                                marker: { size: [0, 8], color: '#059669', symbol: 'diamond' },
+                                text: ['', `  접선 높이 (dy=${dyLinear >= 0 ? '+' : ''}${dyLinear.toFixed(2)})`],
+                                textposition: 'bottom right',
+                                textfont: { size: 11, weight: 'bold', color: '#047857' }
+                            });
+                        }
 
                         // 할선 (Secant Line)
                         traces.push({
@@ -3922,7 +4867,7 @@
                             const easySec = func_isEasyTermMode ? '(두 점 기울기)' : '';
                             const easyTan = func_isEasyTermMode ? '(순간 기울기)' : '';
                             const derivSym = isImp ? `dy/dx|<sub>(${func_formatNumber(xA)},${func_formatNumber(yA)})</sub>` : `f'(${func_formatNumber(xA)})`;
-                            resBox.innerHTML = `기준점 <b>A(${func_formatNumber(xA)}, ${func_formatNumber(yA)})</b> &nbsp;|&nbsp; 평균변화율${easySec} <span style="color:#e11d48; font-weight:800;">Δy/Δx = ${mSec.toFixed(4)}</span> &nbsp;|&nbsp; 미분계수${easyTan} <span style="color:#059669; font-weight:800;">${derivSym} = ${tanStr}</span> &nbsp;|&nbsp; 차이 = <b>${errStr}</b>`;
+                            resBox.innerHTML = `기준점 <b>A(${func_formatNumber(xA)}, ${func_formatNumber(yA)})</b> &nbsp;|&nbsp; 평균변화율${easySec} <span style="color:#e11d48; font-weight:800;">Δy/Δx = ${mSec.toFixed(4)}</span> &nbsp;|&nbsp; 미분계수${easyTan} <span style="color:#059669; font-weight:800;">${derivSym} = ${tanStr}</span> &nbsp;|&nbsp; 기울기 오차 = <b>${errStr}</b>`;
                         }
                     } else {
                         // A는 곡선 위에 있으나 xA + Δx 위치에 곡선 점이 없는 경우
@@ -3933,20 +4878,22 @@
                             textfont: { size: 12, weight: 'bold', color: '#0f172a' }
                         });
                         if (resBox) {
-                            resBox.innerHTML = `기준점 <b>A(${func_formatNumber(xA)}, ${func_formatNumber(yA)})</b> 은 그래프 위에 있으나, <b>x + Δx = ${xb.toFixed(2)}</b> 지점에 대응하는 곡선 위의 점이 없습니다. 증분 Δx 범위를 줄여보세요!`;
+                            resBox.innerHTML = `기준점 <b>A(${func_formatNumber(xA)}, ${func_formatNumber(yA)})</b> 은 그래프 위에 있으나, <b>x + Δx = ${xb.toFixed(2)}</b> 지점에 대응하는 곡선 위의 점이 없습니다. 증분 Δx 범위를 줄여보세요.`;
                         }
                     }
                 }
             }
         }
 
-        // 3) 기울기의 자취(도함수) 실시간 생성 탐색기 (양함수 & 음함수 모두 지원)
+        // 3) 기울기의 자취(도함수) 실시간 생성 탐색기 (단위 기울기 삼각형 가로 1 : 세로 f'(x) 매칭 및 증가·감소·극값 부호 영역 시각화)
         if (func_isSlopeWalkVisible && !visibleFunctions.some(f => f.type === 'complex')) {
             const selEl = document.getElementById('slopeWalkFuncSelect');
             const xSliderEl = document.getElementById('slopeWalkXSlider');
+            const signBandChkEl = document.getElementById('slopeSignBandChk');
             const resBox = document.getElementById('slopeWalkResultBox');
             const targetFunc = visibleFunctions.find(f => f.id === (selEl ? selEl.value : '')) || visibleFunctions.find(f => f.type === 'custom');
             const x0 = xSliderEl && isFinite(parseFloat(xSliderEl.value)) ? parseFloat(xSliderEl.value) : -2.0;
+            const showSignAndTri = signBandChkEl ? signBandChkEl.checked : true;
 
             if (targetFunc) {
                 const isImp = func_isImplicitFunc(targetFunc);
@@ -3968,17 +4915,76 @@
                         hoverinfo: 'skip'
                     });
 
-                    // 시작점(-4.5)부터 현재 x0까지 찍힌 기울기의 자취 점들
+                    // 시작점(-4.5)부터 현재 x0까지 찍힌 기울기의 자취 점들 및 증가(+)/감소(-) 부호 영역 색칠
                     const walkStart = Math.max(minX, -4.5);
                     const footX = [], footY = [], footColors = [];
-                    for (let x = walkStart; x <= x0 + 1e-4; x += 0.15) {
+                    const posSignX = [], posSignY = [], negSignX = [], negSignY = [];
+                    const zeroRootsX = [], zeroRootsY = [];
+                    let prevM = NaN, prevX = NaN;
+
+                    for (let x = walkStart; x <= x0 + 1e-4; x += 0.12) {
                         const m = func_evaluateDerivative(targetFunc, x);
                         if (isFinite(m) && Math.abs(m) < 1e3) {
                             footX.push(x);
                             footY.push(m);
                             footColors.push(m > 0.08 ? '#ef4444' : (m < -0.08 ? '#2563eb' : '#d97706'));
+                            if (showSignAndTri) {
+                                if (m >= 0) {
+                                    posSignX.push(x); posSignY.push(m);
+                                    negSignX.push(x); negSignY.push(0);
+                                } else {
+                                    posSignX.push(x); posSignY.push(0);
+                                    negSignX.push(x); negSignY.push(m);
+                                }
+                                if (isFinite(prevM) && prevM * m <= 0 && Math.abs(m - prevM) < 5.0) {
+                                    const zx = Math.abs(m - prevM) > 1e-9 ? (prevX - prevM * (x - prevX) / (m - prevM)) : x;
+                                    const zy = func_evaluateFunction(targetFunc, zx);
+                                    if (isFinite(zy) && !zeroRootsX.some(rx => Math.abs(rx - zx) < 0.2)) {
+                                        zeroRootsX.push(zx);
+                                        zeroRootsY.push(zy);
+                                    }
+                                }
+                            }
+                            prevM = m;
+                            prevX = x;
                         }
                     }
+
+                    if (showSignAndTri && posSignX.length > 1) {
+                        traces.push({
+                            x: posSignX, y: posSignY, mode: 'lines', fill: 'tozeroy',
+                            fillcolor: 'rgba(239, 68, 68, 0.14)', line: { width: 0, color: 'rgba(0,0,0,0)' },
+                            name: "증가 구간 (f'(x) > 0, 오르막)", hoverinfo: 'skip'
+                        });
+                        traces.push({
+                            x: negSignX, y: negSignY, mode: 'lines', fill: 'tozeroy',
+                            fillcolor: 'rgba(37, 99, 235, 0.14)', line: { width: 0, color: 'rgba(0,0,0,0)' },
+                            name: "감소 구간 (f'(x) < 0, 내리막)", hoverinfo: 'skip'
+                        });
+                    }
+
+                    if (showSignAndTri && zeroRootsX.length > 0) {
+                        const zLineX = [], zLineY = [];
+                        for (let i = 0; i < zeroRootsX.length; i++) {
+                            zLineX.push(zeroRootsX[i], zeroRootsX[i], null);
+                            zLineY.push(0, zeroRootsY[i], null);
+                        }
+                        traces.push({
+                            x: zLineX, y: zLineY, mode: 'lines',
+                            name: "극값(꼭대기·골짜기) ↔ f'(x)=0 대응선",
+                            line: { color: '#d97706', width: 2, dash: 'dot' },
+                            hoverinfo: 'skip'
+                        });
+                        traces.push({
+                            x: zeroRootsX, y: zeroRootsX.map(() => 0),
+                            mode: 'markers+text', name: "기울기 0 지점 (f'(x)=0)",
+                            marker: { size: 10, color: '#f59e0b', symbol: 'diamond', line: { color: '#fff', width: 1.5 } },
+                            text: zeroRootsX.map(zx => `f'(${zx.toFixed(1)})=0`),
+                            textposition: 'bottom center',
+                            textfont: { size: 11, weight: 'bold', color: '#b45309' }
+                        });
+                    }
+
                     if (footX.length > 0) {
                         traces.push({
                             x: footX, y: footY, mode: 'lines+markers', name: "기울기의 자취 (x, f'(x))",
@@ -3987,13 +4993,43 @@
                         });
                     }
 
-                    // 현재 위치 P(x0, f(x0))와 접선 스케이트보드 + 현재 자취 점 Q(x0, f'(x0))
+                    // 현재 위치 P(x0, f(x0))와 접선 스케이트보드 + 단위 기울기 삼각형(가로 1 : 세로 f'(x0)) + 자취 점 Q(x0, f'(x0))
                     const y0 = func_evaluateFunction(targetFunc, x0);
                     const m0 = func_evaluateDerivative(targetFunc, x0);
                     if (isFinite(y0) && isFinite(m0)) {
-                        const skateHalf = 0.85;
+                        const skateHalf = 1.05;
                         const slopeColor = m0 > 0.08 ? '#ef4444' : (m0 < -0.08 ? '#2563eb' : '#d97706');
                         const slopeLabel = m0 > 0.08 ? '오르막(+)' : (m0 < -0.08 ? '내리막(-)' : '평평한 꼭대기/골짜기(0)');
+
+                        if (showSignAndTri) {
+                            // 점 P에서 가로 1칸 갈 때 세로 m0만큼 변하는 단위 기울기 삼각형
+                            traces.push({
+                                x: [x0, x0 + 1, x0 + 1, x0],
+                                y: [y0, y0, y0 + m0, y0],
+                                mode: 'lines', fill: 'toself',
+                                fillcolor: m0 >= 0 ? 'rgba(239, 68, 68, 0.14)' : 'rgba(37, 99, 235, 0.14)',
+                                line: { color: slopeColor, width: 1.8, dash: 'dot' },
+                                name: `단위 기울기 삼각형 (가로 1 : 세로 ${m0.toFixed(2)})`,
+                                hoverinfo: 'skip'
+                            });
+                            traces.push({
+                                x: [x0 + 0.5, x0 + 1],
+                                y: [y0, y0 + 0.5 * m0],
+                                mode: 'text',
+                                text: ['가로 +1', `  기울기 ${m0 >= 0 ? '+' : ''}${m0.toFixed(2)}`],
+                                textposition: [m0 >= 0 ? 'bottom center' : 'top center', 'middle right'],
+                                textfont: { size: 11, weight: 'bold', color: slopeColor },
+                                hoverinfo: 'skip', showlegend: false
+                            });
+                            // x축(y=0)에서 자취 점 Q(x0, m0)까지 세로 막대 (기울기 값이 곧 도함수의 y좌표 높이임을 표시)
+                            traces.push({
+                                x: [x0, x0], y: [0, m0],
+                                mode: 'lines',
+                                name: `도함수 y좌표 높이 = ${m0.toFixed(2)}`,
+                                line: { color: slopeColor, width: 4.5 },
+                                hoverinfo: 'skip'
+                            });
+                        }
 
                         traces.push({
                             x: [x0 - skateHalf, x0 + skateHalf],
@@ -4019,7 +5055,7 @@
                         });
 
                         if (resBox) {
-                            resBox.innerHTML = `위치 x = <b>${x0.toFixed(2)}</b> &nbsp;|&nbsp; 함숫값 f(x) = <b>${y0.toFixed(3)}</b> &nbsp;|&nbsp; 순간 기울기 f'(x) = <b style="color:${slopeColor}">${m0.toFixed(3)} [${slopeLabel}]</b> &nbsp;→&nbsp; 기울기의 자취 좌표 <b>(${x0.toFixed(2)}, ${m0.toFixed(2)})</b>`;
+                            resBox.innerHTML = `위치 x = <b>${x0.toFixed(2)}</b> &nbsp;|&nbsp; 함숫값 f(x) = <b>${y0.toFixed(3)}</b> &nbsp;|&nbsp; 순간 기울기 f'(x) = <b style="color:${slopeColor}">${m0.toFixed(3)} [${slopeLabel}]</b> &nbsp;→&nbsp; 기울기의 자취 좌표 <b>Q(${x0.toFixed(2)}, ${m0.toFixed(2)})</b>`;
                         }
                     }
                 } else {
@@ -4087,7 +5123,7 @@
                             }
                         }
                     } else if (resBox) {
-                        resBox.innerHTML = `현재 x = <b>${x0.toFixed(2)}</b> 에서는 음함수 곡선과 만나는 점이 없습니다. 슬라이더를 곡선이 있는 구간으로 옮겨보세요!`;
+                        resBox.innerHTML = `현재 x = <b>${x0.toFixed(2)}</b> 에서는 음함수 곡선과 만나는 점이 없습니다. 슬라이더를 곡선이 있는 구간으로 옮겨보세요.`;
                     }
                 }
             }
@@ -4300,14 +5336,23 @@
                         }
                     }
 
-                    // 극대·극소 및 꼭짓점 탐색 (가시 범위 내)
+                    // 극대·극소 및 꼭짓점 탐색 (가시 범위 내, 포물선 꼭짓점 정밀 보간 포함)
                     if (!isStepExpr && k > 0 && k < xVal.length - 2 && xVal[k] >= rangeX[0] && xVal[k] <= rangeX[1]) {
                         let yPrev = yVal[k - 1], yCurr = yVal[k], yNext = yVal[k + 1];
                         if (!isNaN(yPrev) && !isNaN(yCurr) && !isNaN(yNext)) {
-                            const isLocalMax = (yCurr > yPrev + 1e-7 && yCurr > yNext + 1e-7);
-                            const isLocalMin = (yCurr < yPrev - 1e-7 && yCurr < yNext - 1e-7);
+                            const isLocalMax = (yCurr >= yPrev - 1e-12 && yCurr >= yNext - 1e-12 && (yCurr > yPrev + 1e-7 || yCurr > yNext + 1e-7));
+                            const isLocalMin = (yCurr <= yPrev + 1e-12 && yCurr <= yNext + 1e-12 && (yCurr < yPrev - 1e-7 || yCurr < yNext - 1e-7));
                             if (isLocalMax || isLocalMin) {
-                                const ex = xVal[k], ey = yCurr;
+                                let ex = xVal[k];
+                                const denom = 2 * (yPrev - 2 * yCurr + yNext);
+                                if (Math.abs(denom) > 1e-10) {
+                                    const offset = ((yPrev - yNext) / denom) * step;
+                                    if (Math.abs(offset) <= step) ex = xVal[k] + offset;
+                                }
+                                const snapEx = Math.round(ex * 4) / 4;
+                                if (Math.abs(ex - snapEx) < 0.025) ex = snapEx;
+                                const eyEval = func_evaluateFunction(f, ex);
+                                const ey = isFinite(eyEval) ? eyEval : yCurr;
                                 const kind = isLocalMax ? '극대' : '극소';
                                 if (!panelData.extrema.some(p => p.name === fName && Math.abs(p.x - ex) < 0.15)) {
                                     panelData.extrema.push({ name: fName, color: f.color, x: ex, y: ey, kind });
@@ -4642,9 +5687,15 @@
             layoutUpdate['xaxis.ticktext'] = xTicks.texts;
         }
 
+        const desiredDragMode = (func_selectedFuncId || func_draggingHandle) ? false : 'pan';
+        graphDiv.layout.dragmode = desiredDragMode;
+        layoutUpdate['dragmode'] = desiredDragMode;
+
         if (typeof Plotly !== 'undefined') {
             Plotly.react('graphPlot', newTraces, graphDiv.layout);
-            Plotly.relayout('graphPlot', layoutUpdate);
+            if (!isDraggingTrace && !func_draggingHandle) {
+                Plotly.relayout('graphPlot', layoutUpdate);
+            }
             if (!skipHeavy && func_isMicroscopeVisible) {
                 func_updateMicroscopePlot();
             }
@@ -4835,6 +5886,201 @@
         return closest;
     }
 
+    // 그래프 위에서 직접 드래그 가능한 미적분 조작 핸들(점 A, 점 B, 점 P/Q, 현미경 마커, 적분 경계선 a/b, 극한 보조선 a/a±h) 감지
+    function func_findDraggableHandle(px, py) {
+        if (!func_isDirectDragMode || func_selectedFuncId) return null;
+        const graphDiv = document.getElementById('graphPlot');
+        if (!graphDiv || !graphDiv.layout) return null;
+        const xSpan = Math.abs(graphDiv.layout.xaxis.range[1] - graphDiv.layout.xaxis.range[0]) || 12;
+        const ySpan = Math.abs(graphDiv.layout.yaxis.range[1] - graphDiv.layout.yaxis.range[0]) || 12;
+        const ptRadius = Math.max(xSpan, ySpan) * 0.048;
+        const lineRadiusX = xSpan * 0.028;
+        const visibleCustom = func_functionsList.filter(f => f.visible && f.type === 'custom');
+        if (visibleCustom.length === 0) return null;
+
+        // 1) 평균변화율(할선) 점 B 또는 기준점 A
+        if (func_isSecantVisible) {
+            const selEl = document.getElementById('secantFuncSelect');
+            const targetFunc = visibleCustom.find(f => f.id === (selEl ? selEl.value : '')) || visibleCustom[0];
+            const aEl = document.getElementById('secantA');
+            const yEl = document.getElementById('secantY');
+            const dxEl = document.getElementById('secantDxSlider');
+            const xA = aEl ? parseFloat(aEl.value) : NaN;
+            const yA = yEl ? parseFloat(yEl.value) : NaN;
+            const dxVal = dxEl ? parseFloat(dxEl.value) : 1.0;
+            if (targetFunc && isFinite(xA) && isFinite(yA)) {
+                const xb = xA + dxVal;
+                let yb = NaN;
+                if (!func_isImplicitFunc(targetFunc)) {
+                    yb = func_evaluateFunction(targetFunc, xb);
+                } else {
+                    const rts = func_findImplicitYRoots(targetFunc, xb, -15, 15, 150);
+                    if (rts.length > 0) yb = rts[rts.length - 1];
+                }
+                if (isFinite(yb) && Math.hypot(px - xb, py - yb) <= ptRadius) {
+                    return { type: 'secant_b', cursor: 'grab', targetFunc, xA };
+                }
+                if (Math.hypot(px - xA, py - yA) <= ptRadius) {
+                    return { type: 'secant_a', cursor: 'grab', targetFunc };
+                }
+            }
+        }
+
+        // 2) 기울기의 자취(도함수) 점 P 또는 자취 점 Q
+        if (func_isSlopeWalkVisible) {
+            const selEl = document.getElementById('slopeWalkFuncSelect');
+            const targetFunc = visibleCustom.find(f => f.id === (selEl ? selEl.value : '')) || visibleCustom[0];
+            const xSlider = document.getElementById('slopeWalkXSlider');
+            const x0 = xSlider ? parseFloat(xSlider.value) : -2.0;
+            if (targetFunc && isFinite(x0)) {
+                if (!func_isImplicitFunc(targetFunc)) {
+                    const y0 = func_evaluateFunction(targetFunc, x0);
+                    const m0 = func_evaluateDerivative(targetFunc, x0);
+                    if ((isFinite(y0) && Math.hypot(px - x0, py - y0) <= ptRadius) ||
+                        (isFinite(m0) && Math.hypot(px - x0, py - m0) <= ptRadius)) {
+                        return { type: 'slope_walk', cursor: 'ew-resize' };
+                    }
+                } else {
+                    const rts = func_findImplicitYRoots(targetFunc, x0, -15, 15, 120);
+                    if (rts.length > 0 && Math.hypot(px - x0, py - rts[rts.length - 1]) <= ptRadius) {
+                        return { type: 'slope_walk', cursor: 'ew-resize' };
+                    }
+                }
+            }
+        }
+
+        // 3) 미분 현미경 관찰 지점 마커
+        if (func_isMicroscopeVisible) {
+            const selEl = document.getElementById('microscopeFuncSelect');
+            const targetFunc = visibleCustom.find(f => f.id === (selEl ? selEl.value : '')) || visibleCustom[0];
+            const aEl = document.getElementById('microscopeA');
+            const aVal = aEl ? parseFloat(aEl.value) : 1;
+            if (targetFunc && isFinite(aVal)) {
+                let yMicro = 0;
+                if (!func_isImplicitFunc(targetFunc)) {
+                    const ya = func_evaluateFunction(targetFunc, aVal);
+                    yMicro = isFinite(ya) ? ya : 0;
+                } else {
+                    const rts = func_findImplicitYRoots(targetFunc, aVal, -15, 15, 120);
+                    if (rts.length > 0) yMicro = rts[rts.length - 1];
+                }
+                if (Math.hypot(px - aVal, py - yMicro) <= ptRadius * 1.15) {
+                    return { type: 'microscope_a', cursor: 'grab' };
+                }
+            }
+        }
+
+        // 4) 좌·우극한 탐색기 접근 점(a-h, a+h) 또는 목표 수직선(x=a)
+        if (func_isLimitVisible) {
+            const selEl = document.getElementById('limitFuncSelect');
+            const targetFunc = visibleCustom.find(f => f.id === (selEl ? selEl.value : '')) || visibleCustom[0];
+            const aEl = document.getElementById('limitTargetA');
+            const hEl = document.getElementById('limitHSlider');
+            const aVal = aEl ? parseFloat(aEl.value) : 1;
+            const hVal = hEl ? parseFloat(hEl.value) : 0.5;
+            if (targetFunc && isFinite(aVal) && isFinite(hVal)) {
+                const xL = aVal - hVal, xR = aVal + hVal;
+                const yL = func_evaluateFunction(targetFunc, xL);
+                const yR = func_evaluateFunction(targetFunc, xR);
+                if ((isFinite(yL) && Math.hypot(px - xL, py - yL) <= ptRadius) ||
+                    (isFinite(yR) && Math.hypot(px - xR, py - yR) <= ptRadius)) {
+                    return { type: 'limit_h', cursor: 'ew-resize', aVal };
+                }
+                if (Math.abs(px - aVal) <= lineRadiusX) {
+                    return { type: 'limit_a', cursor: 'ew-resize' };
+                }
+            }
+        }
+
+        // 5) 정적분 구간 경계선 (x=a, x=b)
+        if (func_isIntegralVisible) {
+            const aEl = document.getElementById('integralA');
+            const bEl = document.getElementById('integralB');
+            const aVal = aEl ? parseFloat(aEl.value) : 0;
+            const bVal = bEl ? parseFloat(bEl.value) : 2;
+            const distA = Math.abs(px - aVal);
+            const distB = Math.abs(px - bVal);
+            if (distA <= lineRadiusX && distA <= distB) {
+                return { type: 'integral_a', cursor: 'ew-resize' };
+            }
+            if (distB <= lineRadiusX) {
+                return { type: 'integral_b', cursor: 'ew-resize' };
+            }
+        }
+
+        return null;
+    }
+
+    // 드래그 중인 미적분 핸들의 새 좌표 (px, py)를 반영하여 슬라이더·입력창 및 그래프를 실시간 갱신
+    function func_applyHandleDrag(handle, px, py) {
+        if (!handle || !isFinite(px)) return;
+        const snapNearQuarter = (v) => {
+            const q = Math.round(v * 4) / 4;
+            return Math.abs(v - q) < 0.03 ? q : Math.round(v * 100) / 100;
+        };
+
+        if (handle.type === 'secant_b') {
+            const aEl = document.getElementById('secantA');
+            const xA = aEl && isFinite(parseFloat(aEl.value)) ? parseFloat(aEl.value) : (handle.xA || 1);
+            let newDx = Math.max(-2.0, Math.min(2.0, px - xA));
+            if (Math.abs(newDx) < 0.01) newDx = newDx >= 0 ? 0.01 : -0.01;
+            const slider = document.getElementById('secantDxSlider');
+            if (slider) slider.value = String(newDx);
+            func_onSecantSliderChange(newDx);
+        } else if (handle.type === 'secant_a') {
+            const aEl = document.getElementById('secantA');
+            const yEl = document.getElementById('secantY');
+            const newX = snapNearQuarter(px);
+            if (aEl) aEl.value = String(newX);
+            if (handle.targetFunc) {
+                if (!func_isImplicitFunc(handle.targetFunc)) {
+                    const newY = func_evaluateFunction(handle.targetFunc, newX);
+                    if (yEl && isFinite(newY)) yEl.value = String(func_formatNumber(newY));
+                } else {
+                    const proj = func_projectPointToImplicitCurve(handle.targetFunc, newX, py, 2.0);
+                    if (proj && yEl) {
+                        if (aEl) aEl.value = String(func_formatNumber(proj.x));
+                        yEl.value = String(func_formatNumber(proj.y));
+                    }
+                }
+            }
+            func_updateAll(true);
+        } else if (handle.type === 'slope_walk') {
+            const clampedX = Math.max(-4.5, Math.min(4.5, Math.round(px * 20) / 20));
+            const slider = document.getElementById('slopeWalkXSlider');
+            if (slider) slider.value = String(clampedX);
+            func_onSlopeWalkSliderChange(clampedX);
+        } else if (handle.type === 'microscope_a') {
+            const newA = snapNearQuarter(px);
+            const aEl = document.getElementById('microscopeA');
+            if (aEl) aEl.value = String(newA);
+            func_updateMicroscopePlot();
+            func_updateAll(true);
+        } else if (handle.type === 'limit_h') {
+            const aEl = document.getElementById('limitTargetA');
+            const aVal = aEl && isFinite(parseFloat(aEl.value)) ? parseFloat(aEl.value) : (handle.aVal || 1);
+            const newH = Math.max(0.001, Math.min(1.5, Math.abs(px - aVal)));
+            const slider = document.getElementById('limitHSlider');
+            if (slider) slider.value = String(newH);
+            func_onLimitSliderChange(newH);
+        } else if (handle.type === 'limit_a') {
+            const newA = snapNearQuarter(px);
+            const aEl = document.getElementById('limitTargetA');
+            if (aEl) aEl.value = String(newA);
+            func_updateAll(true);
+        } else if (handle.type === 'integral_a') {
+            const newA = snapNearQuarter(px);
+            const aEl = document.getElementById('integralA');
+            if (aEl) aEl.value = String(newA);
+            func_updateAll(true);
+        } else if (handle.type === 'integral_b') {
+            const newB = snapNearQuarter(px);
+            const bEl = document.getElementById('integralB');
+            if (bEl) bEl.value = String(newB);
+            func_updateAll(true);
+        }
+    }
+
     // 그래프 위를 클릭했을 때 평균변화율(또는 열린 탐색 패널)의 기준점 A(x, y)로 설정하는 핸들러
     function func_trySetBasePointByGraphClick(px, py) {
         const graphDiv = document.getElementById('graphPlot');
@@ -4883,11 +6129,34 @@
             }
         }, { passive: true });
 
+        let func_windowResizeTimer = null;
+        window.addEventListener('resize', function() {
+            if (currentGlobalApp !== 'func' || typeof Plotly === 'undefined') return;
+            if (func_windowResizeTimer) clearTimeout(func_windowResizeTimer);
+            func_windowResizeTimer = setTimeout(() => {
+                if (document.getElementById('graphPlot')) Plotly.Plots.resize('graphPlot');
+                if (func_isMicroscopeVisible && document.getElementById('microscopePlot')) {
+                    Plotly.Plots.resize('microscopePlot');
+                }
+            }, 120);
+        });
+
+        function func_getPlotAreaRect() {
+            const plotEl = graphDiv.querySelector('.nsewdrag') || graphDiv.querySelector('.gridlayer') || graphDiv;
+            return plotEl.getBoundingClientRect();
+        }
+
         graphDiv.addEventListener('mousemove', function(e) {
-            if (func_isTouchInteraction || isDraggingTrace || !func_isTangentMode || func_selectedFuncId) return;
-            const bgRect = graphDiv.querySelector('.gridlayer').getBoundingClientRect();
+            if (func_isTouchInteraction || isDraggingTrace || func_draggingHandle) return;
+            const bgRect = func_getPlotAreaRect();
             if (e.clientX < bgRect.left || e.clientX > bgRect.right || e.clientY < bgRect.top || e.clientY > bgRect.bottom) return;
             let px = graphDiv._fullLayout.xaxis.p2d(e.clientX - bgRect.left); let py = graphDiv._fullLayout.yaxis.p2d(e.clientY - bgRect.top);
+            if (!func_selectedFuncId && func_isDirectDragMode) {
+                const hoverHandle = func_findDraggableHandle(px, py);
+                const dragLayer = graphDiv.querySelector('.nsewdrag');
+                if (dragLayer) dragLayer.style.cursor = hoverHandle ? hoverHandle.cursor : '';
+            }
+            if (!func_isTangentMode || func_selectedFuncId) return;
             let closest = func_findClosestFunction(px, py);
             if (closest) func_drawTangentFromObj(closest.f, closest.px, closest.py, closest.isInverse); else func_clearTangentShape();
         });
@@ -4895,17 +6164,38 @@
         graphDiv.addEventListener('mouseleave', function() { if (func_isTangentMode && !func_selectedFuncId) func_clearTangentShape(); });
 
         let func_mouseStartClientX = 0, func_mouseStartClientY = 0;
+        let func_dragStartClientX = 0, func_dragStartClientY = 0;
+        let func_dragPlotWidth = 1, func_dragPlotHeight = 1;
+        let func_dragSpanX = 12, func_dragSpanY = 12;
+        let func_dragAnchorOffsetX = 0, func_dragAnchorOffsetY = 0;
         let func_touchTimer = null; let func_touchStartClientX = 0, func_touchStartClientY = 0; let func_touchTargetObj = null;
 
         function getClientCoords(e) { return (e.touches && e.touches.length > 0) ? { clientX: e.touches[0].clientX, clientY: e.touches[0].clientY } : { clientX: e.clientX, clientY: e.clientY }; }
+
+        function func_snapShiftValue(val) {
+            if (!isFinite(val)) return 0;
+            const nearInt = Math.round(val);
+            if (Math.abs(val - nearInt) <= 0.18) return nearInt === 0 ? 0 : nearInt;
+            const nearHalf = Math.round(val * 2) / 2;
+            if (Math.abs(val - nearHalf) <= 0.12) return nearHalf === 0 ? 0 : nearHalf;
+            const nearTenth = Math.round(val * 10) / 10;
+            return Object.is(nearTenth, -0) ? 0 : nearTenth;
+        }
 
         graphDiv.addEventListener('touchstart', function(e) {
             if (e.touches.length > 1) { if (func_touchTimer) { clearTimeout(func_touchTimer); func_touchTimer = null; } return; }
             func_isTouchInteraction = true; if (func_touchIgnoreTimeout) clearTimeout(func_touchIgnoreTimeout);
             const coords = getClientCoords(e); func_touchStartClientX = coords.clientX; func_touchStartClientY = coords.clientY;
-            const bgRect = graphDiv.querySelector('.gridlayer').getBoundingClientRect();
+            const bgRect = func_getPlotAreaRect();
             if (coords.clientX < bgRect.left || coords.clientX > bgRect.right || coords.clientY < bgRect.top || coords.clientY > bgRect.bottom) return;
             let px = graphDiv._fullLayout.xaxis.p2d(coords.clientX - bgRect.left), py = graphDiv._fullLayout.yaxis.p2d(coords.clientY - bgRect.top);
+            const hitHandle = func_findDraggableHandle(px, py);
+            if (hitHandle) {
+                func_draggingHandle = hitHandle;
+                Plotly.relayout(graphDiv, { dragmode: false });
+                if (e.cancelable) e.preventDefault();
+                return;
+            }
             if (!func_selectedFuncId && func_isSecantVisible && func_isSecantClickPickMode) {
                 func_trySetBasePointByGraphClick(px, py);
             }
@@ -4914,20 +6204,31 @@
             if (func_touchTargetObj && !func_selectedFuncId) {
                 func_touchTimer = setTimeout(() => { func_selectGraph(func_touchTargetObj.f.id); func_touchTargetObj = null; if(navigator.vibrate) navigator.vibrate(50); }, 1000); 
             }
-            if (func_selectedFuncId) func_handleDragStart(coords.clientX, coords.clientY);
+            if (func_selectedFuncId) {
+                func_handleDragStart(coords.clientX, coords.clientY);
+                if (e.cancelable) e.preventDefault();
+            }
             if (func_isTangentMode && func_touchTargetObj && !func_selectedFuncId) func_drawTangentFromObj(func_touchTargetObj.f, func_touchTargetObj.px, func_touchTargetObj.py, func_touchTargetObj.isInverse);
         }, { passive: false });
 
         graphDiv.addEventListener('touchmove', function(e) {
             if (e.touches.length > 1) { if (func_touchTimer) { clearTimeout(func_touchTimer); func_touchTimer = null; } return; }
             const coords = getClientCoords(e);
+            if (func_draggingHandle) {
+                const bgRect = func_getPlotAreaRect();
+                let px = graphDiv._fullLayout.xaxis.p2d(coords.clientX - bgRect.left);
+                let py = graphDiv._fullLayout.yaxis.p2d(coords.clientY - bgRect.top);
+                func_applyHandleDrag(func_draggingHandle, px, py);
+                if (e.cancelable) e.preventDefault();
+                return;
+            }
             if (func_touchTimer) {
                 let dx = coords.clientX - func_touchStartClientX, dy = coords.clientY - func_touchStartClientY;
                 if (Math.sqrt(dx*dx + dy*dy) > 10) { clearTimeout(func_touchTimer); func_touchTimer = null; }
             }
             if (isDraggingTrace && func_selectedFuncId) { func_handleDragMove(coords.clientX, coords.clientY); if(e.cancelable) e.preventDefault(); return; }
             if (func_isTangentMode && !func_selectedFuncId && func_isTouchInteraction) {
-                const bgRect = graphDiv.querySelector('.gridlayer').getBoundingClientRect();
+                const bgRect = func_getPlotAreaRect();
                 let px = graphDiv._fullLayout.xaxis.p2d(coords.clientX - bgRect.left), py = graphDiv._fullLayout.yaxis.p2d(coords.clientY - bgRect.top);
                 func_touchTargetObj = func_findClosestFunction(px, py);
                 if (func_touchTargetObj) { func_drawTangentFromObj(func_touchTargetObj.f, func_touchTargetObj.px, func_touchTargetObj.py, func_touchTargetObj.isInverse); if(e.cancelable) e.preventDefault(); } 
@@ -4937,6 +6238,11 @@
 
         window.addEventListener('touchend', function() {
             if (func_touchTimer) { clearTimeout(func_touchTimer); func_touchTimer = null; }
+            if (func_draggingHandle) {
+                func_draggingHandle = null;
+                if (!func_selectedFuncId) Plotly.relayout(graphDiv, { dragmode: 'pan' });
+                func_updateAll(false);
+            }
             if (isDraggingTrace) func_handleDragEnd();
             func_touchIgnoreTimeout = setTimeout(() => { func_isTouchInteraction = false; }, 1000);
             if (func_isTangentMode && !func_selectedFuncId) setTimeout(() => { if (!isDraggingTrace) func_clearTangentShape(); }, 1000);
@@ -4944,43 +6250,121 @@
         
         function func_handleDragStart(clientX, clientY) {
             if (!func_selectedFuncId) return;
-            func_clearTangentShape(); const bgRect = graphDiv.querySelector('.gridlayer').getBoundingClientRect();
+            func_clearTangentShape();
+            const bgRect = func_getPlotAreaRect();
             if (clientX < bgRect.left || clientX > bgRect.right || clientY < bgRect.top || clientY > bgRect.bottom) return;
-            isDraggingTrace = true; func_startDataX = graphDiv._fullLayout.xaxis.p2d(clientX - bgRect.left); func_startDataY = graphDiv._fullLayout.yaxis.p2d(clientY - bgRect.top);
-            func_startFuncState = JSON.parse(JSON.stringify(func_functionsList.find(f => f.id === func_selectedFuncId)));
+            const targetFunc = func_functionsList.find(f => f.id === func_selectedFuncId);
+            if (!targetFunc) return;
+            isDraggingTrace = true;
+            func_dragStartClientX = clientX;
+            func_dragStartClientY = clientY;
+            func_dragPlotWidth = Math.max(bgRect.width, 1);
+            func_dragPlotHeight = Math.max(bgRect.height, 1);
+            const xRng = (graphDiv._fullLayout && graphDiv._fullLayout.xaxis && graphDiv._fullLayout.xaxis.range) ? graphDiv._fullLayout.xaxis.range : graphDiv.layout.xaxis.range;
+            const yRng = (graphDiv._fullLayout && graphDiv._fullLayout.yaxis && graphDiv._fullLayout.yaxis.range) ? graphDiv._fullLayout.yaxis.range : graphDiv.layout.yaxis.range;
+            func_dragSpanX = xRng[1] - xRng[0];
+            func_dragSpanY = yRng[1] - yRng[0];
+
+            let rawStartX = graphDiv._fullLayout.xaxis.p2d(clientX - bgRect.left);
+            let rawStartY = graphDiv._fullLayout.yaxis.p2d(clientY - bgRect.top);
+            func_startDataX = rawStartX;
+            func_startDataY = rawStartY;
+            func_dragAnchorOffsetX = 0;
+            func_dragAnchorOffsetY = 0;
+
+            // 사용자가 꼭짓점·원점 등 격자점 근처(0.32 이내)에서 곡선을 잡고 끌기 시작한 경우 시작 기준점을 해당 격자점으로 자동 보정
+            const nearGridX = Math.round(rawStartX * 2) / 2;
+            const nearGridY = Math.round(rawStartY * 2) / 2;
+            if (Math.abs(rawStartX - nearGridX) < 0.32 && Math.abs(rawStartY - nearGridY) < 0.32) {
+                func_dragAnchorOffsetX = rawStartX - nearGridX;
+                func_dragAnchorOffsetY = rawStartY - nearGridY;
+            }
+
+            if (targetFunc.type === 'custom' && !targetFunc.baseExpr) {
+                targetFunc.baseExpr = targetFunc.expr;
+            }
+            func_startFuncState = JSON.parse(JSON.stringify(targetFunc));
         }
 
         function func_handleDragMove(clientX, clientY) {
             if (!isDraggingTrace || !func_selectedFuncId) return;
-            const bgRect = graphDiv.querySelector('.gridlayer').getBoundingClientRect();
-            let currDataX = graphDiv._fullLayout.xaxis.p2d(clientX - bgRect.left), currDataY = graphDiv._fullLayout.yaxis.p2d(clientY - bgRect.top);
-            let dx = currDataX - func_startDataX, dy = currDataY - func_startDataY;
+            let rawDx = ((clientX - func_dragStartClientX) / func_dragPlotWidth) * func_dragSpanX + func_dragAnchorOffsetX;
+            let rawDy = -((clientY - func_dragStartClientY) / func_dragPlotHeight) * func_dragSpanY + func_dragAnchorOffsetY;
             let targetFunc = func_functionsList.find(f => f.id === func_selectedFuncId);
+            if (!targetFunc) return;
             
             if (targetFunc.type === 'complex') {
                 let c = evaluateComplexExpression(func_startFuncState.expr);
                 if (!isNaN(c.re) && !isNaN(c.im)) {
-                    let newRe = func_formatNumber(c.re + dx);
-                    let newIm = func_formatNumber(c.im + dy);
+                    let newRe = func_snapShiftValue(c.re + rawDx);
+                    let newIm = func_snapShiftValue(c.im + rawDy);
                     targetFunc.expr = `${newRe} ${newIm >= 0 ? '+' : '-'} ${Math.abs(newIm)}i`;
                 }
             } else if (targetFunc.type === 'custom') {
-                targetFunc.H = (func_startFuncState.H || 0) + dx; targetFunc.K = (func_startFuncState.K || 0) + dy;
+                let nextH = func_snapShiftValue((func_startFuncState.H || 0) + rawDx);
+                let nextK = func_snapShiftValue((func_startFuncState.K || 0) + rawDy);
+                targetFunc.H = nextH;
+                targetFunc.K = nextK;
                 targetFunc.expr = func_buildShiftedExpression(targetFunc.baseExpr || func_startFuncState.expr, targetFunc.H, targetFunc.K);
             }
-            func_syncInputValues(targetFunc); func_updateAll(true); 
+            func_syncInputValues(targetFunc, true);
+            func_updateAll(true); 
         }
 
         function func_handleDragEnd() {
-            if (isDraggingTrace) { isDraggingTrace = false; let targetFunc = func_functionsList.find(f => f.id === func_selectedFuncId); if (targetFunc) func_syncInputValues(targetFunc); func_updateAll(false); }
+            if (isDraggingTrace) {
+                isDraggingTrace = false;
+                let targetFunc = func_functionsList.find(f => f.id === func_selectedFuncId);
+                if (targetFunc) {
+                    func_syncInputValues(targetFunc, false);
+                    func_syncIntegralSelect();
+                }
+                func_updateAll(false);
+            }
         }
 
-        graphDiv.addEventListener('mousedown', function(e) { func_mouseStartClientX = e.clientX; func_mouseStartClientY = e.clientY; func_handleDragStart(e.clientX, e.clientY); });
-        window.addEventListener('mousemove', function(e) { func_handleDragMove(e.clientX, e.clientY); });
+        graphDiv.addEventListener('mousedown', function(e) {
+            func_mouseStartClientX = e.clientX; func_mouseStartClientY = e.clientY;
+            const bgRect = func_getPlotAreaRect();
+            if (e.clientX >= bgRect.left && e.clientX <= bgRect.right && e.clientY >= bgRect.top && e.clientY <= bgRect.bottom) {
+                let px = graphDiv._fullLayout.xaxis.p2d(e.clientX - bgRect.left);
+                let py = graphDiv._fullLayout.yaxis.p2d(e.clientY - bgRect.top);
+                const hitHandle = func_findDraggableHandle(px, py);
+                if (hitHandle) {
+                    func_draggingHandle = hitHandle;
+                    Plotly.relayout(graphDiv, { dragmode: false });
+                    e.stopPropagation();
+                    e.preventDefault();
+                    return;
+                }
+                if (func_selectedFuncId) {
+                    func_handleDragStart(e.clientX, e.clientY);
+                    e.stopPropagation();
+                    e.preventDefault();
+                    return;
+                }
+            }
+        }, true);
+        window.addEventListener('mousemove', function(e) {
+            if (func_draggingHandle) {
+                const bgRect = func_getPlotAreaRect();
+                let px = graphDiv._fullLayout.xaxis.p2d(e.clientX - bgRect.left);
+                let py = graphDiv._fullLayout.yaxis.p2d(e.clientY - bgRect.top);
+                func_applyHandleDrag(func_draggingHandle, px, py);
+                return;
+            }
+            func_handleDragMove(e.clientX, e.clientY);
+        });
         window.addEventListener('mouseup', function(e) {
+            if (func_draggingHandle) {
+                func_draggingHandle = null;
+                if (!func_selectedFuncId) Plotly.relayout(graphDiv, { dragmode: 'pan' });
+                func_updateAll(false);
+                return;
+            }
             let dx = e.clientX - func_mouseStartClientX; let dy = e.clientY - func_mouseStartClientY;
             if (Math.sqrt(dx*dx + dy*dy) < 5 && !func_isTouchInteraction && !func_selectedFuncId) {
-                const bgRect = graphDiv.querySelector('.gridlayer').getBoundingClientRect();
+                const bgRect = func_getPlotAreaRect();
                 if (e.clientX >= bgRect.left && e.clientX <= bgRect.right && e.clientY >= bgRect.top && e.clientY <= bgRect.bottom) {
                     let px = graphDiv._fullLayout.xaxis.p2d(e.clientX - bgRect.left), py = graphDiv._fullLayout.yaxis.p2d(e.clientY - bgRect.top);
                     if (!func_trySetBasePointByGraphClick(px, py)) {
@@ -5078,6 +6462,13 @@
     }
 
     let phys_audioCtx, phys_engineOsc, phys_engineGain;
+    let phys_idleAudioFrames = 0;
+    document.addEventListener('visibilitychange', function() {
+        if (document.hidden && phys_audioCtx && phys_audioCtx.state === 'running') {
+            if (phys_engineGain) phys_engineGain.gain.setTargetAtTime(0, phys_audioCtx.currentTime, 0.02);
+            phys_audioCtx.suspend().catch(() => {});
+        }
+    });
     function phys_initAudio() {
         if (globalSoundMuted) return;
         try {
@@ -5670,7 +7061,7 @@
         window.addEventListener('mousemove', move, {passive: false});
         window.addEventListener('mouseup', up);
         canvas.addEventListener('touchstart', down, {passive: false});
-        window.addEventListener('touchmove', move, {passive: false});
+        canvas.addEventListener('touchmove', move, {passive: false});
         window.addEventListener('touchend', up);
     }
     window.phys_attachPanZoomDrag = phys_attachPanZoomDrag;
@@ -5985,7 +7376,7 @@
 
                                 let bg = document.getElementById('t2-btn-gas'); if(bg) { bg.disabled = true; bg.classList.add('opacity-50', 'cursor-not-allowed'); bg.classList.remove('ring-4', 'ring-white', 'scale-95'); }
                                 let bb = document.getElementById('t2-btn-brake'); if(bb) { bb.disabled = true; bb.classList.add('opacity-50', 'cursor-not-allowed'); bb.classList.remove('ring-4', 'ring-white', 'scale-95'); }
-                                let sm = document.getElementById('status-msg'); if(sm) { sm.innerText = "💥 충돌 중! (Impact)"; sm.style.display = 'block'; sm.style.color = '#f87171'; sm.style.borderColor = '#ef4444'; }
+                                let sm = document.getElementById('status-msg'); if(sm) { sm.innerText = "💥 충돌 중 (Impact)"; sm.style.display = 'block'; sm.style.color = '#f87171'; sm.style.borderColor = '#ef4444'; }
                                 phys_playCrashSound(mat.T);
                             } else {
                                 phys_dState.phase = 'done'; phys_dState.v = 0; phys_dState.a = 0; phys_dState.F = 0;
@@ -6041,17 +7432,31 @@
                 phys_renderDynCharts();
             }
             
-            if(phys_audioCtx && phys_audioCtx.state === 'running' && phys_engineGain) {
-                if (globalSoundMuted) {
-                    phys_engineGain.gain.setTargetAtTime(0, phys_audioCtx.currentTime, 0.05);
-                } else {
-                    const activeTab = (document.getElementById('tab1-content') && document.getElementById('tab1-content').classList.contains('hide')) ? 'tab2' : 'tab1';
-                    const isPaused = (activeTab === 'tab1') ? phys_kState.isPaused : phys_dState.isPaused;
-                    const currentVel = (activeTab === 'tab1') ? phys_kState.v : phys_dState.v;
-                    const isGas = (activeTab === 'tab1') ? (phys_kState.inputAcc > 0) : (phys_dState.inputAcc > 0 && phys_dState.phase === 'running');
+            if (phys_audioCtx && phys_engineGain) {
+                const activeTab = (document.getElementById('tab1-content') && document.getElementById('tab1-content').classList.contains('hide')) ? 'tab2' : 'tab1';
+                const isPaused = (activeTab === 'tab1') ? phys_kState.isPaused : phys_dState.isPaused;
+                const currentVel = (activeTab === 'tab1') ? phys_kState.v : phys_dState.v;
+                const isGas = (activeTab === 'tab1') ? (phys_kState.inputAcc !== 0) : (phys_dState.inputAcc !== 0 && phys_dState.phase === 'running');
+                const isActiveSound = !globalSoundMuted && !isPaused && (Math.abs(currentVel) > 0.5 || isGas || phys_dState.phase === 'crashing');
+
+                if (isActiveSound) {
+                    phys_idleAudioFrames = 0;
+                    if (phys_audioCtx.state === 'suspended') {
+                        phys_audioCtx.resume().catch(() => {});
+                    }
                     const tFreq = 60 + Math.abs(currentVel) * 2;
                     phys_engineOsc.frequency.setTargetAtTime(tFreq, phys_audioCtx.currentTime, 0.1);
-                    phys_engineGain.gain.setTargetAtTime((!isPaused && (Math.abs(currentVel)>0.5 || isGas)) ? 0.18 : 0, phys_audioCtx.currentTime, 0.1);
+                    phys_engineGain.gain.setTargetAtTime(0.18, phys_audioCtx.currentTime, 0.1);
+                } else {
+                    if (phys_audioCtx.state === 'running') {
+                        phys_engineGain.gain.setTargetAtTime(0, phys_audioCtx.currentTime, 0.05);
+                        phys_idleAudioFrames = (phys_idleAudioFrames || 0) + 1;
+                        // 1.5초 이상 정지·일시정지·무음 상태면 오디오 컨텍스트를 suspend하여 CPU 및 모바일 배터리 절약
+                        if (phys_idleAudioFrames > 90) {
+                            phys_idleAudioFrames = 0;
+                            phys_audioCtx.suspend().catch(() => {});
+                        }
+                    }
                 }
             }
         } catch (error) { console.error(error); }
