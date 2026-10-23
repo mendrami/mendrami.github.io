@@ -234,14 +234,14 @@
             <div id="limitControlPanel" class="calc-explorer-panel" style="border-color:#93c5fd; background:#eff6ff;">
                 <div class="calc-explorer-header">
                     <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
-                        <span style="font-size:0.95rem; font-weight:800; color:#1e3a8a;">🎯 좌극한(x → a⁻) · 우극한(x → a⁺) 및 연속성 탐색기</span>
+                        <span style="font-size:0.95rem; font-weight:800; color:#1e3a8a;">🎯 좌극한 · 우극한 및 연속성 탐색기</span>
                         <span id="limitVerdictBox" style="font-size:0.8rem; font-weight:800; padding:3px 10px; border-radius:999px; background:#dbeafe; color:#1e40af; border:1px solid #93c5fd;">판정 대기 중</span>
                     </div>
                     <div style="display:flex; align-items:center; gap:6px; flex-wrap:wrap;">
                         <label style="font-size:0.78rem; font-weight:800; color:#1e3a8a; display:flex; align-items:center; gap:4px; background:#dbeafe; padding:3px 8px; border-radius:7px; border:1px solid #93c5fd;">
                             <span>⏱ 애니메이션 속도:</span>
                             <select id="limitAnimSpeed" onchange="func_setLimitAnimSpeed(this.value)" style="padding:2px 6px; border-radius:5px; border:1px solid #60a5fa; background:#fff; color:#1e3a8a; font-weight:800; font-size:0.78rem; cursor:pointer;">
-                                <option value="0.1">0.1× 초저속 (칠판 설명용)</option>
+                                <option value="0.1">0.1× 초저속</option>
                                 <option value="0.25">0.25× 아주 느리게</option>
                                 <option value="0.5">0.5× 느리게</option>
                                 <option value="1" selected>1.0× 보통 속도</option>
@@ -255,7 +255,7 @@
                 </div>
                 <div class="calc-explorer-controls">
                     <label>대상 함수: <select id="limitFuncSelect" onchange="func_updateAll()"></select></label>
-                    <label>목표 지점 x = a : <input type="number" id="limitTargetA" value="1" step="0.5" style="width:76px;" oninput="func_updateAll()"></label>
+                    <label>목표 지점 x = <input type="number" id="limitTargetA" value="1" step="0.5" style="width:76px;" oninput="func_updateAll()"></label>
                     <label style="display:flex; align-items:center; gap:6px;">
                         <span>접근 거리 h = <span id="limitHVal" style="color:#2563eb; font-family:'JetBrains Mono',monospace;">0.500</span></span>
                         <input type="range" id="limitHSlider" min="0.001" max="1.5" step="0.001" value="0.5" style="width:150px;" oninput="func_onLimitSliderChange(this.value)">
@@ -266,10 +266,10 @@
                     <thead>
                         <tr>
                             <th>접근 거리 h</th>
-                            <th style="color:#2563eb;">좌측 x = a - h</th>
-                            <th style="color:#2563eb;">좌극한 접근값 f(a - h)</th>
-                            <th style="color:#ea580c;">우측 x = a + h</th>
-                            <th style="color:#ea580c;">우극한 접근값 f(a + h)</th>
+                            <th id="limitThXL" style="color:#2563eb;">좌측 (x - h)</th>
+                            <th id="limitThYL" style="color:#2563eb;">좌극한 접근값 f(x - h)</th>
+                            <th id="limitThXR" style="color:#ea580c;">우측 (x + h)</th>
+                            <th id="limitThYR" style="color:#ea580c;">우극한 접근값 f(x + h)</th>
                         </tr>
                     </thead>
                     <tbody id="limitTableBody"></tbody>
@@ -286,7 +286,7 @@
                         <label style="font-size:0.78rem; font-weight:800; color:#881337; display:flex; align-items:center; gap:4px; background:#ffe4e6; padding:3px 8px; border-radius:7px; border:1px solid #fda4af;">
                             <span>⏱ 애니메이션 속도:</span>
                             <select id="secantAnimSpeed" onchange="func_setSecantAnimSpeed(this.value)" style="padding:2px 6px; border-radius:5px; border:1px solid #fb7185; background:#fff; color:#881337; font-weight:800; font-size:0.78rem; cursor:pointer;">
-                                <option value="0.1">0.1× 초저속 (칠판 설명용)</option>
+                                <option value="0.1">0.1× 초저속</option>
                                 <option value="0.25">0.25× 아주 느리게</option>
                                 <option value="0.5">0.5× 느리게</option>
                                 <option value="1" selected>1.0× 보통 속도</option>
@@ -300,7 +300,7 @@
                 </div>
                 <div class="calc-explorer-controls">
                     <label>대상 함수: <select id="secantFuncSelect" onchange="func_updateAll()"></select></label>
-                    <label>기준점 x = a : <input type="number" id="secantA" value="1" step="0.5" style="width:76px;" oninput="func_updateAll()"></label>
+                    <label>기준점 x = <input type="number" id="secantA" value="1" step="0.5" style="width:76px;" oninput="func_updateAll()"></label>
                     <label style="display:flex; align-items:center; gap:6px;">
                         <span>증분 Δx = <span id="secantDxVal" style="color:#e11d48; font-family:'JetBrains Mono',monospace;">1.00</span></span>
                         <input type="range" id="secantDxSlider" min="-2" max="2" step="0.01" value="1.0" style="width:160px;" oninput="func_onSecantSliderChange(this.value)">
@@ -325,7 +325,7 @@
                 </div>
                 <div class="calc-explorer-controls" style="margin-bottom:5px;">
                     <label>대상 함수: <select id="microscopeFuncSelect" onchange="func_updateMicroscopePlot()"></select></label>
-                    <label>관찰 지점 x = a : <input type="number" id="microscopeA" value="1" step="0.1" style="width:74px;" oninput="func_updateMicroscopePlot()"></label>
+                    <label>관찰 지점 x = <input type="number" id="microscopeA" value="1" step="0.1" style="width:74px;" oninput="func_updateMicroscopePlot()"></label>
                 </div>
                 <div id="microscopePlot" style="width:100%; height:200px; background:#fff; border-radius:8px; border:1px solid #c7d2fe;"></div>
             </div>
@@ -2517,9 +2517,9 @@
                         line: { color: '#2563eb', width: 1.5, dash: 'dash' }, hoverinfo: 'skip', showlegend: false
                     });
                     traces.push({
-                        x: [xL], y: [yL], mode: 'markers+text', name: `좌극한 접근 P_L(a-h)`,
+                        x: [xL], y: [yL], mode: 'markers+text', name: `좌극한 접근 (${aVal}-h)`,
                         marker: { size: 11, color: '#2563eb', symbol: 'circle', line: { color: '#fff', width: 2 } },
-                        text: [`  x→a⁻: (${xL.toFixed(3)}, ${yL.toFixed(3)})`], textposition: 'top left',
+                        text: [`  x→${aVal}⁻: (${xL.toFixed(3)}, ${yL.toFixed(3)})`], textposition: 'top left',
                         textfont: { size: 12, weight: 'bold', color: '#1d4ed8' }
                     });
                 }
@@ -2529,9 +2529,9 @@
                         line: { color: '#ea580c', width: 1.5, dash: 'dash' }, hoverinfo: 'skip', showlegend: false
                     });
                     traces.push({
-                        x: [xR], y: [yR], mode: 'markers+text', name: `우극한 접근 P_R(a+h)`,
+                        x: [xR], y: [yR], mode: 'markers+text', name: `우극한 접근 (${aVal}+h)`,
                         marker: { size: 11, color: '#ea580c', symbol: 'circle', line: { color: '#fff', width: 2 } },
-                        text: [`  x→a⁺: (${xR.toFixed(3)}, ${yR.toFixed(3)})`], textposition: 'bottom right',
+                        text: [`  x→${aVal}⁺: (${xR.toFixed(3)}, ${yR.toFixed(3)})`], textposition: 'bottom right',
                         textfont: { size: 12, weight: 'bold', color: '#c2410c' }
                     });
                 }
