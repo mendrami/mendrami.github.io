@@ -176,8 +176,8 @@
             <h1 id="planeTitle">실평면 함수 그래프</h1>
 
             <div class="status-board" id="statusBoard">
-                <div style="font-weight: 700; color:#0f172a;">💡 그래프 평행이동 및 특수 함수 입력 안내</div>
-                <div style="margin-top: 3px;">절댓값 <code>|x|</code>, 가우스 함수 <code>[x]</code>(열린 점 ○·닫힌 점 ● 표시)를 지원하며, 각 카드의 <b>[✥ 이동]</b> 버튼이나 그래프 선 클릭 후 드래그로 평행이동할 수 있습니다.</div>
+                <div style="font-weight: 700; color:#0f172a;">💡 그래프 평행이동 · 특수 함수 · 부등식 영역 입력 안내</div>
+                <div style="margin-top: 3px;">절댓값·가우스 복합식(예: <code>y = |x[x-2]|</code>), 부등식 영역 색칠(이상: <code>&gt;=</code>, <code>=&gt;</code>, <code>≥</code> / 이하: <code>&lt;=</code>, <code>=&lt;</code>, <code>≤</code>)을 모두 지원하며, <b>빠른 입력</b> 버튼을 여러 번 눌러 수식을 연속 조합할 수 있습니다.</div>
             </div>
 
             <div class="add-controls" id="addControlsSection">
@@ -836,13 +836,34 @@
     let func_showComplexMul = false;
     let func_showUnitCircle = false;
 
+    let func_isQuickInputOpen = true;
+    let func_lastFocusedId = null;
+
+    const QUICK_SYMBOLS_REAL = [
+        { label: 'π (원주율)', expr: 'π' },
+        { label: '≥ (이상)', expr: '≥' },
+        { label: '≤ (이하)', expr: '≤' },
+        { label: '> (초과)', expr: '>' },
+        { label: '< (미만)', expr: '<' },
+        { label: '|x| (절댓값)', expr: '|x|' },
+        { label: '[x] (가우스)', expr: '[x]' },
+        { label: '√( (제곱근)', expr: 'sqrt(' },
+        { label: '^2 (제곱)', expr: '^2' },
+        { label: '^ (거듭제곱)', expr: '^' },
+        { label: 'e (자연상수)', expr: 'e' },
+        { label: '( ) (괄호)', expr: '()' }
+    ];
+
     const REAL_PRESETS = [
         { label: '이차함수 -x²+x', expr: '-x^2+x' },
         { label: '이차함수 x(x-2)', expr: 'x(x-2)' },
         { label: '삼차함수 x³-3x', expr: 'x^3 - 3x' },
+        { label: '복합 |x[x-2]|', expr: '|x[x - 2]|' },
         { label: '절댓값 |x-1|+|x+1|', expr: '|x - 1| + |x + 1|' },
         { label: '가우스 함수 [x]', expr: '[x]' },
         { label: '소수부분 x-[x]', expr: 'x - [x]' },
+        { label: '부등식 y ≥ x', expr: 'y ≥ x' },
+        { label: '부등식 y ≤ -x²+x', expr: 'y ≤ -x^2+x' },
         { label: '무리함수 √x', expr: 'sqrt(x)' },
         { label: '세제곱근 x^(1/3)', expr: 'x^(1/3)' },
         { label: '유리함수 1/x', expr: '1/x' },
@@ -850,47 +871,152 @@
         { label: '로그함수 log2(x)', expr: 'log2(x)' },
         { label: '삼각함수 sin(x)', expr: 'sin(x)' },
         { label: '마름모 |x|+|y|=4', expr: '|x| + |y| = 4' },
-        { label: '원의 방정식 x²+y²=9', expr: 'x^2 + y^2 = 9' }
+        { label: '원의 방정식 x²+y²=9', expr: 'x^2 + y^2 = 9' },
+        { label: '원 내부 x²+y² ≤ 9', expr: 'x^2 + y^2 ≤ 9' }
     ];
 
     const COMPLEX_PRESETS = [
+        { label: '허수단위 i', expr: 'i' },
+        { label: '^2 (제곱)', expr: '^2' },
+        { label: '^3 (세제곱)', expr: '^3' },
         { label: '기본 복소수 1+i', expr: '1 + i' },
-        { label: '90° 회전 i', expr: 'i' },
         { label: '거듭제곱 (1+i)^2', expr: '(1 + i)^2' },
         { label: '주기성 확인 i^3', expr: 'i^3' },
         { label: '단위원 위 0.8+0.6i', expr: '0.8 + 0.6i' }
     ];
+
+    function func_toggleQuickInputBar() {
+        func_isQuickInputOpen = !func_isQuickInputOpen;
+        func_renderPresets();
+    }
+    window.func_toggleQuickInputBar = func_toggleQuickInputBar;
+
+    function func_clearActiveInput() {
+        const hasComplex = func_functionsList.some(f => f.type === 'complex');
+        let target = func_functionsList.find(f => f.id === func_lastFocusedId) || func_functionsList.find(f => f.id === func_selectedFuncId) || func_functionsList[func_functionsList.length - 1];
+        if (!target) return;
+        target.expr = '';
+        target.baseExpr = '';
+        target.H = 0;
+        target.K = 0;
+        target.isInitialDefault = false;
+        const inputEl = document.getElementById(`input_${target.id}_expr`);
+        if (inputEl) {
+            inputEl.value = '';
+            inputEl.focus();
+        }
+        func_syncIntegralSelect();
+        func_updateAll();
+    }
+    window.func_clearActiveInput = func_clearActiveInput;
 
     function func_renderPresets() {
         const bar = document.getElementById('presetBar');
         if (!bar) return;
         const hasComplex = func_functionsList.some(f => f.type === 'complex');
         const list = hasComplex ? COMPLEX_PRESETS : REAL_PRESETS;
-        let html = `<span style="font-size:0.82rem; font-weight:700; color:#475569; margin-right:4px;">📚 교과 예제 빠른 입력:</span>`;
-        list.forEach((item, idx) => {
-            html += `<button class="preset-chip" onclick="func_applyPreset(${idx})">${item.label}</button>`;
-        });
+
+        let html = `
+            <div style="width:100%; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
+                <div style="display:flex; align-items:center; gap:8px;">
+                    <span style="font-size:0.88rem; font-weight:800; color:#0f172a;">⚡ 빠른 입력</span>
+                    <button onmousedown="event.preventDefault()" onclick="func_toggleQuickInputBar()" style="padding:3px 10px; font-size:0.78rem; font-weight:700; border-radius:6px; border:1px solid #cbd5e1; background:#ffffff; color:#334155; cursor:pointer;">
+                        ${func_isQuickInputOpen ? '▲ 감추기' : '▼ 전체 표시'}
+                    </button>
+                    <button onmousedown="event.preventDefault()" onclick="func_clearActiveInput()" style="padding:3px 10px; font-size:0.78rem; font-weight:700; border-radius:6px; border:1px solid #fca5a5; background:#fef2f2; color:#dc2626; cursor:pointer;" title="현재 입력창의 수식을 비웁니다">
+                        🧹 입력창 비우기
+                    </button>
+                </div>
+                <span style="font-size:0.76rem; color:#64748b; font-weight:600;">* 버튼을 여러 번 클릭하면 입력창 커서 위치에 연속으로 추가됩니다 (예: [x] 두 번 클릭 → [x][x])</span>
+            </div>
+        `;
+
+        if (func_isQuickInputOpen) {
+            if (!hasComplex) {
+                html += `<div style="width:100%; display:flex; align-items:center; gap:6px; flex-wrap:wrap; padding-top:6px; border-top:1px dashed #e2e8f0; margin-top:2px;">`;
+                html += `<span style="font-size:0.76rem; font-weight:700; color:#2563eb; margin-right:2px;">기호·부등호:</span>`;
+                QUICK_SYMBOLS_REAL.forEach((item, idx) => {
+                    html += `<button class="preset-chip" style="border-color:#93c5fd; background:#eff6ff; color:#1e40af; font-weight:700;" onmousedown="event.preventDefault()" onclick="func_insertQuickSymbol(${idx})">${item.label}</button>`;
+                });
+                html += `</div>`;
+            }
+            html += `<div style="width:100%; display:flex; align-items:center; gap:6px; flex-wrap:wrap; padding-top:4px;">`;
+            if (!hasComplex) {
+                html += `<span style="font-size:0.76rem; font-weight:700; color:#475569; margin-right:2px;">함수·예제:</span>`;
+            }
+            list.forEach((item, idx) => {
+                html += `<button class="preset-chip" onmousedown="event.preventDefault()" onclick="func_applyPreset(${idx})">${item.label}</button>`;
+            });
+            html += `</div>`;
+        }
         bar.innerHTML = html;
     }
+
+    function func_insertTextIntoTarget(snippet) {
+        const hasComplex = func_functionsList.some(f => f.type === 'complex');
+        let target = func_functionsList.find(f => f.id === func_lastFocusedId) || func_functionsList.find(f => f.id === func_selectedFuncId) || func_functionsList[func_functionsList.length - 1];
+        if (!target) {
+            if (hasComplex) func_addComplexMode();
+            else func_addRealMode();
+            target = func_functionsList[func_functionsList.length - 1];
+        }
+        func_lastFocusedId = target.id;
+        let inputEl = document.getElementById(`input_${target.id}_expr`);
+        if (!inputEl) {
+            func_renderUI();
+            inputEl = document.getElementById(`input_${target.id}_expr`);
+        }
+        if (!inputEl) return;
+
+        // 카드를 막 생성한 직후(초기 기본값 상태)에서 완결된 수식 예제를 첫 클릭한 경우 기본값을 대체하고, 이후 클릭부터는 뒤에 계속 이어 붙임
+        const isPureSymbol = /^(\^2|\^|≥|≤|>|<|\(\))$/.test(snippet);
+        if (target.isInitialDefault && !isPureSymbol) {
+            target.isInitialDefault = false;
+            inputEl.value = snippet;
+            target.expr = snippet;
+            target.baseExpr = snippet;
+            target.H = 0;
+            target.K = 0;
+            inputEl.focus();
+            const pos = snippet === '()' ? 1 : snippet.length;
+            try { inputEl.setSelectionRange(pos, pos); } catch (e) {}
+        } else {
+            target.isInitialDefault = false;
+            const val = inputEl.value || '';
+            const start = (typeof inputEl.selectionStart === 'number') ? inputEl.selectionStart : val.length;
+            const end = (typeof inputEl.selectionEnd === 'number') ? inputEl.selectionEnd : val.length;
+            const newVal = val.slice(0, start) + snippet + val.slice(end);
+            inputEl.value = newVal;
+            target.expr = newVal;
+            target.baseExpr = newVal;
+            target.H = 0;
+            target.K = 0;
+            inputEl.focus();
+            const nextPos = snippet === '()' ? (start + 1) : (start + snippet.length);
+            try { inputEl.setSelectionRange(nextPos, nextPos); } catch (e) {}
+        }
+
+        const infoEl = document.getElementById(`cinfo_${target.id}`);
+        if (infoEl && target.type === 'complex') {
+            infoEl.innerHTML = func_getComplexSummaryHTML(target.expr);
+        }
+        func_syncIntegralSelect();
+        func_updateAll();
+    }
+
+    function func_insertQuickSymbol(idx) {
+        const item = QUICK_SYMBOLS_REAL[idx];
+        if (!item) return;
+        func_insertTextIntoTarget(item.expr);
+    }
+    window.func_insertQuickSymbol = func_insertQuickSymbol;
 
     function func_applyPreset(idx) {
         const hasComplex = func_functionsList.some(f => f.type === 'complex');
         const list = hasComplex ? COMPLEX_PRESETS : REAL_PRESETS;
         const preset = list[idx];
         if (!preset) return;
-
-        let target = func_functionsList.find(f => f.id === func_selectedFuncId) || func_functionsList[func_functionsList.length - 1];
-        if (!target) {
-            if (hasComplex) func_addComplexMode();
-            else func_addRealMode();
-            target = func_functionsList[func_functionsList.length - 1];
-        }
-        target.expr = preset.expr;
-        target.baseExpr = preset.expr;
-        target.H = 0;
-        target.K = 0;
-        func_renderUI();
-        func_updateAll();
+        func_insertTextIntoTarget(preset.expr);
     }
     window.func_applyPreset = func_applyPreset;
 
@@ -1036,13 +1162,60 @@
         return Object.is(rounded, -0) ? 0 : rounded;
     }
     
+    function func_hexToRgba(hex, alpha) {
+        let c = (hex || '#2563eb').replace('#', '');
+        if (c.length === 3) c = c[0]+c[0]+c[1]+c[1]+c[2]+c[2];
+        let num = parseInt(c, 16);
+        if (isNaN(num)) return `rgba(37, 99, 235, ${alpha})`;
+        return `rgba(${(num >> 16) & 255}, ${(num >> 8) & 255}, ${num & 255}, ${alpha})`;
+    }
+
+    // 부등식 파서: 이상(>=, =>, ≥), 이하(<=, =<, ≤), 초과(>), 미만(<) 인식
+    function func_parseInequality(expr) {
+        let clean = (expr || '').trim();
+        let m = clean.match(/^(.*?)(>=|=>|<=|=<|≥|≤|>|<)(.*)$/);
+        if (!m) return null;
+        let left = m[1].trim();
+        let rawOp = m[2];
+        let right = m[3].trim();
+        if (!left && !right) return null;
+        if (!left) left = 'y';
+        let op = rawOp;
+        if (rawOp === '>=' || rawOp === '=>' || rawOp === '≥') op = '>=';
+        else if (rawOp === '<=' || rawOp === '=<' || rawOp === '≤') op = '<=';
+
+        let isExplicitY = false;
+        let explicitOp = op;
+        let explicitExpr = right;
+        if (left.toLowerCase() === 'y' && !/\by\b/i.test(right)) {
+            isExplicitY = true;
+            explicitOp = op;
+            explicitExpr = right;
+        } else if (right.toLowerCase() === 'y' && !/\by\b/i.test(left)) {
+            isExplicitY = true;
+            if (op === '>=') explicitOp = '<=';
+            else if (op === '<=') explicitOp = '>=';
+            else if (op === '>') explicitOp = '<';
+            else if (op === '<') explicitOp = '>';
+            explicitExpr = left;
+        }
+        return { left, op, right, rawOp, isExplicitY, explicitOp, explicitExpr };
+    }
+
     function func_buildShiftedExpression(baseExpr, totalH, totalK) {
         let clean = (baseExpr || '').trim();
         let hVal = func_formatNumber(totalH), kVal = func_formatNumber(totalK);
         let subX = Math.abs(hVal) > 1e-4 ? (hVal > 0 ? `(x - ${hVal})` : `(x + ${Math.abs(hVal)})`) : `x`;
         let subY = Math.abs(kVal) > 1e-4 ? (kVal > 0 ? `(y - ${kVal})` : `(y + ${Math.abs(kVal)})`) : `y`;
 
-        if (clean.includes('=')) {
+        let ineq = func_parseInequality(clean);
+        if (ineq) {
+            let L = ineq.left.replace(/X/g, 'x').replace(/Y/g, 'y');
+            let R = ineq.right.replace(/X/g, 'x').replace(/Y/g, 'y');
+            let newL = L.replace(/\bx\b/g, subX).replace(/\by\b/g, subY);
+            let newR = R.replace(/\bx\b/g, subX).replace(/\by\b/g, subY);
+            return `${newL.trim()} ${ineq.rawOp} ${newR.trim()}`;
+        } else if (clean.includes('=')) {
             let parts = clean.split('=');
             let L = parts[0].replace(/X/g, 'x').replace(/Y/g, 'y'); let R = parts[1].replace(/X/g, 'x').replace(/Y/g, 'y');
             let newL = L.replace(/\bx\b/g, subX).replace(/\by\b/g, subY); let newR = R.replace(/\bx\b/g, subX).replace(/\by\b/g, subY);
@@ -1111,9 +1284,11 @@
             H: 0, 
             K: 0,
             baseExpr: chosenExpr,
-            expr: chosenExpr 
+            expr: chosenExpr,
+            isInitialDefault: true
         };
         func_functionsList.push(newFunc); func_colorIndex++;
+        func_lastFocusedId = newFunc.id;
         func_syncModeToolbar();
         func_renderUI(); func_updateAll();
     }
@@ -1133,9 +1308,11 @@
             color: func_colorPalette[func_colorIndex % func_colorPalette.length],
             visible: true,
             showConjugate: false,
-            expr: chosenExpr
+            expr: chosenExpr,
+            isInitialDefault: true
         };
         func_functionsList.push(newComplex); func_colorIndex++;
+        func_lastFocusedId = newComplex.id;
         func_syncModeToolbar();
         func_renderUI(); func_updateAll();
     }
@@ -1166,7 +1343,7 @@
         else if (field === 'showConjugate') func.showConjugate = value;
         else if (field === 'color') { func.color = value; document.getElementById(`card_${id}`).style.borderLeftColor = value; } 
         else if (field === 'expr') {
-            func.expr = value; func.baseExpr = value; func.H = 0; func.K = 0;
+            func.expr = value; func.baseExpr = value; func.H = 0; func.K = 0; func.isInitialDefault = false;
             const infoEl = document.getElementById(`cinfo_${id}`);
             if (infoEl && func.type === 'complex') {
                 infoEl.innerHTML = func_getComplexSummaryHTML(func.expr);
@@ -1297,7 +1474,7 @@
                 statusBoard.innerHTML = `<div>✥ <b>그래프 평행이동 모드 활성화됨</b> — 그래프 영역을 드래그하면 선택한 함수/복소수가 평행이동합니다. (완료 후 [이동 해제] 클릭)</div>`;
             } else {
                 statusBoard.classList.remove('active');
-                statusBoard.innerHTML = `<div style="font-weight: 700; color:#0f172a;">💡 그래프 평행이동 및 특수 함수 입력 안내</div><div style="margin-top: 3px;">절댓값 <code>|x|</code>, 가우스 함수 <code>[x]</code>(열린 점 ○·닫힌 점 ● 표시)를 지원하며, 각 카드의 <b>[✥ 이동]</b> 버튼이나 그래프 선 클릭 후 드래그로 평행이동할 수 있습니다.</div>`;
+                statusBoard.innerHTML = `<div style="font-weight: 700; color:#0f172a;">💡 그래프 평행이동 · 특수 함수 · 부등식 영역 입력 안내</div><div style="margin-top: 3px;">절댓값·가우스 복합식(예: <code>y = |x[x-2]|</code>), 부등식 영역 색칠(이상: <code>&gt;=</code>, <code>=&gt;</code>, <code>≥</code> / 이하: <code>&lt;=</code>, <code>=&lt;</code>, <code>≤</code>)을 모두 지원하며, <b>빠른 입력</b> 버튼을 여러 번 눌러 수식을 연속 조합할 수 있습니다.</div>`;
             }
         }
 
@@ -1337,7 +1514,7 @@
                 innerHTML += `
                     <div class="custom-expr-row">
                         <label style="font-size:0.85rem;"><strong>복소수 수식 입력 (사칙연산 및 거듭제곱 <code>^</code> 지원):</strong></label>
-                        <input type="text" inputmode="text" autocorrect="off" autocapitalize="none" spellcheck="false" id="input_${func.id}_expr" value="${func.expr}" oninput="func_updateState('${func.id}', 'expr', this.value)" placeholder="예: 3 + 2i, (1+i)^2, i^3">
+                        <input type="text" inputmode="text" autocorrect="off" autocapitalize="none" spellcheck="false" id="input_${func.id}_expr" value="${func.expr}" onfocus="func_lastFocusedId='${func.id}'" onclick="func_lastFocusedId='${func.id}'; (func_functionsList.find(f=>f.id==='${func.id}')||{}).isInitialDefault=false;" oninput="func_updateState('${func.id}', 'expr', this.value)" placeholder="예: 3 + 2i, (1+i)^2, i^3">
                         <div id="cinfo_${func.id}" style="font-size:0.8rem; color:#334155; background:#f8fafc; padding:5px 8px; border-radius:5px; width:100%; border:1px solid #e2e8f0; margin-top:3px;">
                             ${func_getComplexSummaryHTML(func.expr)}
                         </div>
@@ -1346,10 +1523,10 @@
             } else {
                 innerHTML += `
                     <div class="custom-expr-row">
-                        <label style="font-size:0.85rem;"><strong>함수 또는 도형의 방정식 입력:</strong></label>
-                        <input type="text" inputmode="text" autocorrect="off" autocapitalize="none" spellcheck="false" id="input_${func.id}_expr" value="${func.expr}" oninput="func_updateState('${func.id}', 'expr', this.value)" placeholder="예: |x-1|, [x], x(x-2), log2(x), |x|+|y|=4">
+                        <label style="font-size:0.85rem;"><strong>함수 · 방정식 · 부등식 입력:</strong></label>
+                        <input type="text" inputmode="text" autocorrect="off" autocapitalize="none" spellcheck="false" id="input_${func.id}_expr" value="${func.expr}" onfocus="func_lastFocusedId='${func.id}'" onclick="func_lastFocusedId='${func.id}'; (func_functionsList.find(f=>f.id==='${func.id}')||{}).isInitialDefault=false;" oninput="func_updateState('${func.id}', 'expr', this.value)" placeholder="예: y = |x[x-2]|, y >= x, y =< -x^2+x, [x][x]">
                         <div style="font-size:0.75rem; color:#64748b; margin-top:2px;">
-                            * 예: <code>|x-1|</code>(절댓값), <code>[x]</code>(가우스), <code>x(x-2)</code>, <code>x^(1/3)</code>, <code>log2(x)</code>, <code>|x|+|y|=4</code>
+                            * 예: <code>y = |x[x-2]|</code>, <code>y &gt;= x</code>(또는 <code>=&gt;</code>, <code>≥</code>), <code>y &lt;= x</code>(또는 <code>=&lt;</code>, <code>≤</code>), <code>[x]</code>, <code>π</code>
                         </div>
                     </div>
                 `;
@@ -1431,23 +1608,37 @@
                 .replace(/X/g, 'x')
                 .replace(/Y/g, 'y')
                 .replace(/÷/g, '/')
+                .replace(/×/g, '*')
+                .replace(/π/g, 'pi')
+                .replace(/²/g, '^2')
+                .replace(/³/g, '^3')
+                .replace(/√\s*\(/g, 'sqrt(')
+                .replace(/√\s*([a-zA-Z0-9_.]+)/g, 'sqrt($1)')
                 .replace(/[⌊⌋]/g, function(m) { return m === '⌊' ? '[' : ']'; });
 
+            // 1) 절댓값 기호 |...| 를 먼저 abs(...)로 변환 (내부에 [...] 가 있어도 괄호 깊이를 추적하여 정확히 매칭)
+            cleanExpr = func_convertAbsBars(cleanExpr);
+
+            // 2) 가우스 기호 [...] 앞뒤의 생략된 곱셈(*) 처리 (예: y = |x[x-2]| -> abs(x*[x-2]), [x][x] -> [x]*[x])
+            cleanExpr = cleanExpr.replace(/([0-9a-zA-Z)\]])\s*(?=\[)/g, '$1*');
+            cleanExpr = cleanExpr.replace(/\]\s*(?=[0-9a-zA-Z(\[])/g, ']*');
+
+            // 3) 가우스 기호 [...] 를 (floor(...)) 로 변환
             let guard = 0;
             while (/\[([^\[\]]+)\]/.test(cleanExpr) && guard < 12) {
-                cleanExpr = cleanExpr.replace(/\[([^\[\]]+)\]/g, 'floor($1)');
+                cleanExpr = cleanExpr.replace(/\[([^\[\]]+)\]/g, '(floor($1))');
                 guard++;
             }
-
-            cleanExpr = func_convertAbsBars(cleanExpr);
 
             cleanExpr = cleanExpr.replace(/\blog([0-9.]+)\s*\(([^)]+)\)/gi, 'customMath.customLog($1, $2)');
             cleanExpr = cleanExpr.replace(/\blog\s*\(([^)]+)\)/gi, 'customMath.customLog(10, $1)');
             cleanExpr = cleanExpr.replace(/\bln\s*\(([^)]+)\)/gi, '((($1) > 0) ? Math.log($1) : NaN)');
 
-            cleanExpr = cleanExpr.replace(/\)\s*([a-zA-Z0-9(])/g, ')*$1');
-            cleanExpr = cleanExpr.replace(/(^|[^a-zA-Z0-9_.])(\d+(?:\.\d+)?)\s*([a-zA-Z(])/g, '$1$2*$3');
+            // 4) 괄호·숫자·변수·상수 간 생략된 곱셈(*) 처리
+            cleanExpr = cleanExpr.replace(/\)\s*(?=[a-zA-Z0-9(])/g, ')*');
+            cleanExpr = cleanExpr.replace(/(^|[^a-zA-Z0-9_.])(\d+(?:\.\d+)?)\s*(?=[a-zA-Z(])/g, '$1$2*');
             cleanExpr = cleanExpr.replace(/\b(x|y|pi|PI)\s*\(/g, '$1*(');
+            cleanExpr = cleanExpr.replace(/\b(x|y|pi|PI)\s*(?=(sin|cos|tan|csc|sec|cot|asin|acos|atan|sinh|cosh|tanh|exp|sqrt|abs|cbrt|floor|ceil|round|sign|sgn|log|ln|customMath|pi|PI|x|y)\b)/gi, '$1*');
             cleanExpr = cleanExpr.replace(/\b(x)\s*(y)\b/g, '$1*$2');
             cleanExpr = cleanExpr.replace(/\b(y)\s*(x)\b/g, '$1*$2');
 
@@ -1476,6 +1667,10 @@
     function func_isImplicitFunc(f) {
         if (f.type !== 'custom') return false;
         let clean = (f.expr || '').trim();
+        let ineq = func_parseInequality(clean);
+        if (ineq) {
+            return !ineq.isExplicitY;
+        }
         if (clean.includes('=')) {
             let parts = clean.split('=');
             let left = parts[0].trim().toLowerCase();
@@ -1487,6 +1682,10 @@
     }
 
     function func_evaluateImplicit(f, x, y) {
+        let ineq = func_parseInequality(f.expr);
+        if (ineq) {
+            return func_evaluateCustomExpr(ineq.left, x, y) - func_evaluateCustomExpr(ineq.right, x, y);
+        }
         let parts = f.expr.split('=');
         if (parts.length === 2) return func_evaluateCustomExpr(parts[0], x, y) - func_evaluateCustomExpr(parts[1], x, y);
         else return func_evaluateCustomExpr(f.expr, x, y); 
@@ -1495,6 +1694,11 @@
     function func_evaluateFunction(f, x) {
         if (f.type === 'custom') {
             let clean = (f.expr || '').trim();
+            let ineq = func_parseInequality(clean);
+            if (ineq) {
+                if (ineq.isExplicitY) return func_evaluateCustomExpr(ineq.explicitExpr, x, 0);
+                return NaN;
+            }
             if (clean.includes('=')) {
                 let parts = clean.split('=');
                 if (parts[0].trim().toLowerCase() === 'y') {
@@ -1666,6 +1870,8 @@
                 return;
             }
 
+            const ineqInfo = func_parseInequality(f.expr);
+
             if (func_isImplicitFunc(f)) {
                 let steps = skipHeavy ? 60 : 160; let dx = (maxX - minX) / steps, dy = (maxY - minY) / steps;
                 let xGrid = [], yGrid = [];
@@ -1674,37 +1880,97 @@
                 for(let j=0; j<=steps; j++) {
                     let row = []; for(let i=0; i<=steps; i++) row.push(func_evaluateImplicit(f, xGrid[i], yGrid[j])); zGrid.push(row);
                 }
-                traces.push({ x: xGrid, y: yGrid, z: zGrid, type: 'contour', contours: {start: 0, end: 0, size: 1, coloring: 'none'}, line: {color: f.color, width: isSelected ? 7 : 3}, showscale: false, name: fName, hoverinfo: 'none', customdata: Array(zGrid.length).fill(f.id) });
+                if (ineqInfo) {
+                    const isGreater = (ineqInfo.op === '>=' || ineqInfo.op === '>');
+                    const maskGrid = zGrid.map(row => row.map(v => {
+                        if (!isFinite(v)) return 0;
+                        return isGreater ? (v >= 0 ? 1 : 0) : (v <= 0 ? 1 : 0);
+                    }));
+                    const shadeCol = func_hexToRgba(f.color, 0.18);
+                    traces.push({
+                        x: xGrid, y: yGrid, z: maskGrid, type: 'heatmap',
+                        zmin: 0, zmax: 1, showscale: false, hoverinfo: 'skip', showlegend: false,
+                        colorscale: [[0, 'rgba(0,0,0,0)'], [0.5, 'rgba(0,0,0,0)'], [0.5001, shadeCol], [1, shadeCol]]
+                    });
+                }
+                const isStrictIneq = ineqInfo && (ineqInfo.op === '>' || ineqInfo.op === '<');
+                traces.push({ x: xGrid, y: yGrid, z: zGrid, type: 'contour', contours: {start: 0, end: 0, size: 1, coloring: 'none'}, line: {color: f.color, width: isSelected ? 7 : 3, dash: isStrictIneq ? 'dash' : 'solid'}, showscale: false, name: fName, hoverinfo: 'none', customdata: Array(zGrid.length).fill(f.id) });
                 yDataCollection.push(null);
                 return; 
             }
 
             const isStepExpr = /(\[|\]|\bfloor\b|\bceil\b|\bround\b|\bsgn\b|\bsign\b)/i.test(f.expr || '');
-            const jumpThreshold = isStepExpr ? Math.max(step * 25, 0.25) : (spanY * 1.8);
+            const jumpThreshold = isStepExpr ? 0.08 : (spanY * 1.8);
             const yVal = [];
+            const yRawVal = [];
             for (let i = 0; i < xVal.length; i++) { 
                 let y = func_evaluateFunction(f, xVal[i]); 
-                if (!isFinite(y) || Math.abs(y) > 1e6) y = NaN; 
+                if (!isFinite(y) || Math.abs(y) > 1e6) y = NaN;
+                yRawVal.push(y);
                 if (i > 0 && !isNaN(y) && !isNaN(yVal[i - 1])) {
                     if (Math.abs(y - yVal[i - 1]) > jumpThreshold) {
-                        // 가우스 함수 등 불연속 점프에서 열린 점(○)과 닫힌 점(●) 좌표 수집
-                        if (isStepExpr && !skipHeavy && xVal[i] >= rangeX[0] && xVal[i] <= rangeX[1]) {
-                            const jumpX = Math.round(xVal[i] * 2) / 2;
-                            const exactVal = func_evaluateFunction(f, jumpX);
-                            const leftLim = func_evaluateFunction(f, jumpX - 1e-4);
-                            const rightLim = func_evaluateFunction(f, jumpX + 1e-4);
-                            if (isFinite(exactVal) && Math.abs(rightLim - leftLim) > 0.2) {
-                                stepClosedX.push(jumpX); stepClosedY.push(exactVal); stepColors.push(f.color);
-                                const openY = Math.abs(exactVal - leftLim) > Math.abs(exactVal - rightLim) ? leftLim : rightLim;
-                                stepOpenX.push(jumpX); stepOpenY.push(openY);
+                        let isTrueJump = true;
+                        if (isStepExpr) {
+                            // 이분 탐색으로 연속적인 급경사인지 실제 불연속 점프인지 정밀 판별
+                            let a = xVal[i - 1], b = xVal[i], ya = yVal[i - 1], yb = y;
+                            for (let iter = 0; iter < 8; iter++) {
+                                let m = 0.5 * (a + b), ym = func_evaluateFunction(f, m);
+                                if (!isFinite(ym)) break;
+                                if (Math.abs(ym - ya) >= Math.abs(yb - ym)) { b = m; yb = ym; }
+                                else { a = m; ya = ym; }
+                            }
+                            if (Math.abs(yb - ya) <= 0.05) {
+                                isTrueJump = false;
+                            } else if (!skipHeavy && xVal[i] >= rangeX[0] && xVal[i] <= rangeX[1]) {
+                                const rawJumpX = 0.5 * (a + b);
+                                const snapped = Math.round(rawJumpX * 4) / 4;
+                                const jumpX = Math.abs(rawJumpX - snapped) < 2e-3 ? snapped : rawJumpX;
+                                const exactVal = func_evaluateFunction(f, jumpX);
+                                const leftLim = func_evaluateFunction(f, jumpX - 1e-4);
+                                const rightLim = func_evaluateFunction(f, jumpX + 1e-4);
+                                if (isFinite(exactVal) && isFinite(leftLim) && isFinite(rightLim) && Math.abs(rightLim - leftLim) > 0.05) {
+                                    stepClosedX.push(jumpX); stepClosedY.push(exactVal); stepColors.push(f.color);
+                                    if (Math.abs(exactVal - leftLim) > 0.05) { stepOpenX.push(jumpX); stepOpenY.push(leftLim); }
+                                    if (Math.abs(exactVal - rightLim) > 0.05) { stepOpenX.push(jumpX); stepOpenY.push(rightLim); }
+                                }
                             }
                         }
-                        yVal[i - 1] = NaN;
+                        if (isTrueJump) yVal[i - 1] = NaN;
                     }
                 }
                 yVal.push(y); 
             }
             yDataCollection.push(yVal);
+
+            // 명시적 부등식 (예: y >= x, y => x, y <= -x^2+x, y =< |x[x-2]|) 영역 색칠
+            if (ineqInfo && ineqInfo.isExplicitY) {
+                const isGreater = (ineqInfo.explicitOp === '>=' || ineqInfo.explicitOp === '>');
+                const boundY = isGreater ? (maxY + spanY * 2) : (minY - spanY * 2);
+                const shadeColor = func_hexToRgba(f.color, 0.18);
+                let segX = [], segY = [];
+                const flushSegment = () => {
+                    if (segX.length >= 2) {
+                        const polyX = [segX[0], ...segX, segX[segX.length - 1], segX[0]];
+                        const polyY = [boundY, ...segY, boundY, boundY];
+                        traces.push({
+                            x: polyX, y: polyY, mode: 'lines', fill: 'toself',
+                            fillcolor: shadeColor, line: { width: 0, color: 'rgba(0,0,0,0)' },
+                            name: `${fName} 부등식 영역`, showlegend: false, hoverinfo: 'skip'
+                        });
+                    }
+                    segX = []; segY = [];
+                };
+                for (let i = 0; i < xVal.length; i++) {
+                    if (isFinite(yRawVal[i])) {
+                        const clampedY = Math.max(minY - spanY * 2, Math.min(maxY + spanY * 2, yRawVal[i]));
+                        segX.push(xVal[i]);
+                        segY.push(clampedY);
+                    } else {
+                        flushSegment();
+                    }
+                }
+                flushSegment();
+            }
 
             if (!skipHeavy) {
                 let y_at_0 = func_evaluateFunction(f, 0);
@@ -1746,7 +2012,7 @@
                 }
             }
 
-            traces.push({ x: xVal, y: yVal, mode: 'lines', name: fName, line: { color: f.color, width: isSelected ? 7 : 3 }, customdata: Array(xVal.length).fill(f.id), hovertemplate: '(%{x:.2f}, %{y:.2f})<extra></extra>' });
+            const isStrictExpIneq = ineqInfo && (ineqInfo.explicitOp === '>' || ineqInfo.explicitOp === '<'); traces.push({ x: xVal, y: yVal, mode: 'lines', name: fName, line: { color: f.color, width: isSelected ? 7 : 3, dash: isStrictExpIneq ? 'dash' : 'solid' }, customdata: Array(xVal.length).fill(f.id), hovertemplate: '(%{x:.2f}, %{y:.2f})<extra></extra>' });
             
             if (f.showInverse && !func_isImplicitFunc(f)) { 
                 hasInverse = true; 
