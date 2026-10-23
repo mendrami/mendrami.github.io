@@ -18,58 +18,54 @@
         /* === 공통 전역 스타일 === */
         body { margin: 0; background-color: #0f172a; -webkit-tap-highlight-color: transparent; font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; }
         
-        .global-nav { position: fixed; top: 0; left: 0; right: 0; z-index: 99999; display: flex; justify-content: center; align-items: center; flex-wrap: wrap; gap: 10px; padding: 10px 14px; background: rgba(15, 23, 42, 0.96); backdrop-filter: blur(10px); border-bottom: 1px solid #334155; box-shadow: 0 4px 15px rgba(0,0,0,0.35); }
-        .nav-btn { padding: 8px 18px; font-size: 0.95rem; font-weight: 700; border-radius: 999px; cursor: pointer; transition: all 0.2s ease; border: 2px solid #3b82f6; }
-        .nav-btn.active { background-color: #3b82f6; color: white; box-shadow: 0 0 15px rgba(59,130,246,0.5); }
+        .global-nav { position: fixed; top: 0; left: 0; right: 0; z-index: 99999; display: flex; justify-content: center; align-items: center; flex-wrap: wrap; gap: 8px; padding: 6px 12px; background: rgba(15, 23, 42, 0.96); backdrop-filter: blur(10px); border-bottom: 1px solid #334155; box-shadow: 0 2px 10px rgba(0,0,0,0.3); }
+        .nav-btn { padding: 5px 14px; font-size: 0.86rem; font-weight: 700; border-radius: 999px; cursor: pointer; transition: all 0.2s ease; border: 2px solid #3b82f6; }
+        .nav-btn.active { background-color: #3b82f6; color: white; box-shadow: 0 0 12px rgba(59,130,246,0.45); }
         .nav-btn.inactive { background-color: #1e293b; color: #cbd5e1; border-color: #475569; }
         .nav-btn.inactive:hover { background-color: #334155; color: white; border-color: #64748b; }
-        .sound-btn { padding: 7px 14px; font-size: 0.85rem; font-weight: 700; border-radius: 999px; cursor: pointer; transition: all 0.2s ease; background: #1e293b; color: #e2e8f0; border: 1px solid #475569; }
+        .sound-btn { padding: 5px 12px; font-size: 0.8rem; font-weight: 700; border-radius: 999px; cursor: pointer; transition: all 0.2s ease; background: #1e293b; color: #e2e8f0; border: 1px solid #475569; }
         .sound-btn:hover { background: #334155; color: white; }
 
-        .app-view { display: none !important; width: 100%; min-height: 100vh; padding-top: 72px; }
+        .app-view { display: none !important; width: 100%; min-height: 100vh; padding-top: 50px; }
         #app-func.active { display: block !important; }
         #app-phys.active { display: flex !important; flex-direction: column; align-items: center; }
 
-        /* === [함수 비교 & 복소 평면] 전용 스타일 === */
-        #app-func { background-color: #f1f5f9; color: #1e293b; padding-bottom: 60px; }
-        .func-container { max-width: 1450px; margin: 0 auto; background: white; padding: 18px; border-radius: 14px; box-shadow: 0 4px 16px rgba(0,0,0,0.06); }
-        .func-container h1 { color: #0f172a; text-align: center; font-size: 1.65rem; margin-bottom: 12px; font-weight: 800; }
+        /* === [함수 비교 & 복소 평면] 공간 절약형 스타일 === */
+        #app-func { background-color: #f1f5f9; color: #1e293b; padding-bottom: 40px; }
+        .func-container { max-width: 1480px; margin: 0 auto; background: white; padding: 10px 14px; border-radius: 12px; box-shadow: 0 4px 16px rgba(0,0,0,0.05); }
         
-        .status-board { text-align: center; background: #f8fafc; border: 1px solid #e2e8f0; padding: 10px 14px; border-radius: 8px; color: #334155; margin-bottom: 14px; transition: all 0.25s; display: flex; flex-direction: column; justify-content: center; align-items: center; font-size: 0.93rem; line-height: 1.5; }
-        .status-board.active { background: #fef3c7; color: #92400e; border: 2px dashed #f59e0b; font-weight: 700; }
+        .add-controls { display: flex; justify-content: center; align-items: center; gap: 5px; margin-bottom: 7px; background: #f8fafc; padding: 6px 10px; border-radius: 8px; border: 1px solid #e2e8f0; flex-wrap: wrap; }
+        .add-controls button.mode-add-btn { padding: 5px 11px; font-size: 0.82rem; cursor: pointer; border: none; border-radius: 6px; color: white; font-weight: 700; transition: all 0.15s; white-space: nowrap; }
         
-        .add-controls { display: flex; justify-content: center; align-items: center; gap: 8px; margin-bottom: 12px; background: #fff; padding: 12px; border-radius: 10px; border: 1px solid #e2e8f0; flex-wrap: wrap; }
-        .add-controls button.mode-add-btn { padding: 8px 15px; font-size: 0.92rem; cursor: pointer; border: none; border-radius: 7px; color: white; font-weight: 700; transition: all 0.2s; }
-        
-        .toggle-btn { display: flex; align-items: center; gap: 5px; font-weight: 700; padding: 7px 13px; border-radius: 7px; cursor: pointer; transition: all 0.2s; border: 2px solid #2563eb; background: white; color: #2563eb; font-size: 0.88rem; }
+        .toggle-btn { display: flex; align-items: center; gap: 4px; font-weight: 700; padding: 5px 10px; border-radius: 6px; cursor: pointer; transition: all 0.15s; border: 1.5px solid #2563eb; background: white; color: #2563eb; font-size: 0.8rem; white-space: nowrap; }
         .toggle-btn.active { background: #2563eb; color: white; }
         .toggle-btn.emerald { border-color: #059669; color: #059669; }
         .toggle-btn.emerald.active { background: #059669; color: white; }
         .toggle-btn.purple { border-color: #9333ea; color: #9333ea; }
         .toggle-btn.purple.active { background: #9333ea; color: white; }
 
-        .integral-panel { display: none; align-items: center; justify-content: center; gap: 12px; flex-wrap: wrap; background: #ecfdf5; border: 1px solid #a7f3d0; padding: 12px 16px; border-radius: 10px; margin-bottom: 14px; color: #065f46; font-size: 0.9rem; }
+        .integral-panel { display: none; align-items: center; justify-content: center; gap: 10px; flex-wrap: wrap; background: #ecfdf5; border: 1px solid #a7f3d0; padding: 7px 12px; border-radius: 8px; margin-bottom: 8px; color: #065f46; font-size: 0.82rem; }
         .integral-panel.visible { display: flex; }
-        .integral-panel input[type="number"], .integral-panel select { padding: 5px 8px; border: 1px solid #6ee7b7; border-radius: 6px; font-family: 'JetBrains Mono', monospace; font-weight: 700; background: white; color: #064e3b; }
+        .integral-panel input[type="number"], .integral-panel select { padding: 3px 6px; border: 1px solid #6ee7b7; border-radius: 5px; font-family: 'JetBrains Mono', monospace; font-weight: 700; background: white; color: #064e3b; font-size: 0.8rem; }
 
-        .preset-bar { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; background: #f8fafc; padding: 10px 14px; border-radius: 8px; border: 1px solid #e2e8f0; margin-bottom: 15px; }
-        .preset-chip { padding: 5px 11px; font-size: 0.82rem; font-weight: 600; border-radius: 999px; background: #ffffff; color: #334155; border: 1px solid #cbd5e1; cursor: pointer; transition: all 0.15s; }
-        .preset-chip:hover { background: #eff6ff; color: #1d4ed8; border-color: #93c5fd; transform: translateY(-1px); }
+        .preset-bar { display: flex; align-items: center; gap: 5px; flex-wrap: wrap; background: #f8fafc; padding: 6px 10px; border-radius: 8px; border: 1px solid #e2e8f0; margin-bottom: 8px; }
+        .preset-chip { padding: 3px 8px; font-size: 0.76rem; font-weight: 600; border-radius: 999px; background: #ffffff; color: #334155; border: 1px solid #cbd5e1; cursor: pointer; transition: all 0.12s; white-space: nowrap; }
+        .preset-chip:hover { background: #eff6ff; color: #1d4ed8; border-color: #93c5fd; }
 
-        .functions-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(330px, 1fr)); gap: 14px; margin-bottom: 16px; }
-        .func-card { background: #fff; border: 2px solid #e2e8f0; border-radius: 10px; padding: 14px 16px; box-shadow: 0 2px 5px rgba(0,0,0,0.03); position: relative; transition: all 0.2s; border-left-width: 6px; }
-        .func-card.selected { border-color: #0f172a; box-shadow: 0 0 14px rgba(15,23,42,0.18); transform: translateY(-2px); background: #fffbeb; }
-        .func-card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; border-bottom: 1px solid #f1f5f9; padding-bottom: 8px; flex-wrap: wrap; gap: 6px; }
-        .func-card-title { font-weight: 700; font-size: 1rem; display: flex; align-items: center; gap: 8px; color: #0f172a; }
+        .functions-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(360px, 1fr)); gap: 8px; margin-bottom: 8px; }
+        .func-card { background: #fff; border: 1.5px solid #cbd5e1; border-radius: 8px; padding: 7px 10px; box-shadow: 0 1px 3px rgba(0,0,0,0.02); position: relative; transition: all 0.15s; border-left-width: 5px; }
+        .func-card.selected { border-color: #0f172a; box-shadow: 0 0 10px rgba(15,23,42,0.14); background: #fffbeb; }
+        .func-card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px; flex-wrap: wrap; gap: 4px; }
+        .func-card-title { font-weight: 800; font-size: 0.88rem; display: flex; align-items: center; gap: 5px; color: #0f172a; white-space: nowrap; }
         
-        .func-card input[type="color"] { border: none; width: 26px; height: 26px; border-radius: 4px; cursor: pointer; padding: 0; background: none; }
-        .btn-delete { background: #ef4444; color: white; border: none; border-radius: 5px; padding: 4px 9px; cursor: pointer; font-size: 0.78rem; font-weight: 700; }
+        .func-card input[type="color"] { border: none; width: 20px; height: 20px; border-radius: 4px; cursor: pointer; padding: 0; background: none; }
+        .btn-delete { background: #ef4444; color: white; border: none; border-radius: 4px; padding: 2px 7px; cursor: pointer; font-size: 0.72rem; font-weight: 700; }
         .btn-delete:hover { background: #dc2626; }
-        .btn-move-select { background: #f1f5f9; color: #334155; border: 1px solid #cbd5e1; border-radius: 5px; padding: 3px 8px; cursor: pointer; font-size: 0.78rem; font-weight: 700; transition: all 0.15s; }
+        .btn-move-select { background: #f1f5f9; color: #334155; border: 1px solid #cbd5e1; border-radius: 4px; padding: 2px 6px; cursor: pointer; font-size: 0.72rem; font-weight: 700; transition: all 0.15s; }
         .btn-move-select.active { background: #f59e0b; color: white; border-color: #d97706; }
         
-        .custom-expr-row { display: flex; flex-direction: column; align-items: flex-start; gap: 5px; width: 100%; color: #1e293b; }
-        .custom-expr-row input[type="text"] { width: 100%; font-family: 'JetBrains Mono', monospace; box-sizing: border-box; padding: 8px 10px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 1rem; }
+        .custom-expr-row { display: flex; flex-direction: column; align-items: flex-start; gap: 3px; width: 100%; color: #1e293b; }
+        .custom-expr-row input[type="text"] { width: 100%; font-family: 'JetBrains Mono', monospace; box-sizing: border-box; padding: 5px 8px; border: 1px solid #cbd5e1; border-radius: 5px; font-size: 0.9rem; }
         .custom-expr-row input[type="text"]:focus { border-color: #3b82f6; outline: 0; box-shadow: 0 0 0 3px rgba(59,130,246,0.2); }
         
         .switch { position: relative; display: inline-block; width: 34px; height: 18px; }
@@ -151,14 +147,14 @@
         .mission-bar { background: rgba(15, 23, 42, 0.85); border: 1px solid #334155; border-radius: 12px; padding: 10px 14px; margin-bottom: 14px; display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px; }
         .mission-step { background: #1e293b; border: 1px solid #475569; border-radius: 8px; padding: 6px 11px; font-size: 0.8rem; color: #cbd5e1; display: flex; align-items: center; gap: 6px; font-weight: 600; transition: all 0.2s; }
         .mission-step.done { background: rgba(6, 95, 70, 0.55); border-color: #10b981; color: #a7f3d0; font-weight: 700; }
-        .calc-explorer-panel { display: none; background: #f8fafc; border: 2px solid #cbd5e1; border-radius: 12px; padding: 12px 16px; margin-bottom: 12px; box-shadow: 0 4px 12px rgba(15, 23, 42, 0.06); }
+        .calc-explorer-panel { display: none; background: #f8fafc; border: 1.5px solid #cbd5e1; border-radius: 9px; padding: 8px 12px; margin-bottom: 8px; box-shadow: 0 2px 8px rgba(15, 23, 42, 0.05); }
         .calc-explorer-panel.visible { display: block; }
-        .calc-explorer-header { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 10px; padding-bottom: 8px; border-bottom: 1px solid #e2e8f0; }
-        .calc-explorer-controls { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; font-size: 0.85rem; font-weight: 700; color: #1e293b; }
-        .calc-explorer-controls select, .calc-explorer-controls input[type="number"] { padding: 4px 8px; border-radius: 6px; border: 1px solid #94a3b8; background: #fff; font-weight: 700; font-family: 'JetBrains Mono', monospace; }
-        .calc-table { width: 100%; border-collapse: collapse; font-size: 0.8rem; margin-top: 8px; background: #fff; border-radius: 8px; overflow: hidden; border: 1px solid #cbd5e1; }
-        .calc-table th { background: #f1f5f9; color: #334155; padding: 6px 8px; font-weight: 800; border-bottom: 1px solid #cbd5e1; text-align: center; }
-        .calc-table td { padding: 5px 8px; border-bottom: 1px solid #e2e8f0; text-align: center; font-family: 'JetBrains Mono', monospace; }
+        .calc-explorer-header { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 6px; padding-bottom: 5px; border-bottom: 1px solid #e2e8f0; }
+        .calc-explorer-controls { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; font-size: 0.8rem; font-weight: 700; color: #1e293b; }
+        .calc-explorer-controls select, .calc-explorer-controls input[type="number"] { padding: 2px 6px; border-radius: 5px; border: 1px solid #94a3b8; background: #fff; font-weight: 700; font-family: 'JetBrains Mono', monospace; font-size: 0.8rem; }
+        .calc-table { width: 100%; border-collapse: collapse; font-size: 0.75rem; margin-top: 6px; background: #fff; border-radius: 6px; overflow: hidden; border: 1px solid #cbd5e1; }
+        .calc-table th { background: #f1f5f9; color: #334155; padding: 3px 6px; font-weight: 800; border-bottom: 1px solid #cbd5e1; text-align: center; }
+        .calc-table td { padding: 3px 6px; border-bottom: 1px solid #e2e8f0; text-align: center; font-family: 'JetBrains Mono', monospace; }
         .calc-btn-anim { padding: 5px 12px; border-radius: 7px; font-size: 0.8rem; font-weight: 800; color: #fff; background: #2563eb; border: none; cursor: pointer; transition: all 0.15s; }
         .calc-btn-anim:hover { background: #1d4ed8; }
         .zoom-chip-btn { padding: 4px 10px; border-radius: 6px; font-size: 0.78rem; font-weight: 800; border: 1px solid #cbd5e1; background: #fff; color: #334155; cursor: pointer; }
@@ -185,51 +181,53 @@
          ========================================================= -->
     <div id="app-func" class="app-view active">
         <div class="func-container">
-            <h1 id="planeTitle">실평면 함수 그래프</h1>
-
-            <div class="status-board" id="statusBoard">
-                <div style="font-weight: 700; color:#0f172a;">💡 그래프 평행이동 · 특수 함수 · 부등식 영역 입력 안내</div>
-                <div style="margin-top: 3px;">절댓값·가우스 복합식(예: <code>y = |x[x-2]|</code>), 부등식 영역 색칠(이상: <code>&gt;=</code>, <code>=&gt;</code>, <code>≥</code> / 이하: <code>&lt;=</code>, <code>=&lt;</code>, <code>≤</code>)을 모두 지원하며, <b>빠른 입력</b> 버튼을 여러 번 눌러 수식을 연속 조합할 수 있습니다.</div>
-            </div>
-
             <div class="add-controls" id="addControlsSection">
-                <button onclick="func_addRealMode()" class="mode-add-btn bg-blue-600 hover:bg-blue-700 shadow">+ 실평면에서 함수 추가</button>
-                <button onclick="func_addComplexMode()" class="mode-add-btn bg-purple-600 hover:bg-purple-700 shadow">+ 복소평면에서 복소수 추가</button>
-                <div style="border-left: 2px solid #e2e8f0; height: 26px; margin: 0 4px;"></div>
-                
-                <!-- 실평면 전용 도구 -->
-                <button id="intersectToggleBtn" class="toggle-btn" onclick="func_toggleIntersectionPanel()">
-                    <span>📍</span> 교점·절편·극값 좌표
-                </button>
-                <button id="limitModeBtn" class="toggle-btn" onclick="func_toggleLimitPanel()">
-                    <span>🎯</span> 좌극한·우극한 탐색: OFF
-                </button>
-                <button id="secantModeBtn" class="toggle-btn" onclick="func_toggleSecantPanel()">
-                    <span>📐</span> 평균변화율→미분계수(Δx→0): OFF
-                </button>
-                <button id="tangentModeBtn" class="toggle-btn" onclick="func_toggleTangentMode()">
-                    <span style="font-size:1.05rem;">⤡</span> 실시간 접선(좌·우미분): OFF
-                </button>
-                <button id="microscopeModeBtn" class="toggle-btn" onclick="func_toggleMicroscopePanel()">
-                    <span>🔬</span> 미분 현미경(국소 확대): OFF
-                </button>
-                <button id="integralModeBtn" class="toggle-btn emerald" onclick="func_toggleIntegralPanel()">
-                    <span>∫</span> 정적분 넓이 도구: OFF
-                </button>
-                <button id="piTickBtn" class="toggle-btn" onclick="func_togglePiTicks()">
-                    <span>π</span> 호도법(π) 눈금: OFF
-                </button>
+                <div style="width:100%; display:flex; align-items:center; flex-wrap:wrap; gap:5px;">
+                    <button onclick="func_addRealMode()" class="mode-add-btn bg-blue-600 hover:bg-blue-700 shadow">+ 함수 추가</button>
+                    <button onclick="func_addComplexMode()" class="mode-add-btn bg-purple-600 hover:bg-purple-700 shadow">+ 복소수 추가</button>
+                    <div style="border-left: 2px solid #cbd5e1; height: 18px; margin: 0 2px;"></div>
+                    <button id="toolbarMenuToggleBtn" onclick="func_toggleToolbarMenu()" style="display:flex; align-items:center; gap:5px; padding:4px 10px; font-size:0.78rem; font-weight:800; border-radius:6px; border:1.5px solid #334155; background:#1e293b; color:#ffffff; cursor:pointer; transition:all 0.15s;">
+                        <span>🛠️ 분석·미적분 도구 메뉴</span>
+                        <span id="toolbarMenuArrow" style="font-size:0.72rem; background:#334155; padding:1px 6px; border-radius:4px;">▼ 펼치기</span>
+                    </button>
+                    <span id="activeToolsBadge" style="display:none; font-size:0.74rem; font-weight:700; padding:2px 8px; border-radius:999px; background:#dbeafe; color:#1e40af; border:1px solid #93c5fd;"></span>
+                </div>
 
-                <!-- 복소평면 전용 도구 -->
-                <button id="complexSumBtn" class="toggle-btn purple hide" onclick="func_toggleComplexSum()">
-                    <span>📐</span> 덧셈 평행사변형: OFF
-                </button>
-                <button id="complexMulBtn" class="toggle-btn purple hide" onclick="func_toggleComplexMul()">
-                    <span>🔄</span> 곱셈 회전·확대(z₁×z₂): OFF
-                </button>
-                <button id="unitCircleBtn" class="toggle-btn purple hide" onclick="func_toggleUnitCircle()">
-                    <span>⭕</span> 단위원(|z|=1): OFF
-                </button>
+                <div id="toolsMenuDrawer" style="display:none; width:100%; align-items:center; flex-wrap:wrap; gap:5px; padding-top:6px; margin-top:4px; border-top:1px dashed #cbd5e1;">
+                    <!-- 실평면 전용 도구 -->
+                    <button id="intersectToggleBtn" class="toggle-btn" onclick="func_toggleIntersectionPanel()">
+                        <span>📍</span> 교점·극값
+                    </button>
+                    <button id="limitModeBtn" class="toggle-btn" onclick="func_toggleLimitPanel()">
+                        <span>🎯</span> 좌·우극한: OFF
+                    </button>
+                    <button id="secantModeBtn" class="toggle-btn" onclick="func_toggleSecantPanel()">
+                        <span>📐</span> 평균변화율(Δx→0): OFF
+                    </button>
+                    <button id="tangentModeBtn" class="toggle-btn" onclick="func_toggleTangentMode()">
+                        <span>⤡</span> 실시간 접선: OFF
+                    </button>
+                    <button id="microscopeModeBtn" class="toggle-btn" onclick="func_toggleMicroscopePanel()">
+                        <span>🔬</span> 미분 현미경: OFF
+                    </button>
+                    <button id="integralModeBtn" class="toggle-btn emerald" onclick="func_toggleIntegralPanel()">
+                        <span>∫</span> 정적분: OFF
+                    </button>
+                    <button id="piTickBtn" class="toggle-btn" onclick="func_togglePiTicks()">
+                        <span>π</span> 호도법 눈금: OFF
+                    </button>
+
+                    <!-- 복소평면 전용 도구 -->
+                    <button id="complexSumBtn" class="toggle-btn purple hide" onclick="func_toggleComplexSum()">
+                        <span>📐</span> 덧셈 평행사변형: OFF
+                    </button>
+                    <button id="complexMulBtn" class="toggle-btn purple hide" onclick="func_toggleComplexMul()">
+                        <span>🔄</span> 곱셈 회전·확대(z₁×z₂): OFF
+                    </button>
+                    <button id="unitCircleBtn" class="toggle-btn purple hide" onclick="func_toggleUnitCircle()">
+                        <span>⭕</span> 단위원(|z|=1): OFF
+                    </button>
+                </div>
             </div>
 
             <!-- 1) 좌극한·우극한 및 연속성 양방향 탐색 패널 -->
@@ -239,7 +237,21 @@
                         <span style="font-size:0.95rem; font-weight:800; color:#1e3a8a;">🎯 좌극한(x → a⁻) · 우극한(x → a⁺) 및 연속성 탐색기</span>
                         <span id="limitVerdictBox" style="font-size:0.8rem; font-weight:800; padding:3px 10px; border-radius:999px; background:#dbeafe; color:#1e40af; border:1px solid #93c5fd;">판정 대기 중</span>
                     </div>
-                    <button class="calc-btn-anim" onclick="func_animateLimitH()">▶ h → 0 양방향 수렴 애니메이션</button>
+                    <div style="display:flex; align-items:center; gap:6px; flex-wrap:wrap;">
+                        <label style="font-size:0.78rem; font-weight:800; color:#1e3a8a; display:flex; align-items:center; gap:4px; background:#dbeafe; padding:3px 8px; border-radius:7px; border:1px solid #93c5fd;">
+                            <span>⏱ 애니메이션 속도:</span>
+                            <select id="limitAnimSpeed" onchange="func_setLimitAnimSpeed(this.value)" style="padding:2px 6px; border-radius:5px; border:1px solid #60a5fa; background:#fff; color:#1e3a8a; font-weight:800; font-size:0.78rem; cursor:pointer;">
+                                <option value="0.1">0.1× 초저속 (칠판 설명용)</option>
+                                <option value="0.25">0.25× 아주 느리게</option>
+                                <option value="0.5">0.5× 느리게</option>
+                                <option value="1" selected>1.0× 보통 속도</option>
+                                <option value="2">2.0× 빠르게</option>
+                                <option value="3">3.0× 매우 빠르게</option>
+                            </select>
+                        </label>
+                        <button id="limitAnimBtn" class="calc-btn-anim" onclick="func_animateLimitH()">▶ h → 0 양방향 수렴 애니메이션</button>
+                        <button class="calc-btn-anim" style="background:#475569;" onclick="func_resetLimitAnim()" title="접근 거리 h를 초기값(1.2)으로 되돌립니다">↺ 초기화</button>
+                    </div>
                 </div>
                 <div class="calc-explorer-controls">
                     <label>대상 함수: <select id="limitFuncSelect" onchange="func_updateAll()"></select></label>
@@ -268,10 +280,23 @@
             <div id="secantControlPanel" class="calc-explorer-panel" style="border-color:#fda4af; background:#fff1f2;">
                 <div class="calc-explorer-header">
                     <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
-                        <span style="font-size:0.95rem; font-weight:800; color:#881337;">📐 평균변화율(할선 AB) → 미분계수(접선) 수렴 탐색기</span>
-                        <span style="font-size:0.78rem; color:#9f1239; font-weight:600;">Δx → 0 일 때 할선이 접선으로 수렴하는 과정을 관찰합니다</span>
+                        <span style="font-size:0.88rem; font-weight:800; color:#881337;">📐 평균변화율(할선 AB) → 미분계수(접선) 수렴 탐색기</span>
                     </div>
-                    <button class="calc-btn-anim" style="background:#e11d48;" onclick="func_animateSecantDx()">▶ Δx → 0 수렴 애니메이션</button>
+                    <div style="display:flex; align-items:center; gap:6px; flex-wrap:wrap;">
+                        <label style="font-size:0.78rem; font-weight:800; color:#881337; display:flex; align-items:center; gap:4px; background:#ffe4e6; padding:3px 8px; border-radius:7px; border:1px solid #fda4af;">
+                            <span>⏱ 애니메이션 속도:</span>
+                            <select id="secantAnimSpeed" onchange="func_setSecantAnimSpeed(this.value)" style="padding:2px 6px; border-radius:5px; border:1px solid #fb7185; background:#fff; color:#881337; font-weight:800; font-size:0.78rem; cursor:pointer;">
+                                <option value="0.1">0.1× 초저속 (칠판 설명용)</option>
+                                <option value="0.25">0.25× 아주 느리게</option>
+                                <option value="0.5">0.5× 느리게</option>
+                                <option value="1" selected>1.0× 보통 속도</option>
+                                <option value="2">2.0× 빠르게</option>
+                                <option value="3">3.0× 매우 빠르게</option>
+                            </select>
+                        </label>
+                        <button id="secantAnimBtn" class="calc-btn-anim" style="background:#e11d48;" onclick="func_animateSecantDx()">▶ Δx → 0 수렴 애니메이션</button>
+                        <button class="calc-btn-anim" style="background:#475569;" onclick="func_resetSecantAnim()" title="증분 Δx를 초기값(±1.5)으로 되돌립니다">↺ 초기화</button>
+                    </div>
                 </div>
                 <div class="calc-explorer-controls">
                     <label>대상 함수: <select id="secantFuncSelect" onchange="func_updateAll()"></select></label>
@@ -298,12 +323,11 @@
                         <button id="microZoom200" class="zoom-chip-btn" onclick="func_setMicroscopeZoom(200)">200× 초고배율</button>
                     </div>
                 </div>
-                <div class="calc-explorer-controls" style="margin-bottom:8px;">
+                <div class="calc-explorer-controls" style="margin-bottom:5px;">
                     <label>대상 함수: <select id="microscopeFuncSelect" onchange="func_updateMicroscopePlot()"></select></label>
-                    <label>관찰 지점 x = a : <input type="number" id="microscopeA" value="1" step="0.1" style="width:80px;" oninput="func_updateMicroscopePlot()"></label>
-                    <span id="microscopeDescText" style="font-size:0.8rem; color:#3730a3; font-weight:700;">💡 미분가능한 곡선은 고배율 확대 시 접선(직선)과 완전히 포개지지만, 첨점(예: |x-1|의 x=1)은 아무리 확대해도 꺾인 V자 모양이 유지됩니다.</span>
+                    <label>관찰 지점 x = a : <input type="number" id="microscopeA" value="1" step="0.1" style="width:74px;" oninput="func_updateMicroscopePlot()"></label>
                 </div>
-                <div id="microscopePlot" style="width:100%; height:260px; background:#fff; border-radius:8px; border:1px solid #c7d2fe;"></div>
+                <div id="microscopePlot" style="width:100%; height:200px; background:#fff; border-radius:8px; border:1px solid #c7d2fe;"></div>
             </div>
 
             <!-- 정적분 넓이 계산 및 색칠 컨트롤 패널 -->
@@ -356,9 +380,9 @@
                     </div>
                     
                     <div id="graphPlot"></div>
-                    <div class="scroll-notice">
-                        <span>▼ 페이지 하단으로 스크롤하거나 옆의 버튼을 누르면 캔버스가 Y축 하단으로 확장됩니다 ▼</span>
-                        <button onclick="func_expandCanvasDown()" class="px-3 py-1 bg-slate-200 hover:bg-slate-300 text-slate-700 rounded-md text-xs font-bold transition-colors">+ Y축 캔버스 확장</button>
+                    <div class="scroll-notice" style="margin-top:6px; font-size:0.78rem;">
+                        <span>▼ 하단 스크롤 시 Y축 자동 확장</span>
+                        <button onclick="func_expandCanvasDown()" class="px-2.5 py-0.5 bg-slate-200 hover:bg-slate-300 text-slate-700 rounded text-xs font-bold transition-colors">+ Y축 확장</button>
                     </div>
                 </div>
             </div>
@@ -496,9 +520,21 @@
                                 <span>③ <b>감속 후 방향 전환</b> ($v &lt; 0$ 후진: 변위 $\int v\,dt$와 이동거리 $\int |v|\,dt$ 차이 비교)</span>
                             </div>
                         </div>
-                        <button id="btn-auto-demo" onclick="phys_startAutoDemo()" class="px-3.5 py-1.5 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 text-slate-950 font-extrabold text-xs md:text-sm rounded-lg shadow transition-all whitespace-nowrap">
-                            ▶ 3단계 표준 실험 자동 시연
-                        </button>
+                        <div class="flex flex-wrap items-center gap-2">
+                            <label class="flex items-center gap-1.5 bg-slate-900 px-2.5 py-1.5 rounded-lg border border-amber-500/50 text-xs font-bold text-amber-300">
+                                <span>⏱ 애니메이션 배속:</span>
+                                <select id="t1-sim-speed" onchange="phys_setSimSpeed(this.value)" class="bg-slate-800 text-white font-extrabold rounded px-1.5 py-0.5 border border-slate-600 outline-none cursor-pointer">
+                                    <option value="0.1">0.1× 초저속 슬로모션</option>
+                                    <option value="0.25">0.25× 슬로모션</option>
+                                    <option value="0.5">0.5× 느리게</option>
+                                    <option value="1" selected>1.0× 정상 속도</option>
+                                    <option value="2">2.0× 빠르게</option>
+                                </select>
+                            </label>
+                            <button id="btn-auto-demo" onclick="phys_startAutoDemo()" class="px-3.5 py-1.5 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 text-slate-950 font-extrabold text-xs md:text-sm rounded-lg shadow transition-all whitespace-nowrap">
+                                ▶ 3단계 표준 실험 자동 시연
+                            </button>
+                        </div>
                     </div>
 
                     <!-- 화면을 가리지 않는 상단 디지털 계기판 (Telemetry Strip) -->
@@ -702,7 +738,17 @@
                         <div class="lg:col-span-3 flex flex-col gap-3">
                             <div class="flex flex-wrap justify-between items-center gap-2">
                                 <span class="text-xs md:text-sm text-slate-200 font-semibold">💡 완충재를 바꿔가며 연속 테스트하면 그래프가 겹쳐져 충격력을 비교할 수 있습니다.</span>
-                                <div class="flex gap-2">
+                                <div class="flex flex-wrap items-center gap-2">
+                                    <label class="flex items-center gap-1.5 bg-slate-900 px-2.5 py-1.5 rounded-lg border border-purple-500/50 text-xs font-bold text-purple-300" title="0.1초 충돌 순간을 슬로모션으로 천천히 관찰할 수 있습니다">
+                                        <span>⏱ 애니메이션 배속:</span>
+                                        <select id="t2-sim-speed" onchange="phys_setSimSpeed(this.value)" class="bg-slate-800 text-white font-extrabold rounded px-1.5 py-0.5 border border-slate-600 outline-none cursor-pointer">
+                                            <option value="0.1">0.1× 초저속 슬로모션</option>
+                                            <option value="0.25">0.25× 슬로모션</option>
+                                            <option value="0.5">0.5× 느리게</option>
+                                            <option value="1" selected>1.0× 정상 속도</option>
+                                            <option value="2">2.0× 빠르게</option>
+                                        </select>
+                                    </label>
                                     <button id="t2-btn-gas" class="px-3.5 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg font-bold shadow opacity-50 cursor-not-allowed text-xs md:text-sm transition-all" disabled>가속</button>
                                     <button id="t2-btn-brake" class="px-3.5 py-1.5 bg-rose-600 hover:bg-rose-500 text-white rounded-lg font-bold shadow opacity-50 cursor-not-allowed text-xs md:text-sm transition-all" disabled>감속</button>
                                     <button id="t2-btn-pause" class="px-3.5 py-1.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg font-bold shadow text-xs md:text-sm transition-all">⏸ 일시정지</button>
@@ -932,12 +978,53 @@
     let func_microscopeZoom = 10;
     let func_limitAnimId = null;
     let func_secantAnimId = null;
+    let func_limitAnimSpeed = 1.0;
+    let func_secantAnimSpeed = 1.0;
     let func_usePiTicks = false;
     let func_showComplexSum = false;
     let func_showComplexMul = false;
     let func_showUnitCircle = false;
 
     let func_isQuickInputOpen = true;
+    let func_isToolbarOpen = false;
+
+    function func_toggleToolbarMenu() {
+        func_isToolbarOpen = !func_isToolbarOpen;
+        const drawer = document.getElementById('toolsMenuDrawer');
+        const arrow = document.getElementById('toolbarMenuArrow');
+        if (drawer) drawer.style.display = func_isToolbarOpen ? 'flex' : 'none';
+        if (arrow) arrow.textContent = func_isToolbarOpen ? '▲ 접기' : '▼ 펼치기';
+        func_updateToolbarMenuBadge();
+    }
+    window.func_toggleToolbarMenu = func_toggleToolbarMenu;
+
+    function func_updateToolbarMenuBadge() {
+        const badge = document.getElementById('activeToolsBadge');
+        if (!badge) return;
+        const hasComplex = func_functionsList.some(f => f.type === 'complex');
+        const activeNames = [];
+        if (hasComplex) {
+            if (func_showComplexSum) activeNames.push('덧셈 평행사변형');
+            if (func_showComplexMul) activeNames.push('곱셈 회전·확대');
+            if (func_showUnitCircle) activeNames.push('단위원');
+        } else {
+            if (func_isIntersectionVisible) activeNames.push('교점·극값');
+            if (func_isLimitVisible) activeNames.push('좌·우극한');
+            if (func_isSecantVisible) activeNames.push('평균변화율');
+            if (func_isTangentMode) activeNames.push('실시간 접선');
+            if (func_isMicroscopeVisible) activeNames.push('미분 현미경');
+            if (func_isIntegralVisible) activeNames.push('정적분');
+            if (func_usePiTicks) activeNames.push('호도법 눈금');
+        }
+        if (activeNames.length > 0) {
+            badge.style.display = 'inline-flex';
+            badge.textContent = `켜진 도구(${activeNames.length}): ${activeNames.join(', ')}`;
+        } else {
+            badge.style.display = 'none';
+            badge.textContent = '';
+        }
+    }
+    window.func_updateToolbarMenuBadge = func_updateToolbarMenuBadge;
     let func_lastFocusedId = null;
 
     const QUICK_SYMBOLS_REAL = [
@@ -1023,32 +1110,27 @@
         const list = hasComplex ? COMPLEX_PRESETS : REAL_PRESETS;
 
         let html = `
-            <div style="width:100%; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
-                <div style="display:flex; align-items:center; gap:8px;">
-                    <span style="font-size:0.88rem; font-weight:800; color:#0f172a;">⚡ 빠른 입력</span>
-                    <button onmousedown="event.preventDefault()" onclick="func_toggleQuickInputBar()" style="padding:3px 10px; font-size:0.78rem; font-weight:700; border-radius:6px; border:1px solid #cbd5e1; background:#ffffff; color:#334155; cursor:pointer;">
-                        ${func_isQuickInputOpen ? '▲ 감추기' : '▼ 전체 표시'}
-                    </button>
-                    <button onmousedown="event.preventDefault()" onclick="func_clearActiveInput()" style="padding:3px 10px; font-size:0.78rem; font-weight:700; border-radius:6px; border:1px solid #fca5a5; background:#fef2f2; color:#dc2626; cursor:pointer;" title="현재 입력창의 수식을 비웁니다">
-                        🧹 입력창 비우기
-                    </button>
-                </div>
-                <span style="font-size:0.76rem; color:#64748b; font-weight:600;">* 버튼을 여러 번 클릭하면 입력창 커서 위치에 연속으로 추가됩니다 (예: [x] 두 번 클릭 → [x][x])</span>
-            </div>
+            <div style="width:100%; display:flex; align-items:center; flex-wrap:wrap; gap:5px;">
+                <span style="font-size:0.82rem; font-weight:800; color:#0f172a; margin-right:2px;">⚡ 빠른 입력</span>
+                <button onmousedown="event.preventDefault()" onclick="func_toggleQuickInputBar()" style="padding:2px 8px; font-size:0.74rem; font-weight:700; border-radius:5px; border:1px solid #cbd5e1; background:#ffffff; color:#334155; cursor:pointer;">
+                    ${func_isQuickInputOpen ? '▲ 접기' : '▼ 펼치기'}
+                </button>
+                <button onmousedown="event.preventDefault()" onclick="func_clearActiveInput()" style="padding:2px 8px; font-size:0.74rem; font-weight:700; border-radius:5px; border:1px solid #fca5a5; background:#fef2f2; color:#dc2626; cursor:pointer; margin-right:4px;" title="현재 입력창의 수식을 비웁니다">
+                    🧹 비우기
+                </button>
         `;
 
+        if (func_isQuickInputOpen && !hasComplex) {
+            QUICK_SYMBOLS_REAL.forEach((item, idx) => {
+                html += `<button class="preset-chip" style="border-color:#93c5fd; background:#eff6ff; color:#1e40af; font-weight:700;" onmousedown="event.preventDefault()" onclick="func_insertQuickSymbol(${idx})">${item.label}</button>`;
+            });
+        }
+        html += `</div>`;
+
         if (func_isQuickInputOpen) {
+            html += `<div style="width:100%; display:flex; align-items:center; gap:5px; flex-wrap:wrap; padding-top:3px; border-top:1px dashed #e2e8f0;">`;
             if (!hasComplex) {
-                html += `<div style="width:100%; display:flex; align-items:center; gap:6px; flex-wrap:wrap; padding-top:6px; border-top:1px dashed #e2e8f0; margin-top:2px;">`;
-                html += `<span style="font-size:0.76rem; font-weight:700; color:#2563eb; margin-right:2px;">기호·부등호:</span>`;
-                QUICK_SYMBOLS_REAL.forEach((item, idx) => {
-                    html += `<button class="preset-chip" style="border-color:#93c5fd; background:#eff6ff; color:#1e40af; font-weight:700;" onmousedown="event.preventDefault()" onclick="func_insertQuickSymbol(${idx})">${item.label}</button>`;
-                });
-                html += `</div>`;
-            }
-            html += `<div style="width:100%; display:flex; align-items:center; gap:6px; flex-wrap:wrap; padding-top:4px;">`;
-            if (!hasComplex) {
-                html += `<span style="font-size:0.76rem; font-weight:700; color:#475569; margin-right:2px;">함수·예제:</span>`;
+                html += `<span style="font-size:0.74rem; font-weight:700; color:#475569;">예제:</span>`;
             }
             list.forEach((item, idx) => {
                 html += `<button class="preset-chip" onmousedown="event.preventDefault()" onclick="func_applyPreset(${idx})">${item.label}</button>`;
@@ -1132,6 +1214,7 @@
         const btn = document.getElementById('intersectToggleBtn');
         if (func_isIntersectionVisible) { panel.classList.add('visible'); btn.classList.add('active'); } 
         else { panel.classList.remove('visible'); btn.classList.remove('active'); }
+        func_updateToolbarMenuBadge();
     }
     window.func_toggleIntersectionPanel = func_toggleIntersectionPanel;
 
@@ -1142,7 +1225,7 @@
         if (panel && btn) {
             panel.classList.toggle('visible', func_isIntegralVisible);
             btn.classList.toggle('active', func_isIntegralVisible);
-            btn.innerHTML = `<span>∫</span> 정적분 넓이 도구: ${func_isIntegralVisible ? 'ON' : 'OFF'}`;
+            btn.innerHTML = `<span>∫</span> 정적분: ${func_isIntegralVisible ? 'ON' : 'OFF'}`;
         }
         func_syncIntegralSelect();
         func_updateAll();
@@ -1154,10 +1237,13 @@
         const btn = document.getElementById('piTickBtn');
         if (btn) {
             btn.classList.toggle('active', func_usePiTicks);
-            btn.innerHTML = `<span>π</span> 호도법(π) 눈금: ${func_usePiTicks ? 'ON' : 'OFF'}`;
+            btn.innerHTML = `<span>π</span> 호도법 눈금: ${func_usePiTicks ? 'ON' : 'OFF'}`;
         }
         func_updateAll();
     }
+    window.func_togglePiTicks = func_togglePiTicks;
+    const _origTogglePi = func_togglePiTicks;
+    func_togglePiTicks = function() { _origTogglePi(); func_updateToolbarMenuBadge(); };
     window.func_togglePiTicks = func_togglePiTicks;
 
     function func_toggleComplexSum() {
@@ -1170,6 +1256,9 @@
         func_updateAll();
     }
     window.func_toggleComplexSum = func_toggleComplexSum;
+    const _origToggleCSum = func_toggleComplexSum;
+    func_toggleComplexSum = function() { _origToggleCSum(); func_updateToolbarMenuBadge(); };
+    window.func_toggleComplexSum = func_toggleComplexSum;
 
     function func_toggleComplexMul() {
         func_showComplexMul = !func_showComplexMul;
@@ -1180,6 +1269,9 @@
         }
         func_updateAll();
     }
+    window.func_toggleComplexMul = func_toggleComplexMul;
+    const _origToggleCMul = func_toggleComplexMul;
+    func_toggleComplexMul = function() { _origToggleCMul(); func_updateToolbarMenuBadge(); };
     window.func_toggleComplexMul = func_toggleComplexMul;
 
     function func_toggleUnitCircle() {
@@ -1192,8 +1284,12 @@
         func_updateAll();
     }
     window.func_toggleUnitCircle = func_toggleUnitCircle;
+    const _origToggleUC = func_toggleUnitCircle;
+    func_toggleUnitCircle = function() { _origToggleUC(); func_updateToolbarMenuBadge(); };
+    window.func_toggleUnitCircle = func_toggleUnitCircle;
 
     function func_syncIntegralSelect() {
+        if (typeof func_updateToolbarMenuBadge === 'function') func_updateToolbarMenuBadge();
         const selectIds = ['integralFuncSelect', 'limitFuncSelect', 'secantFuncSelect', 'microscopeFuncSelect'];
         selectIds.forEach(sid => {
             const sel = document.getElementById(sid);
@@ -1222,7 +1318,7 @@
         if (panel && btn) {
             panel.classList.toggle('visible', func_isLimitVisible);
             btn.classList.toggle('active', func_isLimitVisible);
-            btn.innerHTML = `<span>🎯</span> 좌극한·우극한 탐색: ${func_isLimitVisible ? 'ON' : 'OFF'}`;
+            btn.innerHTML = `<span>🎯</span> 좌·우극한: ${func_isLimitVisible ? 'ON' : 'OFF'}`;
         }
         if (!func_isLimitVisible && func_limitAnimId) {
             cancelAnimationFrame(func_limitAnimId);
@@ -1241,27 +1337,65 @@
     }
     window.func_onLimitSliderChange = func_onLimitSliderChange;
 
-    function func_animateLimitH() {
+    function func_setLimitAnimSpeed(val) {
+        const parsed = parseFloat(val);
+        if (isFinite(parsed) && parsed > 0) func_limitAnimSpeed = parsed;
+    }
+    window.func_setLimitAnimSpeed = func_setLimitAnimSpeed;
+
+    function func_updateLimitAnimBtnLabel() {
+        const btn = document.getElementById('limitAnimBtn');
+        if (!btn) return;
+        btn.textContent = func_limitAnimId ? '⏸ 수렴 일시정지' : '▶ h → 0 양방향 수렴 애니메이션';
+        btn.style.background = func_limitAnimId ? '#d97706' : '#2563eb';
+    }
+
+    function func_resetLimitAnim() {
         if (func_limitAnimId) {
             cancelAnimationFrame(func_limitAnimId);
             func_limitAnimId = null;
         }
+        func_updateLimitAnimBtnLabel();
+        const slider = document.getElementById('limitHSlider');
+        if (slider) {
+            slider.value = '1.2';
+            func_onLimitSliderChange(1.2);
+            func_updateAll(false);
+        }
+    }
+    window.func_resetLimitAnim = func_resetLimitAnim;
+
+    function func_animateLimitH() {
+        // 실행 중이면 일시정지 토글
+        if (func_limitAnimId) {
+            cancelAnimationFrame(func_limitAnimId);
+            func_limitAnimId = null;
+            func_updateLimitAnimBtnLabel();
+            func_updateAll(false);
+            return;
+        }
         const slider = document.getElementById('limitHSlider');
         if (!slider) return;
-        let h = 1.2;
+        let h = parseFloat(slider.value);
+        if (!isFinite(h) || h <= 0.005) h = 1.2;
         function stepAnim() {
-            h *= 0.94;
-            if (h <= 0.002) {
+            const spEl = document.getElementById('limitAnimSpeed');
+            const sp = spEl && isFinite(parseFloat(spEl.value)) ? parseFloat(spEl.value) : func_limitAnimSpeed;
+            const decay = Math.pow(0.96, sp);
+            h = h * decay - 0.0003 * sp;
+            if (h <= 0.0015) {
                 h = 0.001;
                 slider.value = String(h);
                 func_onLimitSliderChange(h);
-                func_updateAll(false);
                 func_limitAnimId = null;
+                func_updateLimitAnimBtnLabel();
+                func_updateAll(false);
                 return;
             }
             slider.value = String(h);
             func_onLimitSliderChange(h);
             func_limitAnimId = requestAnimationFrame(stepAnim);
+            func_updateLimitAnimBtnLabel();
         }
         stepAnim();
     }
@@ -1274,11 +1408,12 @@
         if (panel && btn) {
             panel.classList.toggle('visible', func_isSecantVisible);
             btn.classList.toggle('active', func_isSecantVisible);
-            btn.innerHTML = `<span>📐</span> 평균변화율→미분계수(Δx→0): ${func_isSecantVisible ? 'ON' : 'OFF'}`;
+            btn.innerHTML = `<span>📐</span> 평균변화율(Δx→0): ${func_isSecantVisible ? 'ON' : 'OFF'}`;
         }
         if (!func_isSecantVisible && func_secantAnimId) {
             cancelAnimationFrame(func_secantAnimId);
             func_secantAnimId = null;
+            func_updateSecantAnimBtnLabel();
         }
         func_syncIntegralSelect();
         func_updateAll();
@@ -1294,29 +1429,69 @@
     }
     window.func_onSecantSliderChange = func_onSecantSliderChange;
 
-    function func_animateSecantDx() {
+    function func_setSecantAnimSpeed(val) {
+        const parsed = parseFloat(val);
+        if (isFinite(parsed) && parsed > 0) func_secantAnimSpeed = parsed;
+    }
+    window.func_setSecantAnimSpeed = func_setSecantAnimSpeed;
+
+    function func_updateSecantAnimBtnLabel() {
+        const btn = document.getElementById('secantAnimBtn');
+        if (!btn) return;
+        btn.textContent = func_secantAnimId ? '⏸ 수렴 일시정지' : '▶ Δx → 0 수렴 애니메이션';
+        btn.style.background = func_secantAnimId ? '#d97706' : '#e11d48';
+    }
+
+    function func_resetSecantAnim() {
         if (func_secantAnimId) {
             cancelAnimationFrame(func_secantAnimId);
             func_secantAnimId = null;
+        }
+        func_updateSecantAnimBtnLabel();
+        const slider = document.getElementById('secantDxSlider');
+        if (slider) {
+            const cur = parseFloat(slider.value) || 1.5;
+            const sign = cur < 0 ? -1 : 1;
+            const resetVal = sign * 1.5;
+            slider.value = String(resetVal);
+            func_onSecantSliderChange(resetVal);
+            func_updateAll(false);
+        }
+    }
+    window.func_resetSecantAnim = func_resetSecantAnim;
+
+    function func_animateSecantDx() {
+        // 실행 중이면 일시정지 토글
+        if (func_secantAnimId) {
+            cancelAnimationFrame(func_secantAnimId);
+            func_secantAnimId = null;
+            func_updateSecantAnimBtnLabel();
+            func_updateAll(false);
+            return;
         }
         const slider = document.getElementById('secantDxSlider');
         if (!slider) return;
         let cur = parseFloat(slider.value) || 1.5;
         let sign = cur < 0 ? -1 : 1;
-        let mag = Math.max(Math.abs(cur), 1.4);
+        let mag = Math.abs(cur) <= 0.03 ? 1.5 : Math.abs(cur);
         function stepAnim() {
-            mag *= 0.94;
+            const spEl = document.getElementById('secantAnimSpeed');
+            const sp = spEl && isFinite(parseFloat(spEl.value)) ? parseFloat(spEl.value) : func_secantAnimSpeed;
+            const decay = Math.pow(0.96, sp);
+            mag = mag * decay - 0.0004 * sp;
             if (mag <= 0.012) {
                 mag = 0.01;
                 slider.value = String(sign * mag);
                 func_onSecantSliderChange(sign * mag);
-                func_updateAll(false);
                 func_secantAnimId = null;
+                func_updateSecantAnimBtnLabel();
+                func_updateAll(false);
                 return;
             }
             slider.value = String(sign * mag);
             func_onSecantSliderChange(sign * mag);
             func_secantAnimId = requestAnimationFrame(stepAnim);
+            func_updateSecantAnimBtnLabel();
         }
         stepAnim();
     }
@@ -1329,7 +1504,7 @@
         if (panel && btn) {
             panel.classList.toggle('visible', func_isMicroscopeVisible);
             btn.classList.toggle('active', func_isMicroscopeVisible);
-            btn.innerHTML = `<span>🔬</span> 미분 현미경(국소 확대): ${func_isMicroscopeVisible ? 'ON' : 'OFF'}`;
+            btn.innerHTML = `<span>🔬</span> 미분 현미경: ${func_isMicroscopeVisible ? 'ON' : 'OFF'}`;
         }
         func_syncIntegralSelect();
         if (func_isMicroscopeVisible) {
@@ -1466,13 +1641,16 @@
         func_isTangentMode = !func_isTangentMode;
         const btn = document.getElementById('tangentModeBtn');
         if (func_isTangentMode) {
-            btn.className = 'toggle-btn active'; btn.innerHTML = `<span style="font-size:1.05rem;">⤡</span> 실시간 접선(좌·우미분): ON`;
+            btn.className = 'toggle-btn active'; btn.innerHTML = `<span>⤡</span> 실시간 접선: ON`;
             Plotly.relayout('graphPlot', { hovermode: 'closest' });
         } else {
-            btn.className = 'toggle-btn'; btn.innerHTML = `<span style="font-size:1.05rem;">⤡</span> 실시간 접선(좌·우미분): OFF`;
+            btn.className = 'toggle-btn'; btn.innerHTML = `<span>⤡</span> 실시간 접선: OFF`;
             Plotly.relayout('graphPlot', { shapes: [], annotations: [], hovermode: 'closest' }); 
         }
     }
+    window.func_toggleTangentMode = func_toggleTangentMode;
+    const _origToggleTangent = func_toggleTangentMode;
+    func_toggleTangentMode = function() { _origToggleTangent(); func_updateToolbarMenuBadge(); };
     window.func_toggleTangentMode = func_toggleTangentMode;
 
     function func_zoomGraph(direction) {
@@ -1821,23 +1999,13 @@
 
     function func_renderUI() {
         const grid = document.getElementById('functionsGrid'); if(!grid) return; grid.innerHTML = '';
-        const statusBoard = document.getElementById('statusBoard');
-        if (statusBoard) {
-            if (func_selectedFuncId) {
-                statusBoard.classList.add('active');
-                statusBoard.innerHTML = `<div>✥ <b>그래프 평행이동 모드 활성화됨</b> — 그래프 영역을 드래그하면 선택한 함수/복소수가 평행이동합니다. (완료 후 [이동 해제] 클릭)</div>`;
-            } else {
-                statusBoard.classList.remove('active');
-                statusBoard.innerHTML = `<div style="font-weight: 700; color:#0f172a;">💡 그래프 평행이동 · 특수 함수 · 부등식 영역 입력 안내</div><div style="margin-top: 3px;">절댓값·가우스 복합식(예: <code>y = |x[x-2]|</code>), 부등식 영역 색칠(이상: <code>&gt;=</code>, <code>=&gt;</code>, <code>≥</code> / 이하: <code>&lt;=</code>, <code>=&lt;</code>, <code>≤</code>)을 모두 지원하며, <b>빠른 입력</b> 버튼을 여러 번 눌러 수식을 연속 조합할 수 있습니다.</div>`;
-            }
-        }
 
         func_functionsList.forEach((func, idx) => {
             const isSelected = (func_selectedFuncId === func.id);
             const card = document.createElement('div');
             card.className = 'func-card' + (isSelected ? ' selected' : '');
             card.id = `card_${func.id}`; card.style.borderLeftColor = func.color;
-            let typeName = func.type === 'complex' ? `복소수 z<sub>${idx + 1}</sub>` : `함수 f<sub>${idx + 1}</sub>`;
+            let typeName = func.type === 'complex' ? `z<sub>${idx + 1}</sub>` : `f<sub>${idx + 1}</sub>`;
 
             let innerHTML = `
                 <div class="func-card-header">
@@ -1845,22 +2013,22 @@
                         <input type="color" value="${func.color}" onchange="func_updateState('${func.id}', 'color', this.value)">
                         <span>${typeName}</span>
                     </div>
-                    <div style="display:flex; align-items:center; gap:6px; flex-wrap:wrap;">
-                        <button class="btn-move-select ${isSelected ? 'active' : ''}" onclick="func_toggleSelectById('${func.id}')" title="이 그래프를 마우스/터치 드래그로 평행이동합니다">
-                            ${isSelected ? '✥ 이동 중' : '✥ 이동'}
+                    <div style="display:flex; align-items:center; gap:4px; flex-wrap:wrap;">
+                        <button class="btn-move-select ${isSelected ? 'active' : ''}" onclick="func_toggleSelectById('${func.id}')" title="드래그로 그래프 평행이동">
+                            ${isSelected ? '✥이동중' : '✥이동'}
                         </button>
                         ${func.type === 'complex' ? `
-                        <label title="실수축 대칭인 켤레복소수(a-bi)를 함께 표시합니다" style="font-size:0.78rem; display:flex; align-items:center; gap:3px; cursor:pointer; background:#f8fafc; padding:3px 7px; border-radius:5px; border:1px solid #cbd5e1; font-weight:600;">
-                            <input type="checkbox" ${func.showConjugate ? 'checked' : ''} onchange="func_updateState('${func.id}', 'showConjugate', this.checked)"> 켤레복소수
+                        <label title="실수축 대칭인 켤레복소수(a-bi) 표시" style="font-size:0.72rem; display:flex; align-items:center; gap:2px; cursor:pointer; background:#f8fafc; padding:2px 5px; border-radius:4px; border:1px solid #cbd5e1; font-weight:600;">
+                            <input type="checkbox" ${func.showConjugate ? 'checked' : ''} onchange="func_updateState('${func.id}', 'showConjugate', this.checked)"> 켤레
                         </label>
                         ` : `
-                        <label title="도함수 y = f'(x) 그래프를 점선으로 함께 그립니다" style="font-size:0.76rem; display:flex; align-items:center; gap:3px; cursor:pointer; background:#eff6ff; color:#1e40af; padding:3px 7px; border-radius:5px; border:1px solid #93c5fd; font-weight:700;">
-                            <input type="checkbox" ${func.showDerivative ? 'checked' : ''} onchange="func_updateState('${func.id}', 'showDerivative', this.checked)"> 도함수 f'(x)
+                        <label title="도함수 y = f'(x) 그래프 표시" style="font-size:0.72rem; display:flex; align-items:center; gap:2px; cursor:pointer; background:#eff6ff; color:#1e40af; padding:2px 5px; border-radius:4px; border:1px solid #93c5fd; font-weight:700;">
+                            <input type="checkbox" ${func.showDerivative ? 'checked' : ''} onchange="func_updateState('${func.id}', 'showDerivative', this.checked)"> f'(x)
                         </label>
-                        <label title="이계도함수 y = f''(x) 그래프를 함께 그립니다" style="font-size:0.76rem; display:flex; align-items:center; gap:3px; cursor:pointer; background:#f5f3ff; color:#5b21b6; padding:3px 7px; border-radius:5px; border:1px solid #c4b5fd; font-weight:700;">
-                            <input type="checkbox" ${func.showSecondDerivative ? 'checked' : ''} onchange="func_updateState('${func.id}', 'showSecondDerivative', this.checked)"> 이계도함수 f''(x)
+                        <label title="이계도함수 y = f''(x) 그래프 표시" style="font-size:0.72rem; display:flex; align-items:center; gap:2px; cursor:pointer; background:#f5f3ff; color:#5b21b6; padding:2px 5px; border-radius:4px; border:1px solid #c4b5fd; font-weight:700;">
+                            <input type="checkbox" ${func.showSecondDerivative ? 'checked' : ''} onchange="func_updateState('${func.id}', 'showSecondDerivative', this.checked)"> f''(x)
                         </label>
-                        <label title="y=x 대칭인 역함수 그래프를 함께 표시합니다" style="font-size:0.76rem; display:flex; align-items:center; gap:3px; cursor:pointer; background:#f8fafc; padding:3px 7px; border-radius:5px; border:1px solid #cbd5e1; font-weight:600;">
+                        <label title="y=x 대칭인 역함수 그래프 표시" style="font-size:0.72rem; display:flex; align-items:center; gap:2px; cursor:pointer; background:#f8fafc; padding:2px 5px; border-radius:4px; border:1px solid #cbd5e1; font-weight:600;">
                             <input type="checkbox" ${func.showInverse ? 'checked' : ''} onchange="func_updateState('${func.id}', 'showInverse', this.checked)"> 역함수
                         </label>
                         `}
@@ -1873,9 +2041,8 @@
             if (func.type === 'complex') {
                 innerHTML += `
                     <div class="custom-expr-row">
-                        <label style="font-size:0.85rem;"><strong>복소수 수식 입력 (사칙연산 및 거듭제곱 <code>^</code> 지원):</strong></label>
-                        <input type="text" inputmode="text" autocorrect="off" autocapitalize="none" spellcheck="false" id="input_${func.id}_expr" value="${func.expr}" onfocus="func_lastFocusedId='${func.id}'" onclick="func_lastFocusedId='${func.id}'; (func_functionsList.find(f=>f.id==='${func.id}')||{}).isInitialDefault=false;" oninput="func_updateState('${func.id}', 'expr', this.value)" placeholder="예: 3 + 2i, (1+i)^2, i^3">
-                        <div id="cinfo_${func.id}" style="font-size:0.8rem; color:#334155; background:#f8fafc; padding:5px 8px; border-radius:5px; width:100%; border:1px solid #e2e8f0; margin-top:3px;">
+                        <input type="text" inputmode="text" autocorrect="off" autocapitalize="none" spellcheck="false" id="input_${func.id}_expr" value="${func.expr}" onfocus="func_lastFocusedId='${func.id}'" onclick="func_lastFocusedId='${func.id}'; (func_functionsList.find(f=>f.id==='${func.id}')||{}).isInitialDefault=false;" oninput="func_updateState('${func.id}', 'expr', this.value)" placeholder="복소수 식 입력 (예: 3+2i, (1+i)^2, i^3)">
+                        <div id="cinfo_${func.id}" style="font-size:0.76rem; color:#334155; background:#f8fafc; padding:3px 7px; border-radius:4px; width:100%; border:1px solid #e2e8f0;">
                             ${func_getComplexSummaryHTML(func.expr)}
                         </div>
                     </div>
@@ -1883,11 +2050,7 @@
             } else {
                 innerHTML += `
                     <div class="custom-expr-row">
-                        <label style="font-size:0.85rem;"><strong>함수 · 방정식 · 부등식 입력:</strong></label>
-                        <input type="text" inputmode="text" autocorrect="off" autocapitalize="none" spellcheck="false" id="input_${func.id}_expr" value="${func.expr}" onfocus="func_lastFocusedId='${func.id}'" onclick="func_lastFocusedId='${func.id}'; (func_functionsList.find(f=>f.id==='${func.id}')||{}).isInitialDefault=false;" oninput="func_updateState('${func.id}', 'expr', this.value)" placeholder="예: y = |x[x-2]|, y >= x, y =< -x^2+x, [x][x]">
-                        <div style="font-size:0.75rem; color:#64748b; margin-top:2px;">
-                            * 예: <code>y = |x[x-2]|</code>, <code>y &gt;= x</code>(또는 <code>=&gt;</code>, <code>≥</code>), <code>y &lt;= x</code>(또는 <code>=&lt;</code>, <code>≤</code>), <code>[x]</code>, <code>π</code>
-                        </div>
+                        <input type="text" inputmode="text" autocorrect="off" autocapitalize="none" spellcheck="false" id="input_${func.id}_expr" value="${func.expr}" onfocus="func_lastFocusedId='${func.id}'" onclick="func_lastFocusedId='${func.id}'; (func_functionsList.find(f=>f.id==='${func.id}')||{}).isInitialDefault=false;" oninput="func_updateState('${func.id}', 'expr', this.value)" placeholder="수식 입력 (예: -x^2+x, |x[x-2]|, y>=x, x<1 ? x^2 : 2x-1)">
                     </div>
                 `;
             }
@@ -3239,11 +3402,26 @@
     /* =========================================================================
        3. 수학 물리 시뮬레이터 (Physics Simulation) 로직
        ========================================================================= */
-    const phys_dt = 1/60; 
+    const phys_baseDt = 1/60;
+    let phys_simSpeed = 1.0;
+    let phys_dt = phys_baseDt;
     const phys_PIXELS_PER_METER = 15; 
     const phys_WALL_POS_M = 100;
     let phys_globalMass = 1000;
     let phys_animationFrameId = null;
+
+    function phys_setSimSpeed(val) {
+        const sp = parseFloat(val);
+        if (isFinite(sp) && sp > 0) {
+            phys_simSpeed = sp;
+            phys_dt = phys_baseDt * phys_simSpeed;
+            const s1 = document.getElementById('t1-sim-speed');
+            const s2 = document.getElementById('t2-sim-speed');
+            if (s1 && s1.value !== String(val)) s1.value = String(val);
+            if (s2 && s2.value !== String(val)) s2.value = String(val);
+        }
+    }
+    window.phys_setSimSpeed = phys_setSimSpeed;
 
     let phys_isLightMode = false;
     let phys_isStackLayout = false;
