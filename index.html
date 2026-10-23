@@ -1757,6 +1757,75 @@
         return terms;
     }
 
+    function func_stripOuterParens(s) {
+        let str = (s || '').trim();
+        while (str.startsWith('(') && str.endsWith(')')) {
+            let depth = 0, ok = true;
+            for (let i = 0; i < str.length - 1; i++) {
+                if (str[i] === '(') depth++;
+                else if (str[i] === ')') { depth--; if (depth === 0) { ok = false; break; } }
+            }
+            if (ok && depth === 1) str = str.slice(1, -1).trim();
+            else break;
+        }
+        return str;
+    }
+
+    // 수식이 양함수(예: "[x]", "y = [x]", "[x] = y", "f(x) = [x]", "y - [x] = 0", "(y - 2) = [x - 1]")인지 판별하고 x에 대한 우변 수식을 추출
+    function func_extractExplicitYExpr(exprStr) {
+        const clean = (exprStr || '').trim();
+        if (!clean) return null;
+        const ineq = func_parseInequality(clean);
+        if (ineq) {
+            return ineq.isExplicitY ? ineq.explicitExpr : null;
+        }
+        if (!clean.includes('=')) {
+            if (!/\by\b/i.test(clean)) return clean;
+            return null;
+        }
+        const parts = clean.split('=');
+        if (parts.length !== 2) return null;
+        const rawL = func_stripOuterParens(parts[0].trim());
+        const rawR = func_stripOuterParens(parts[1].trim());
+        if (!rawL || !rawR) return null;
+
+        // 1) y = g(x) 또는 f(x) = g(x)
+        if (/^(y|f\s*\(\s*x\s*\))$/i.test(rawL) && !/\by\b/i.test(rawR)) {
+            return rawR;
+        }
+        // 2) g(x) = y 또는 g(x) = f(x) (예: [x] = y)
+        if (/^(y|f\s*\(\s*x\s*\))$/i.test(rawR) && !/\by\b/i.test(rawL)) {
+            return rawL;
+        }
+        // 3) 이항 시 y = g(x) 로 정리되는 일차 양함수 방정식 (예: y - [x] = 0, [x] - y = 0, (y - 2) = [x - 1])
+        const lTerms = func_splitTopLevelTerms(rawL);
+        const rTerms = func_splitTopLevelTerms(rawR).map(t => ({
+            sign: t.sign === '+' ? '-' : '+',
+            body: t.body
+        }));
+        const allTerms = [...lTerms, ...rTerms];
+        const yTerms = allTerms.filter(t => /\by\b/i.test(t.body));
+        if (yTerms.length === 1) {
+            const yTerm = yTerms[0];
+            const yBody = func_stripOuterParens(yTerm.body);
+            if (/^(y|f\s*\(\s*x\s*\))$/i.test(yBody)) {
+                const otherTerms = allTerms.filter(t => t !== yTerm && t.body !== '0');
+                if (otherTerms.length === 0) return '0';
+                const rhsTerms = otherTerms.map(t => ({
+                    sign: yTerm.sign === '+' ? (t.sign === '+' ? '-' : '+') : t.sign,
+                    body: t.body
+                }));
+                let combined = '';
+                rhsTerms.forEach((t, idx) => {
+                    if (idx === 0) combined += (t.sign === '-' ? `-(${t.body})` : t.body);
+                    else combined += ` ${t.sign} (${t.body})`;
+                });
+                return combined;
+            }
+        }
+        return null;
+    }
+
     // 음함수 수식의 모든 항을 한쪽 변으로 이항하여 "f(x, y) = [정리된 식] = 0" 형태로 변환
     function func_formatImplicitNormalized(exprStr) {
         let raw = (exprStr || '').trim();
@@ -1802,16 +1871,9 @@
         if (func_isImplicitFunc(f)) {
             return func_formatImplicitNormalized(raw);
         }
-        const ineq = func_parseInequality(raw);
-        if (ineq && ineq.isExplicitY) {
-            return `f(x) = ${ineq.explicitExpr.trim()}`;
-        }
-        if (raw.includes('=')) {
-            const parts = raw.split('=');
-            const lhs = parts[0].trim().toLowerCase();
-            const rhs = parts[1].trim();
-            if (lhs === 'y' || lhs === 'f(x)') return `f(x) = ${rhs}`;
-            if (rhs.toLowerCase() === 'y' || rhs.toLowerCase() === 'f(x)') return `f(x) = ${parts[0].trim()}`;
+        const expExpr = func_extractExplicitYExpr(raw);
+        if (expExpr !== null) {
+            return `f(x) = ${expExpr.trim()}`;
         }
         return `f(x) = ${raw}`;
     }
@@ -2414,7 +2476,25 @@
             return `${newL.trim()} ${ineq.rawOp} ${newR.trim()}`;
         } else if (clean.includes('=')) {
             let parts = clean.split('=');
-            let L = parts[0].replace(/X/g, 'x').replace(/Y/g, 'y'); let R = parts[1].replace(/X/g, 'x').replace(/Y/g, 'y');
+            let rawL = parts[0].trim(), rawR = parts[1].trim();
+            let L = rawL.replace(/X/g, 'x').replace(/Y/g, 'y');
+            let R = rawR.replace(/X/g, 'x').replace(/Y/g, 'y');
+            if (/^(y|f\s*\(\s*x\s*\))$/i.test(func_stripOuterParens(L)) && !/\by\b/i.test(R)) {
+                let newR = R.replace(/\bx\b/g, subX);
+                if (Math.abs(kVal) > 1e-4) {
+                    let signVal = kVal > 0 ? `+ ${kVal}` : `- ${Math.abs(kVal)}`;
+                    return `${rawL} = ${newR} ${signVal}`;
+                }
+                return `${rawL} = ${newR}`;
+            }
+            if (/^(y|f\s*\(\s*x\s*\))$/i.test(func_stripOuterParens(R)) && !/\by\b/i.test(L)) {
+                let newL = L.replace(/\bx\b/g, subX);
+                if (Math.abs(kVal) > 1e-4) {
+                    let signVal = kVal > 0 ? `+ ${kVal}` : `- ${Math.abs(kVal)}`;
+                    return `${newL} ${signVal} = ${rawR}`;
+                }
+                return `${newL} = ${rawR}`;
+            }
             let newL = L.replace(/\bx\b/g, subX).replace(/\by\b/g, subY); let newR = R.replace(/\bx\b/g, subX).replace(/\by\b/g, subY);
             return `${newL.trim()} = ${newR.trim()}`;
         } else if (clean.toLowerCase().includes('y')) {
@@ -2889,20 +2969,20 @@
     }
 
     function func_isImplicitFunc(f) {
-        if (f.type !== 'custom') return false;
+        if (!f || f.type !== 'custom') return false;
         let clean = (f.expr || '').trim();
         let ineq = func_parseInequality(clean);
         if (ineq) {
             return !ineq.isExplicitY;
         }
+        const expExpr = func_extractExplicitYExpr(clean);
+        if (expExpr !== null) {
+            return false;
+        }
         if (clean.includes('=')) {
-            let parts = clean.split('=');
-            let left = parts[0].trim().toLowerCase();
-            let right = parts[1].trim().toLowerCase();
-            if (left === 'y') return /\by\b/.test(right);
             return true;
         }
-        return /\by\b/.test(clean.toLowerCase());
+        return /\by\b/i.test(clean);
     }
 
     function func_evaluateImplicit(f, x, y) {
@@ -2916,20 +2996,13 @@
     }
 
     function func_evaluateFunction(f, x) {
-        if (f.type === 'custom') {
+        if (f && f.type === 'custom') {
             let clean = (f.expr || '').trim();
-            let ineq = func_parseInequality(clean);
-            if (ineq) {
-                if (ineq.isExplicitY) return func_evaluateCustomExpr(ineq.explicitExpr, x, 0);
-                return NaN;
+            const expExpr = func_extractExplicitYExpr(clean);
+            if (expExpr !== null) {
+                return func_evaluateCustomExpr(expExpr, x, 0);
             }
-            if (clean.includes('=')) {
-                let parts = clean.split('=');
-                if (parts[0].trim().toLowerCase() === 'y') {
-                    return func_evaluateCustomExpr(parts[1], x, 0);
-                }
-            }
-            return func_evaluateCustomExpr(clean, x, 0);
+            return NaN;
         } 
         return NaN;
     }
