@@ -154,6 +154,14 @@
         .mission-bar { background: rgba(15, 23, 42, 0.85); border: 1px solid #334155; border-radius: 12px; padding: 10px 14px; margin-bottom: 14px; display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px; }
         .mission-step { background: #1e293b; border: 1px solid #475569; border-radius: 8px; padding: 6px 11px; font-size: 0.8rem; color: #cbd5e1; display: flex; align-items: center; gap: 6px; font-weight: 600; transition: all 0.2s; }
         .mission-step.done { background: rgba(6, 95, 70, 0.55); border-color: #10b981; color: #a7f3d0; font-weight: 700; }
+        .math-phys-bridge-bar { background: rgba(15, 23, 42, 0.9); border: 1.5px solid #0ea5e9; border-radius: 12px; padding: 10px 14px; margin-bottom: 14px; display: flex; flex-direction: column; gap: 8px; box-shadow: 0 4px 12px rgba(14, 165, 233, 0.12); }
+        #app-phys.light-mode .math-phys-bridge-bar { background: #f0f9ff; border-color: #38bdf8; color: #0f172a; }
+        #app-phys.light-mode .math-phys-bridge-bar input, #app-phys.light-mode .math-phys-bridge-bar select { background: #ffffff !important; color: #0f172a !important; border-color: #7dd3fc !important; }
+        .phys-export-btn { padding: 3px 9px; border-radius: 6px; font-size: 0.72rem; font-weight: 800; background: #0284c7; color: #ffffff; border: 1px solid #38bdf8; cursor: pointer; transition: all 0.15s; white-space: nowrap; }
+        .phys-export-btn:hover { background: #0369a1; transform: translateY(-1px); }
+        .func-phys-bridge-banner { display: none; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; background: linear-gradient(90deg, #ecfeff 0%, #eff6ff 100%); border: 1.5px solid #06b6d4; border-radius: 8px; padding: 7px 12px; margin-bottom: 8px; font-size: 0.8rem; font-weight: 700; color: #0f172a; }
+        .func-phys-bridge-banner.visible { display: flex; }
+        .explorer-phys-hint { margin-top: 5px; font-size: 0.76rem; color: #0e7490; background: #ecfeff; border: 1px solid #a5f3fc; padding: 4px 9px; border-radius: 6px; font-weight: 700; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 6px; }
         .calc-explorer-panel { display: none; background: #f8fafc; border: 1.5px solid #cbd5e1; border-radius: 9px; padding: 8px 12px; margin-bottom: 8px; box-shadow: 0 2px 8px rgba(15, 23, 42, 0.05); }
         .calc-explorer-panel.visible { display: block; }
         .calc-explorer-header { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 6px; padding-bottom: 5px; border-bottom: 1px solid #e2e8f0; }
@@ -358,6 +366,10 @@
                 <div class="easy-term-hint" style="margin-top:5px; font-size:0.76rem; color:#881337; background:#ffe4e6; padding:4px 9px; border-radius:6px; font-weight:700;">
                     💡 <b>쉬운 설명:</b> 중2 때 배운 <b>두 점 사이의 기울기(y증가량 ÷ x증가량 = 평균변화율)</b>에서 두 점 사이 간격(Δx)을 0으로 좁히면, 한 점에서의 <b>순간 기울기(미분계수 = 접선 기울기)</b>가 됩니다. (그래프 위의 <b>점 A</b>나 <b>점 B</b>를 직접 드래그해 보세요)
                 </div>
+                <div class="explorer-phys-hint">
+                    <span>🚗 <b>물리(역학) 연결:</b> x를 시간(t), y를 위치 x(t)로 보면 <b>평균변화율(할선 기울기) = 평균 속도</b>, <b>미분계수(접선 기울기) = 순간 속도 v(t)</b>가 됩니다.</span>
+                    <button type="button" onclick="bridge_sendExplorerFuncToPhysics('secant', 'x')" style="padding:2px 8px; font-size:0.73rem; font-weight:800; border-radius:5px; background:#0891b2; color:#fff; border:none; cursor:pointer;">🚗 이 함수로 자동차 주행 실험하기 →</button>
+                </div>
             </div>
 
             <!-- 3) 미분 현미경 (국소 선형성 vs 첨점 확대 비교) 패널 -->
@@ -471,6 +483,10 @@
                 <div class="easy-term-hint" style="margin-top:5px; font-size:0.76rem; color:#854d0e; background:#fef9c3; padding:4px 9px; border-radius:6px; font-weight:700;">
                     💡 <b>쉬운 설명:</b> 곡선 위에서 <b>오르막길(기울기 +)</b>일 때는 점이 x축 위에 찍히고, <b>산꼭대기·골짜기(기울기 0)</b>에서는 x축(0)에 찍히며, <b>내리막길(기울기 -)</b>일 때는 x축 아래에 찍힙니다. 이 점들이 지나간 흔적(<b>기울기의 자취</b>)이 바로 <b>도함수</b>입니다. (그래프 위의 <b>점 P</b>나 <b>자취 점 Q</b>를 직접 드래그해 보세요)
                 </div>
+                <div class="explorer-phys-hint">
+                    <span>🚗 <b>물리(역학) 연결:</b> 위치 그래프 x(t)의 순간 기울기 자취 f'(t)가 곧 <b>속도 그래프 v(t)</b>입니다 (오르막=전진 v&gt;0, 꼭대기=방향전환 정지 v=0, 내리막=후진 v&lt;0).</span>
+                    <button type="button" onclick="bridge_sendExplorerFuncToPhysics('slopeWalk', 'x')" style="padding:2px 8px; font-size:0.73rem; font-weight:800; border-radius:5px; background:#0891b2; color:#fff; border:none; cursor:pointer;">🚗 이 함수로 자동차 주행 실험하기 →</button>
+                </div>
             </div>
 
             <!-- 6) 정적분 넓이 계산 · 직사각형 블록 쪼개기(구분구적법) · 넓이 누적 그래프 패널 -->
@@ -536,10 +552,23 @@
                 <div class="easy-term-hint" style="margin-top:5px; font-size:0.76rem; color:#065f46; background:#d1fae5; padding:4px 9px; border-radius:6px; font-weight:700;">
                     💡 <b>쉬운 설명:</b> 휘어진 곡선 아래를 우리가 넓이 공식(가로×세로)을 아는 <b>직사각형 막대 N개</b>로 쪼개어 더한 뒤, 막대를 한없이 얇게 쪼개면(<b>N → ∞ 극한</b>) 튀어나온 빈틈 오차가 0이 되면서 정확한 곡선 넓이(<b>적분</b>)가 됩니다. (그래프의 <b>구간 경계선 a, b 핸들</b>을 좌우로 직접 드래그해 보세요)
                 </div>
+                <div class="explorer-phys-hint">
+                    <span>🚗 <b>물리(역학) 연결:</b> y를 속도 v(t)로 보면 <b>정적분 ∫v(t)dt = 위치 변화량(변위 Δx)</b>, <b>순수 넓이 ∫|v(t)|dt = 총 이동거리(s)</b>, <b>누적 넓이 S(t) = 위치 x(t)</b>가 됩니다.</span>
+                    <button type="button" onclick="bridge_sendExplorerFuncToPhysics('integral', 'v')" style="padding:2px 8px; font-size:0.73rem; font-weight:800; border-radius:5px; background:#0891b2; color:#fff; border:none; cursor:pointer;">🚗 이 함수를 속도 v(t)로 자동차 주행 실험하기 →</button>
+                </div>
             </div>
 
             <!-- 교과과정 단원별 빠른 예제 프리셋 바 -->
             <div id="presetBar" class="preset-bar"></div>
+
+            <!-- 수학 ↔ 물리 유기적 연동 알림 배너 -->
+            <div id="mathPhysBridgeBanner" class="func-phys-bridge-banner">
+                <span id="mathPhysBridgeText">🔗 수학 ↔ 물리 실험실 연동</span>
+                <div style="display:flex; align-items:center; gap:6px;">
+                    <button type="button" onclick="switchApp('phys')" style="padding:3px 10px; font-size:0.75rem; font-weight:800; border-radius:6px; background:#0284c7; color:#fff; border:none; cursor:pointer;">🚗 물리 시뮬레이터로 돌아가기</button>
+                    <button type="button" onclick="document.getElementById('mathPhysBridgeBanner').classList.remove('visible')" style="padding:3px 8px; font-size:0.74rem; font-weight:700; border-radius:6px; background:#e2e8f0; color:#334155; border:none; cursor:pointer;">닫기</button>
+                </div>
+            </div>
 
             <div id="functionsGrid" class="functions-grid"></div>
             
@@ -735,6 +764,42 @@
                         </div>
                     </div>
 
+                    <!-- 🔗 수학(함수 실험실) ↔ 물리(역학 실험실) 유기적 연결: 수식 직접 주행 & 양방향 미적분 연동 바 -->
+                    <div class="math-phys-bridge-bar">
+                        <div class="flex flex-wrap items-center justify-between gap-2">
+                            <div class="flex flex-wrap items-center gap-2">
+                                <span class="text-xs md:text-sm font-extrabold text-sky-400">🔗 수학 함수 수식으로 자동차 주행하기:</span>
+                                <select id="phys-formula-mode" class="bg-slate-900 text-sky-300 font-extrabold text-xs md:text-sm rounded-lg px-2.5 py-1.5 border border-sky-500/50 outline-none cursor-pointer">
+                                    <option value="x" selected>위치 함수 x(t) =</option>
+                                    <option value="v">속도 함수 v(t) =</option>
+                                </select>
+                                <input type="text" id="phys-formula-input" value="12*t - 2*t^2" placeholder="예: 3*t^2, 12*t - 2*t^2, 6*t^2 - t^3, 8*sin(t)" class="bg-slate-950 text-white font-mono font-bold text-xs md:text-sm rounded-lg px-3 py-1.5 border border-sky-500/60 outline-none focus:border-sky-400 w-48 md:w-64">
+                                <button id="btn-formula-drive" onclick="phys_startFormulaDrive()" class="px-3.5 py-1.5 bg-sky-500 hover:bg-sky-400 text-slate-950 font-extrabold text-xs md:text-sm rounded-lg shadow transition-all whitespace-nowrap cursor-pointer">
+                                    ▶ 수식대로 주행 시작
+                                </button>
+                            </div>
+                            <div class="flex flex-wrap items-center gap-1.5">
+                                <button onclick="bridge_sendPhysicsToFunc('pos1')" class="phys-export-btn" title="현재 위치 그래프 x(t)를 함수 실험실로 보내 평균변화율(평균속도)과 접선 기울기(순간속도)를 분석합니다">
+                                    📈 x(t) → 함수 실험실(미분)
+                                </button>
+                                <button onclick="bridge_sendPhysicsToFunc('vel1')" class="phys-export-btn" style="background:#059669; border-color:#34d399;" title="현재 속도 그래프 v(t)를 함수 실험실로 보내 정적분(변위)과 직사각형 블록 쪼개기를 분석합니다">
+                                    📈 v(t) → 함수 실험실(정적분)
+                                </button>
+                            </div>
+                        </div>
+                        <div class="flex flex-wrap items-center justify-between gap-2 pt-1 border-t border-slate-700/60 text-xs">
+                            <div class="flex flex-wrap items-center gap-1.5">
+                                <span class="font-bold text-slate-400">빠른 수식 실험:</span>
+                                <button onclick="phys_applyFormulaPreset('x', '3*t^2')" class="px-2 py-0.5 rounded bg-slate-800 hover:bg-slate-700 text-sky-200 border border-slate-600 font-semibold cursor-pointer">등가속도 x(t)=3t²</button>
+                                <button onclick="phys_applyFormulaPreset('x', '12*t - 2*t^2')" class="px-2 py-0.5 rounded bg-slate-800 hover:bg-slate-700 text-sky-200 border border-slate-600 font-semibold cursor-pointer">전진 후 후진 x(t)=12t-2t²</button>
+                                <button onclick="phys_applyFormulaPreset('x', '6*t^2 - t^3')" class="px-2 py-0.5 rounded bg-slate-800 hover:bg-slate-700 text-sky-200 border border-slate-600 font-semibold cursor-pointer">삼차 운동 x(t)=6t²-t³</button>
+                                <button onclick="phys_applyFormulaPreset('x', '8*sin(1.2*t)')" class="px-2 py-0.5 rounded bg-slate-800 hover:bg-slate-700 text-sky-200 border border-slate-600 font-semibold cursor-pointer">왕복 단진동 x(t)=8sin(1.2t)</button>
+                                <button onclick="phys_applyFormulaPreset('v', '12 - 4*t')" class="px-2 py-0.5 rounded bg-slate-800 hover:bg-slate-700 text-emerald-200 border border-slate-600 font-semibold cursor-pointer">등가속도 속도 v(t)=12-4t</button>
+                            </div>
+                            <span id="phys-formula-readout" class="font-mono font-bold text-sky-300">수식을 입력하거나 함수 실험실 카드에서 [🚗 물리 주행]을 눌러보세요</span>
+                        </div>
+                    </div>
+
                     <!-- 화면을 가리지 않는 상단 디지털 계기판 (Telemetry Strip) -->
                     <div class="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-2.5 mb-3">
                         <div class="telemetry-card">
@@ -785,6 +850,7 @@
                             <div class="flex items-center gap-2 flex-wrap">
                                 <h3 class="text-base font-extrabold text-blue-400">① 위치 $x(t)$</h3>
                                 <span class="text-xs bg-blue-950/90 text-blue-200 px-2 py-0.5 rounded border border-blue-700/60 font-semibold">접선 기울기 = 순간 속도 $v$</span>
+                                <button onclick="bridge_sendPhysicsToFunc('pos1')" class="phys-export-btn" title="이 위치 함수를 함수 실험실로 보내 평균변화율(할선)과 미분계수(접선)로 분석합니다">📈 함수 실험실로</button>
                             </div>
                             <div class="flex flex-wrap gap-1.5 items-center">
                                 <label class="flex items-center gap-1 bg-slate-900 px-2 py-1 rounded border border-pink-500/50 cursor-pointer text-xs text-pink-300 font-bold" title="처음 시각(t=0)부터 선택한 시각(t)까지의 평균 속도(할선)를 함께 표시합니다.">
@@ -817,6 +883,7 @@
                             <div class="flex items-center gap-2 flex-wrap">
                                 <h3 class="text-base font-extrabold text-green-400">② 속도 $v(t)$ (벡터)</h3>
                                 <span class="text-xs bg-green-950/90 text-green-200 px-2 py-0.5 rounded border border-green-700/60 font-semibold">접선 기울기 = 가속도 $a$</span>
+                                <button onclick="bridge_sendPhysicsToFunc('vel1')" class="phys-export-btn" style="background:#059669; border-color:#34d399;" title="이 속도 함수를 함수 실험실로 보내 정적분(변위 Δx)과 누적 넓이 S(t)=x(t)를 확인합니다">📈 함수 실험실로</button>
                             </div>
                             <div class="flex flex-wrap gap-1.5 items-center">
                                 <div class="flex items-center gap-1 bg-slate-900 px-1.5 py-0.5 rounded border border-slate-600">
@@ -845,6 +912,7 @@
                             <div class="flex items-center gap-2 flex-wrap">
                                 <h3 class="text-base font-extrabold text-teal-400">③ 속력 $|v(t)|$ (스칼라)</h3>
                                 <span class="text-xs bg-teal-950/90 text-teal-200 px-2 py-0.5 rounded border border-teal-700/60 font-semibold">항상 $0$ 이상 (V자 반전)</span>
+                                <button onclick="bridge_sendPhysicsToFunc('spd1')" class="phys-export-btn" style="background:#0d9488; border-color:#5eead4;" title="이 속력 함수 |v(t)|를 함수 실험실로 보내 정적분 넓이(총 이동거리 s)를 확인합니다">📈 함수 실험실로</button>
                             </div>
                             <div class="flex flex-wrap gap-1.5 items-center">
                                 <div class="flex items-center gap-1 bg-slate-900 px-1.5 py-0.5 rounded border border-slate-600">
@@ -873,6 +941,7 @@
                             <div class="flex items-center gap-2 flex-wrap">
                                 <h3 class="text-base font-extrabold text-orange-400">④ 가속도 $a(t) = \frac{dv}{dt}$</h3>
                                 <span class="text-xs bg-orange-950/90 text-orange-200 px-2 py-0.5 rounded border border-orange-700/60 font-semibold">속도의 순간 변화율</span>
+                                <button onclick="bridge_sendPhysicsToFunc('acc1')" class="phys-export-btn" style="background:#ea580c; border-color:#fdba74;" title="속도 v(t)와 가속도 a(t)를 함수 실험실로 보내 기울기의 자취(도함수)로 확인합니다">📈 함수 실험실로</button>
                             </div>
                             <div class="flex flex-wrap gap-1.5 items-center">
                                 <div class="flex items-center gap-1 bg-slate-900 px-1.5 py-0.5 rounded border border-slate-600">
@@ -997,7 +1066,7 @@
                             <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 mt-1">
                                 <div id="wrapper-mom2" class="graph-wrapper glass-panel rounded-2xl flex flex-col overflow-hidden border border-slate-600 shadow-xl">
                                     <div class="bg-slate-800/95 px-4 py-2.5 flex justify-between items-center border-b border-slate-700 flex-wrap gap-2">
-                                        <h3 class="text-base font-extrabold text-purple-400 whitespace-nowrap">충돌 후 운동량 $p(t)$ 변화</h3>
+                                        <div class="flex items-center gap-2 flex-wrap"><h3 class="text-base font-extrabold text-purple-400 whitespace-nowrap">충돌 후 운동량 $p(t)$ 변화</h3><button onclick="bridge_sendPhysicsToFunc('mom2')" class="phys-export-btn" style="background:#7c3aed; border-color:#c4b5fd;" title="충돌 중 운동량 변화 함수 p(t)를 함수 실험실로 보내 접선 기울기 dp/dt = -F 관계를 확인합니다">📈 함수 실험실로</button></div>
                                         <div class="flex gap-1.5 items-center">
                                             <div class="flex items-center gap-1 bg-slate-900 px-1.5 py-0.5 rounded border border-slate-600">
                                                 <button onclick="phys_zoomChart('mom2', -0.2)" class="px-2 py-0.5 bg-slate-700 hover:bg-slate-500 text-white text-xs rounded font-bold">-</button>
@@ -1020,7 +1089,7 @@
 
                                 <div id="wrapper-force2" class="graph-wrapper glass-panel rounded-2xl flex flex-col overflow-hidden border border-slate-600 shadow-xl">
                                     <div class="bg-slate-800/95 px-4 py-2.5 flex justify-between items-center border-b border-slate-700 flex-wrap gap-2">
-                                        <h3 class="text-base font-extrabold text-red-400 whitespace-nowrap">충격력 $F(t)$ 및 평균 힘</h3>
+                                        <div class="flex items-center gap-2 flex-wrap"><h3 class="text-base font-extrabold text-red-400 whitespace-nowrap">충격력 $F(t)$ 및 평균 힘</h3><button onclick="bridge_sendPhysicsToFunc('force2')" class="phys-export-btn" style="background:#e11d48; border-color:#fda4af;" title="충격력 함수 F(t)를 함수 실험실로 보내 정적분 넓이 ∫F(t)dt = 충격량 J 관계를 확인합니다">📈 함수 실험실로</button></div>
                                         <div class="flex gap-1.5 items-center flex-wrap">
                                             <button id="btn-clear-chart" class="text-xs px-2.5 py-1 bg-red-900/60 hover:bg-red-800 border border-red-600 rounded text-red-100 font-bold">기록 지우기</button>
                                             <div class="flex items-center gap-1 bg-slate-900 px-1.5 py-0.5 rounded border border-slate-600">
@@ -1206,7 +1275,7 @@
     let func_isQuickInputOpen = false;
     let func_isToolbarOpen = false;
     let func_isSingleToolMode = true; // 단독 집중 모드 (새 미적분 패널 열 때 기존 패널 자동 닫기)
-    let func_isAutoScenarioMode = true; // 예제 프리셋 클릭 시 맞춤 도구 자동 열기
+    let func_isAutoScenarioMode = false; // 예제 프리셋 클릭 시 맞춤 도구 자동 열기 (기본값 OFF)
     let func_isDirectDragMode = true; // 그래프 위 조작점(A, B, P, 경계선 a/b 등) 직접 드래그 모드
     let func_draggingHandle = null; // 현재 그래프 위에서 드래그 중인 조작 핸들 정보
 
@@ -1642,7 +1711,9 @@
         const inputEl = document.getElementById(`input_${target.id}_expr`);
         if (inputEl) inputEl.value = sc.expr;
         func_updateMathPreview(target.id);
-        func_activateToolForScenario(sc, target.id);
+        if (func_isAutoScenarioMode) {
+            func_activateToolForScenario(sc, target.id);
+        }
         func_updateAll();
     }
     window.func_applyScenario = func_applyScenario;
@@ -3427,6 +3498,9 @@
                         <label title="y=x 대칭인 역함수 그래프 표시" style="font-size:0.72rem; display:flex; align-items:center; gap:2px; cursor:pointer; background:#f8fafc; padding:2px 5px; border-radius:4px; border:1px solid #cbd5e1; font-weight:600;">
                             <input type="checkbox" ${func.showInverse ? 'checked' : ''} onchange="func_updateState('${func.id}', 'showInverse', this.checked)"> 역함수
                         </label>
+                        <button type="button" onclick="bridge_sendFuncToPhysics('${func.id}', 'x')" title="이 함수 수식을 위치 x(t)로 삼아 미적분 물리 시뮬레이터에서 자동차를 직접 주행시킵니다" style="font-size:0.72rem; display:flex; align-items:center; gap:2px; cursor:pointer; background:#ecfeff; color:#0e7490; padding:2px 6px; border-radius:4px; border:1px solid #67e8f9; font-weight:800;">
+                            🚗 물리 주행
+                        </button>
                         `}
                         <label class="switch" title="그래프 표시 켜기/끄기"><input type="checkbox" ${func.visible ? 'checked' : ''} onchange="func_updateState('${func.id}', 'visible', this.checked)"><span class="slider"></span></label>
                         <button class="btn-delete" onclick="func_removeFunction('${func.id}')">삭제</button>
@@ -6676,6 +6750,7 @@
         useDrag: false, syncCursor: true, showSecant: true, showVectors: true,
         isEbrake: false, isStopped: false, isPaused: false,
         autoDemoActive: false,
+        formulaMode: false, formulaDriveType: 'x', formulaExpr: '12*t - 2*t^2',
         mission1: false, mission2: false, mission3: false, constVelTime: 0,
         history: []
     };
@@ -6780,6 +6855,7 @@
         phys_kState.isStopped = false;
         phys_kState.isPaused = false;
         phys_kState.autoDemoActive = false;
+        phys_kState.formulaMode = false;
         phys_kState.mission1 = false;
         phys_kState.mission2 = false;
         phys_kState.mission3 = false;
@@ -7424,6 +7500,10 @@
                 stateObj.isEbrake = false; 
                 stateObj.isStopped = false;
                 stateObj.isPaused = false;
+                if (stateObj === phys_kState) {
+                    phys_kState.formulaMode = false;
+                    phys_kState.autoDemoActive = false;
+                }
                 const pBtn1 = document.getElementById('t1-btn-pause');
                 if (stateObj === phys_kState && pBtn1) pBtn1.innerText = '⏸ 일시정지';
                 
@@ -7450,6 +7530,8 @@
                 e.preventDefault();
                 phys_initAudio();
                 phys_kState.inputAcc = 0;
+                phys_kState.formulaMode = false;
+                phys_kState.autoDemoActive = false;
                 phys_kState.isEbrake = true;
                 phys_kState.isStopped = false;
                 phys_kState.isPaused = false;
@@ -7537,7 +7619,29 @@
                         }
                     }
 
-                    if (phys_kState.isEbrake) {
+                    if (phys_kState.formulaMode && !phys_kState.isStopped) {
+                        const prevX = phys_kState.x;
+                        const prevV = phys_kState.v;
+                        const nextT = phys_kState.t + phys_dt;
+                        if (nextT > 10.0) {
+                            phys_kState.isPaused = true;
+                            const pBtn = document.getElementById('t1-btn-pause');
+                            if (pBtn) pBtn.innerText = '▶ 계속 재생';
+                        } else {
+                            phys_kState.t = nextT;
+                            const evalRes = phys_evalFormulaAtTime(phys_kState.formulaExpr, phys_kState.formulaDriveType, phys_kState.t, prevX, prevV, phys_dt);
+                            phys_kState.x = evalRes.x;
+                            phys_kState.v = evalRes.v;
+                            phys_kState.a = evalRes.a;
+                            phys_kState.dist += Math.abs(phys_kState.x - prevX);
+                            phys_kState.history.push({ t: phys_kState.t, x: phys_kState.x, v: phys_kState.v, speed: Math.abs(phys_kState.v), a: phys_kState.a });
+                            if (phys_kState.history.length > 500) phys_kState.history.shift();
+                            const fReadout = document.getElementById('phys-formula-readout');
+                            if (fReadout) {
+                                fReadout.innerText = `수식 주행(t=${phys_kState.t.toFixed(2)}s): x=${phys_kState.x.toFixed(2)}m | v=dx/dt=${phys_kState.v.toFixed(2)}m/s | a=dv/dt=${phys_kState.a.toFixed(2)}m/s²`;
+                            }
+                        }
+                    } else if (phys_kState.isEbrake) {
                         const brakeForceMag = 60.0;
                         if (Math.abs(phys_kState.v) > 0.05) {
                             const sgn = Math.sign(phys_kState.v);
@@ -7562,7 +7666,7 @@
                         phys_kState.v += phys_kState.a * phys_dt;
                     }
 
-                    if (!phys_kState.isStopped) {
+                    if (!phys_kState.isStopped && !phys_kState.formulaMode) {
                         const dx = phys_kState.v * phys_dt;
                         phys_kState.x += dx;
                         phys_kState.dist += Math.abs(dx);
@@ -7720,6 +7824,317 @@
         } catch (error) { console.error(error); }
         phys_animationFrameId = requestAnimationFrame(phys_updatePhysicsLoop);
     }
+
+    /* =========================================================================
+       4. 수학(함수 실험실) ↔ 물리(역학 실험실) 유기적 양방향 연동 로직
+       ========================================================================= */
+    // 물리 수식 문자열(변수 t 또는 x)을 x 변수 수식으로 정규화
+    function bridge_normalizeExprToX(rawExpr) {
+        let s = (rawExpr || '').trim();
+        if (!s) return '0';
+        // x(t) = ..., v(t) = ..., y = ..., f(x) = ... 등 좌변 제거
+        if (s.includes('=')) {
+            const parts = s.split('=');
+            s = parts[parts.length - 1].trim();
+        }
+        // 함수명(sqrt, cot, atan 등) 안의 t는 보존하고 독립 변수 t만 x로 변환
+        return s.replace(
+            /(sqrt|cbrt|cot|atan|tanh|customMath)|([tT])/g,
+            function(match, fnTok, tTok) {
+                if (fnTok) return fnTok;
+                return 'x';
+            }
+        );
+    }
+
+    // x 변수 수식을 물리 실험실 표시용 t 변수 수식으로 변환
+    function bridge_normalizeExprToT(rawExpr) {
+        const expX = func_extractExplicitYExpr(rawExpr);
+        let s = (expX !== null ? expX : rawExpr || '').trim();
+        if (!s) return '0';
+        return s.replace(
+            /(exp|sin|cos|tan|csc|sec|cot|asin|acos|atan|sinh|cosh|tanh|sqrt|abs|cbrt|floor|ceil|round|sign|sgn|log|ln|pi)|([xX])/gi,
+            function(match, fnTok, xTok) {
+                if (fnTok) return fnTok;
+                return 't';
+            }
+        );
+    }
+
+    // 시각 t에서 수식 주행 모드의 위치 x(t), 속도 v(t), 가속도 a(t) 정밀 계산
+    function phys_evalFormulaAtTime(formulaStr, driveType, t, prevX, prevV, dt) {
+        const exprX = bridge_normalizeExprToX(formulaStr);
+        const evalAt = (tau) => {
+            const v = func_evaluateCustomExpr(exprX, tau, 0);
+            return isFinite(v) ? v : 0;
+        };
+        const h1 = 1e-4, h2 = 1e-3;
+        if (driveType === 'v') {
+            const vt = evalAt(t);
+            const at = (evalAt(t + h1) - evalAt(Math.max(0, t - h1))) / (t >= h1 ? 2 * h1 : h1);
+            const xt = prevX + 0.5 * (prevV + vt) * dt;
+            return { x: xt, v: vt, a: isFinite(at) ? at : 0 };
+        } else {
+            const xt = evalAt(t);
+            const vt = (evalAt(t + h1) - evalAt(Math.max(0, t - h1))) / (t >= h1 ? 2 * h1 : h1);
+            const tCenter = Math.max(h2, t);
+            const at = (evalAt(tCenter + h2) - 2 * evalAt(tCenter) + evalAt(tCenter - h2)) / (h2 * h2);
+            return { x: xt, v: isFinite(vt) ? vt : 0, a: isFinite(at) ? at : 0 };
+        }
+    }
+
+    function phys_startFormulaDrive() {
+        const modeEl = document.getElementById('phys-formula-mode');
+        const inpEl = document.getElementById('phys-formula-input');
+        const mode = modeEl ? modeEl.value : 'x';
+        const rawFormula = inpEl && inpEl.value.trim() ? inpEl.value.trim() : '12*t - 2*t^2';
+        phys_initAudio();
+        phys_resetKinematics();
+        phys_kState.formulaMode = true;
+        phys_kState.formulaDriveType = mode;
+        phys_kState.formulaExpr = rawFormula;
+
+        // t = 0 초기 상태 세팅
+        const initRes = phys_evalFormulaAtTime(rawFormula, mode, 0, 0, 0, 0);
+        phys_kState.t = 0;
+        phys_kState.x = mode === 'x' ? initRes.x : 0;
+        phys_kState.v = initRes.v;
+        phys_kState.a = initRes.a;
+        phys_kState.history.push({ t: 0, x: phys_kState.x, v: phys_kState.v, speed: Math.abs(phys_kState.v), a: phys_kState.a });
+
+        const modeBadge = document.getElementById('t1-mode-badge');
+        if (modeBadge) {
+            modeBadge.innerText = `🔗 수학 수식 주행 모드 (${mode}(t) = ${rawFormula})`;
+            modeBadge.className = 'px-2.5 py-1 rounded-full text-xs font-bold bg-sky-950 text-sky-300 border border-sky-500';
+        }
+    }
+    window.phys_startFormulaDrive = phys_startFormulaDrive;
+
+    function phys_applyFormulaPreset(mode, expr) {
+        const modeEl = document.getElementById('phys-formula-mode');
+        const inpEl = document.getElementById('phys-formula-input');
+        if (modeEl) modeEl.value = mode;
+        if (inpEl) inpEl.value = expr;
+        phys_startFormulaDrive();
+    }
+    window.phys_applyFormulaPreset = phys_applyFormulaPreset;
+
+    // [수학 -> 물리] 함수 실험실의 함수를 물리 시뮬레이터 자동차 주행 수식으로 전송
+    function bridge_sendFuncToPhysics(funcId, driveMode = 'x') {
+        const target = func_functionsList.find(f => f.id === funcId) || func_functionsList.find(f => f.type === 'custom');
+        if (!target || target.type !== 'custom') return;
+        const banner = document.getElementById('mathPhysBridgeBanner');
+        const bannerText = document.getElementById('mathPhysBridgeText');
+
+        if (func_isImplicitFunc(target)) {
+            if (banner && bannerText) {
+                banner.classList.add('visible');
+                bannerText.innerHTML = '⚠️ 음함수(예: 원, 마름모)는 하나의 시각 t에 위치가 여러 개 대응하므로 자동차 직선 주행 수식으로는 양함수 y = f(x) 형태를 사용해 주세요.';
+            }
+            return;
+        }
+
+        const exprT = bridge_normalizeExprToT(target.expr);
+        switchApp('phys');
+        const tab1Btn = document.getElementById('tab1-btn');
+        if (tab1Btn) tab1Btn.click();
+
+        const modeEl = document.getElementById('phys-formula-mode');
+        const inpEl = document.getElementById('phys-formula-input');
+        if (modeEl) modeEl.value = driveMode;
+        if (inpEl) inpEl.value = exprT;
+        phys_startFormulaDrive();
+    }
+    window.bridge_sendFuncToPhysics = bridge_sendFuncToPhysics;
+
+    function bridge_sendExplorerFuncToPhysics(panelType, driveMode = 'x') {
+        const selIdMap = {
+            secant: 'secantFuncSelect',
+            slopeWalk: 'slopeWalkFuncSelect',
+            integral: 'integralFuncSelect'
+        };
+        const selEl = document.getElementById(selIdMap[panelType]);
+        const funcId = selEl ? selEl.value : null;
+        bridge_sendFuncToPhysics(funcId, driveMode);
+    }
+    window.bridge_sendExplorerFuncToPhysics = bridge_sendExplorerFuncToPhysics;
+
+    // 주행 기록 데이터(history)로부터 최소제곱 다항식(2차 또는 3차) 근사 수식 생성
+    function bridge_fitPolynomialFromHistory(history, key) {
+        if (!history || history.length < 3) return '6*x - x^2';
+        const n = history.length;
+        const p0 = history[0], pMid = history[Math.floor(n / 2)], pEnd = history[n - 1];
+        const t1 = pMid.t - p0.t, t2 = pEnd.t - p0.t;
+        if (t2 < 0.1 || Math.abs(t1 * (t2 - t1)) < 1e-4) {
+            return String(func_formatNumber(pEnd[key] || 0));
+        }
+        const y0 = p0[key] || 0, y1 = pMid[key] || 0, y2 = pEnd[key] || 0;
+        // 2차 보간: y(t) = c0 + c1*t + c2*t^2
+        const c0 = Math.round(y0 * 100) / 100;
+        const d1 = (y1 - y0) / t1;
+        const d2 = (y2 - y0) / t2;
+        const c2 = Math.round(((d2 - d1) / (t2 - t1)) * 100) / 100;
+        const c1 = Math.round((d1 - c2 * t1) * 100) / 100;
+        const terms = [];
+        if (Math.abs(c2) >= 0.01) terms.push(`${c2}*x^2`);
+        if (Math.abs(c1) >= 0.01) terms.push(terms.length > 0 && c1 > 0 ? `+ ${c1}*x` : `${c1}*x`);
+        if (Math.abs(c0) >= 0.01 || terms.length === 0) terms.push(terms.length > 0 && c0 > 0 ? `+ ${c0}` : `${c0}`);
+        return terms.join(' ').replace(/\+\s*-/g, '- ');
+    }
+
+    // 현재 물리 실험실의 운동 상태로부터 위치 x(t), 속도 v(t), 가속도 a(t)에 대응하는 수학 수식(변수 x) 추출
+    function bridge_extractPhysicsExpressions() {
+        const modeEl = document.getElementById('phys-formula-mode');
+        const inpEl = document.getElementById('phys-formula-input');
+        const uiMode = modeEl ? modeEl.value : 'x';
+        const uiRaw = inpEl && inpEl.value.trim() ? inpEl.value.trim() : '12*t - 2*t^2';
+
+        const useFormula = phys_kState.formulaMode || phys_kState.history.length < 5;
+        const activeMode = phys_kState.formulaMode ? phys_kState.formulaDriveType : uiMode;
+        const activeRaw = phys_kState.formulaMode ? phys_kState.formulaExpr : uiRaw;
+
+        if (useFormula) {
+            const cleanX = bridge_normalizeExprToX(activeRaw);
+            const compact = cleanX.replace(/\s+/g, '');
+            const knownMap = {
+                '3*x^2': { x: '3*x^2', v: '6*x', a: '6' },
+                '12*x-2*x^2': { x: '12*x - 2*x^2', v: '12 - 4*x', a: '-4' },
+                '6*x^2-x^3': { x: '6*x^2 - x^3', v: '12*x - 3*x^2', a: '12 - 6*x' },
+                '8*sin(1.2*x)': { x: '8*sin(1.2*x)', v: '9.6*cos(1.2*x)', a: '-11.52*sin(1.2*x)' },
+                '12-4*x': { x: '12*x - 2*x^2', v: '12 - 4*x', a: '-4' }
+            };
+            if (knownMap[compact]) return knownMap[compact];
+            if (activeMode === 'x') {
+                const vFitted = phys_kState.history.length >= 5
+                    ? bridge_fitPolynomialFromHistory(phys_kState.history, 'v')
+                    : `((${cleanX.replace(/\bx\b/g, '(x+0.001)')}) - (${cleanX.replace(/\bx\b/g, '(x-0.001)')})) / 0.002`;
+                return { x: cleanX, v: vFitted, a: '0' };
+            } else {
+                const xFitted = phys_kState.history.length >= 5
+                    ? bridge_fitPolynomialFromHistory(phys_kState.history, 'x')
+                    : cleanX;
+                return { x: xFitted, v: cleanX, a: '0' };
+            }
+        }
+
+        // 수동 주행 기록이 있는 경우
+        return {
+            x: bridge_fitPolynomialFromHistory(phys_kState.history, 'x'),
+            v: bridge_fitPolynomialFromHistory(phys_kState.history, 'v'),
+            a: bridge_fitPolynomialFromHistory(phys_kState.history, 'a')
+        };
+    }
+
+    // [물리 -> 수학] 물리 실험실의 그래프를 함수 실험실로 보내 미적분 탐색 도구로 즉시 연결
+    function bridge_sendPhysicsToFunc(sourceKey) {
+        // 물리 실험실 일시정지
+        phys_kState.isPaused = true;
+        const pBtn1 = document.getElementById('t1-btn-pause');
+        if (pBtn1) pBtn1.innerText = '▶ 계속 재생';
+
+        switchApp('func');
+
+        // 복소평면 모드였다면 실평면 모드로 전환
+        if (func_functionsList.some(f => f.type === 'complex')) {
+            func_functionsList.length = 0;
+            func_selectedFuncId = null;
+        }
+        if (func_functionsList.length === 0) {
+            func_addRealMode();
+        }
+        // 첫 번째 함수 카드를 대상 카드로 사용 (추가 카드가 있으면 정리하여 집중도 향상)
+        while (func_functionsList.length > 1) {
+            func_functionsList.pop();
+        }
+        const target = func_functionsList[0];
+        target.visible = true;
+        target.H = 0;
+        target.K = 0;
+        target.showInverse = false;
+        target.showDerivative = false;
+        target.showSecondDerivative = false;
+        target.isInitialDefault = false;
+
+        const tCur = phys_kState.t > 0.4 ? Math.min(8, Math.round(phys_kState.t * 10) / 10) : 4.0;
+        const selT = (phys_charts[sourceKey] && phys_charts[sourceKey].selT > 0.1)
+            ? Math.round(phys_charts[sourceKey].selT * 10) / 10
+            : Math.max(1.0, Math.round((tCur * 0.5) * 10) / 10);
+
+        const banner = document.getElementById('mathPhysBridgeBanner');
+        const bannerText = document.getElementById('mathPhysBridgeText');
+        let msg = '';
+
+        if (sourceKey === 'pos1') {
+            const exprs = bridge_extractPhysicsExpressions();
+            target.expr = exprs.x;
+            target.baseExpr = exprs.x;
+            target.color = '#2563eb';
+            target.showDerivative = true;
+            func_renderUI();
+            func_activateToolForScenario({ tool: 'secant', a: selT, dx: 1.0 }, target.id);
+            msg = `🔗 <b>[물리 → 수학 연동: ① 위치 x(t)]</b> 위치 함수 <code>f₁(x) = ${exprs.x}</code>와 그 도함수 <code>f₁'(x) = v(t)</code>를 불러왔습니다. <b>할선 기울기(평균 속도)</b>가 <b>접선 기울기(순간 속도)</b>로 수렴하는 과정을 확인해 보세요.`;
+        } else if (sourceKey === 'vel1') {
+            const exprs = bridge_extractPhysicsExpressions();
+            target.expr = exprs.v;
+            target.baseExpr = exprs.v;
+            target.color = '#16a34a';
+            func_renderUI();
+            const accumChk = document.getElementById('integralAccumChk');
+            if (accumChk) accumChk.checked = true;
+            func_activateToolForScenario({ tool: 'integral', a: 0, b: tCur, n: 12 }, target.id);
+            msg = `🔗 <b>[물리 → 수학 연동: ② 속도 v(t)]</b> 속도 함수 <code>f₁(x) = ${exprs.v}</code>를 불러왔습니다. 구간 [0, ${tCur}]에서 <b>정적분 ∫v(t)dt = 변위(Δx)</b>가 되고, 보라색 <b>넓이 누적 곡선 S(x)가 곧 위치 그래프 x(t)</b>가 됨을 확인해 보세요.`;
+        } else if (sourceKey === 'spd1') {
+            const exprs = bridge_extractPhysicsExpressions();
+            const spdExpr = `|${exprs.v}|`;
+            target.expr = spdExpr;
+            target.baseExpr = spdExpr;
+            target.color = '#0d9488';
+            func_renderUI();
+            func_activateToolForScenario({ tool: 'integral', a: 0, b: tCur, n: 12 }, target.id);
+            msg = `🔗 <b>[물리 → 수학 연동: ③ 속력 |v(t)|]</b> 속력 함수 <code>f₁(x) = ${spdExpr}</code>를 불러왔습니다. 후진 구간이 절댓값으로 접혀 올라가 모든 넓이가 양(+)으로 더해져 <b>총 이동거리 s = ∫|v(t)|dt</b>가 되는 원리와 뾰족점(첨점)을 확인해 보세요.`;
+        } else if (sourceKey === 'acc1') {
+            const exprs = bridge_extractPhysicsExpressions();
+            target.expr = exprs.v;
+            target.baseExpr = exprs.v;
+            target.color = '#ea580c';
+            target.showDerivative = true;
+            func_renderUI();
+            func_activateToolForScenario({ tool: 'slopeWalk', x0: selT }, target.id);
+            msg = `🔗 <b>[물리 → 수학 연동: ④ 가속도 a(t) = v'(t)]</b> 속도 함수 <code>f₁(x) = ${exprs.v}</code>의 순간 기울기 자취가 곧 <b>가속도 그래프 a(t)</b>가 되는 과정을 기울기의 자취 탐색기로 확인해 보세요.`;
+        } else if (sourceKey === 'mom2') {
+            const mat = phys_materials[phys_dState.matKey] || phys_materials.concrete;
+            const T = mat.T;
+            const p0k = Math.round((phys_globalMass * phys_dState.v0) / 1000 * 10) / 10; // 10^3 kg·m/s 단위
+            const momExpr = `x <= ${T} ? ${(p0k / 2).toFixed(2)}*(1 + cos(pi*x/${T})) : 0`;
+            target.expr = momExpr;
+            target.baseExpr = momExpr;
+            target.color = '#7c3aed';
+            func_renderUI();
+            func_activateToolForScenario({ tool: 'secant', a: Number((T * 0.5).toFixed(2)), dx: Number((T * 0.25).toFixed(2)) }, target.id);
+            msg = `🔗 <b>[물리 → 수학 연동: 충돌 후 운동량 p(t)]</b> 충돌 시간 Δt = ${T}초 동안 운동량(단위: 10³ kg·m/s)이 0으로 줄어드는 곡선입니다. <b>접선의 기울기 dp/dt = -F(t) (순간 충격력)</b>임을 확인해 보세요.`;
+        } else if (sourceKey === 'force2') {
+            const mat = phys_materials[phys_dState.matKey] || phys_materials.concrete;
+            const T = mat.T;
+            const p0k = (phys_globalMass * phys_dState.v0) / 1000; // kN·s 단위 충격량
+            const fMaxK = Math.round(((p0k * Math.PI) / (2 * T)) * 100) / 100; // 10^4 N 단위 스케일 조정
+            const scaleNote = fMaxK > 15 ? 10 : 1;
+            const fPeak = Math.round((fMaxK / scaleNote) * 100) / 100;
+            const forceExpr = `x <= ${T} ? ${fPeak}*sin(pi*x/${T}) : 0`;
+            target.expr = forceExpr;
+            target.baseExpr = forceExpr;
+            target.color = '#e11d48';
+            func_renderUI();
+            func_activateToolForScenario({ tool: 'integral', a: 0, b: T, n: 16 }, target.id);
+            msg = `🔗 <b>[물리 → 수학 연동: 충격력 F(t) 정적분]</b> 충돌 구간 [0, ${T}]에서 힘-시간 곡선 아래의 <b>정적분 넓이 ∫F(t)dt가 곧 충격량 J = Δp</b>와 일치함을 구분구적법 블록으로 확인해 보세요.`;
+        }
+
+        if (banner && bannerText && msg) {
+            banner.classList.add('visible');
+            bannerText.innerHTML = msg;
+        }
+        func_updateAll(false);
+    }
+    window.bridge_sendPhysicsToFunc = bridge_sendPhysicsToFunc;
 
     // === 전역 부트스트랩 ===
     window.onload = function() {
