@@ -149,6 +149,7 @@
         #app-phys.light-mode .mission-bar { background: #f8fafc; border-color: #cbd5e1; color: #0f172a; }
         #app-phys.light-mode .mission-step { background: #ffffff; border-color: #cbd5e1; color: #334155; }
         #app-phys.light-mode .mission-step.done { background: #ecfdf5; border-color: #10b981; color: #065f46; }
+        #app-phys.light-mode #btn-sound-toggle { background: #ecfdf5 !important; color: #065f46 !important; border-color: #10b981 !important; }
 
         .mission-bar { background: rgba(15, 23, 42, 0.85); border: 1px solid #334155; border-radius: 12px; padding: 10px 14px; margin-bottom: 14px; display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px; }
         .mission-step { background: #1e293b; border: 1px solid #475569; border-radius: 8px; padding: 6px 11px; font-size: 0.8rem; color: #cbd5e1; display: flex; align-items: center; gap: 6px; font-weight: 600; transition: all 0.2s; }
@@ -177,9 +178,6 @@
         <button id="nav-btn-phys" class="nav-btn inactive" onclick="switchApp('phys')">
             🚗 미적분 물리 시뮬레이터
         </button>
-        <button id="btn-sound-toggle" class="sound-btn" onclick="toggleGlobalSound()" title="엔진음 및 충돌 효과음 켜기/끄기">
-            🔊 사운드: ON
-        </button>
     </header>
 
     <!-- =========================================================
@@ -192,18 +190,9 @@
                     <button onclick="func_addRealMode()" class="mode-add-btn bg-blue-600 hover:bg-blue-700 shadow">+ 함수 추가</button>
                     <button onclick="func_addComplexMode()" class="mode-add-btn bg-purple-600 hover:bg-purple-700 shadow">+ 복소수 추가</button>
                     <div style="border-left: 2px solid #cbd5e1; height: 18px; margin: 0 2px;"></div>
-                    <button id="toolbarMenuToggleBtn" onclick="func_toggleToolbarMenu()" style="display:flex; align-items:center; gap:5px; padding:4px 10px; font-size:0.78rem; font-weight:800; border-radius:6px; border:1.5px solid #334155; background:#1e293b; color:#ffffff; cursor:pointer; transition:all 0.15s;">
-                        <span>🛠️ 분석·미적분 도구 메뉴</span>
-                        <span id="toolbarMenuArrow" style="font-size:0.72rem; background:#334155; padding:1px 6px; border-radius:4px;">▼ 펼치기</span>
-                    </button>
-                    <button id="singleToolModeBtn" onclick="func_toggleSingleToolMode()" title="켜두면 새 미적분 탐색 도구를 열 때 이전에 열려 있던 패널을 자동으로 닫아 화면이 복잡해지는 것을 막아줍니다" style="display:flex; align-items:center; gap:4px; padding:4px 9px; font-size:0.75rem; font-weight:800; border-radius:6px; border:1.5px solid #4f46e5; background:#eef2ff; color:#3730a3; cursor:pointer; transition:all 0.15s;">
-                        <span>🎯 단독 집중 모드: ON</span>
-                    </button>
-                    <button id="directDragToggleBtn" onclick="func_toggleDirectDragMode()" title="켜두면 그래프 위의 점(A, B, P, 현미경)이나 정적분 구간 경계선(a, b), 극한 보조선(a, a±h)을 마우스나 손가락으로 직접 잡고 드래그하여 조작할 수 있습니다" style="display:flex; align-items:center; gap:4px; padding:4px 9px; font-size:0.75rem; font-weight:800; border-radius:6px; border:1.5px solid #059669; background:#ecfdf5; color:#065f46; cursor:pointer; transition:all 0.15s;">
-                        <span>🖐️ 그래프 직접 드래그: ON</span>
-                    </button>
-                    <button id="easyTermToggleBtn" onclick="func_toggleEasyTermMode()" title="고등 미적분 기호 옆에 중학교 수학 개념(기울기, 직사각형 넓이 등)으로 풀어쓴 쉬운 설명을 함께 표시합니다" style="display:flex; align-items:center; gap:4px; padding:4px 9px; font-size:0.76rem; font-weight:800; border-radius:6px; border:1.5px solid #f59e0b; background:#fffbeb; color:#b45309; cursor:pointer; transition:all 0.15s;">
-                        <span>💬 쉬운 설명: ON</span>
+                    <button id="toolbarMenuToggleBtn" onclick="func_toggleToolbarMenu()" style="display:flex; align-items:center; gap:6px; padding:4px 10px; font-size:0.8rem; font-weight:800; border-radius:6px; border:1.5px solid #1e293b; background:#1e293b; color:#ffffff; cursor:pointer; transition:all 0.15s;">
+                        <span>🛠️ 메뉴</span>
+                        <span id="toolbarMenuArrow" style="font-size:0.74rem; font-weight:800; background:#f59e0b; color:#0f172a; padding:2px 8px; border-radius:999px; border:1px solid #fde68a; box-shadow:0 1px 5px rgba(245,158,11,0.45);">▼ 펼치기</span>
                     </button>
                     <span id="planeTitle" style="font-size:0.74rem; font-weight:800; padding:2px 8px; border-radius:999px; background:#f1f5f9; color:#334155; border:1px solid #cbd5e1;">실평면 함수 그래프</span>
                     <span id="activeToolsBadge" style="display:none; font-size:0.74rem; font-weight:700; padding:2px 8px; border-radius:999px; background:#dbeafe; color:#1e40af; border:1px solid #93c5fd;"></span>
@@ -212,8 +201,24 @@
                     </button>
                 </div>
 
-                <div id="toolsMenuDrawer" style="display:none; width:100%; align-items:center; flex-wrap:wrap; gap:5px; padding-top:6px; margin-top:4px; border-top:1px dashed #cbd5e1;">
-                    <!-- 실평면 전용 도구 -->
+                <div id="toolsMenuDrawer" style="display:none; width:100%; flex-direction:column; align-items:flex-start; gap:6px; padding-top:7px; margin-top:5px; border-top:1px dashed #cbd5e1;">
+                    <!-- 하위 범주 1: 조작 및 설명 옵션 -->
+                    <div style="width:100%; display:flex; align-items:center; flex-wrap:wrap; gap:5px; padding-bottom:5px; border-bottom:1px dotted #e2e8f0;">
+                        <span style="font-size:0.74rem; font-weight:800; color:#475569; margin-right:2px;">⚙️ 조작·설명 설정:</span>
+                        <button id="singleToolModeBtn" onclick="func_toggleSingleToolMode()" title="켜두면 새 미적분 탐색 도구를 열 때 이전에 열려 있던 패널을 자동으로 닫아 화면이 복잡해지는 것을 막아줍니다" style="display:flex; align-items:center; gap:4px; padding:4px 9px; font-size:0.75rem; font-weight:800; border-radius:6px; border:1.5px solid #4f46e5; background:#eef2ff; color:#3730a3; cursor:pointer; transition:all 0.15s;">
+                            <span>🎯 단독 집중 모드: ON</span>
+                        </button>
+                        <button id="directDragToggleBtn" onclick="func_toggleDirectDragMode()" title="켜두면 그래프 위의 점(A, B, P, 현미경)이나 정적분 구간 경계선(a, b), 극한 보조선(a, a±h)을 마우스나 손가락으로 직접 잡고 드래그하여 조작할 수 있습니다" style="display:flex; align-items:center; gap:4px; padding:4px 9px; font-size:0.75rem; font-weight:800; border-radius:6px; border:1.5px solid #059669; background:#ecfdf5; color:#065f46; cursor:pointer; transition:all 0.15s;">
+                            <span>🖐️ 그래프 직접 드래그: ON</span>
+                        </button>
+                        <button id="easyTermToggleBtn" onclick="func_toggleEasyTermMode()" title="고등 미적분 기호 옆에 중학교 수학 개념(기울기, 직사각형 넓이 등)으로 풀어쓴 쉬운 설명을 함께 표시합니다" style="display:flex; align-items:center; gap:4px; padding:4px 9px; font-size:0.76rem; font-weight:800; border-radius:6px; border:1.5px solid #f59e0b; background:#fffbeb; color:#b45309; cursor:pointer; transition:all 0.15s;">
+                            <span>💬 쉬운 설명: ON</span>
+                        </button>
+                    </div>
+                    <!-- 하위 범주 2: 분석·미적분 탐색 도구 -->
+                    <div style="width:100%; display:flex; align-items:center; flex-wrap:wrap; gap:5px;">
+                        <span style="font-size:0.74rem; font-weight:800; color:#475569; margin-right:2px;">📐 분석·탐색 도구:</span>
+                        <!-- 실평면 전용 도구 -->
                     <button id="intersectToggleBtn" class="toggle-btn" onclick="func_toggleIntersectionPanel()">
                         <span>📍</span> 교점·극값
                     </button>
@@ -252,6 +257,7 @@
                     <button id="unitCircleBtn" class="toggle-btn purple hide" onclick="func_toggleUnitCircle()">
                         <span>⭕</span> 단위원(|z|=1): OFF
                     </button>
+                    </div>
                 </div>
             </div>
 
@@ -605,6 +611,9 @@
                     </button>
                     <button id="btn-phys-theme" onclick="phys_toggleTheme()" class="px-4 py-2.5 bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 rounded-xl border border-amber-400/50 text-xs md:text-sm font-bold transition-colors" title="프로젝터·전자칠판 수업을 위한 밝은 화면 모드로 전환합니다">
                         ☀️ 라이트 모드(칠판용): OFF
+                    </button>
+                    <button id="btn-sound-toggle" onclick="toggleGlobalSound()" class="px-4 py-2.5 bg-slate-900 hover:bg-slate-700 text-emerald-300 rounded-xl border border-emerald-500/40 text-xs md:text-sm font-bold transition-colors" title="엔진음 및 충돌 효과음 켜기/끄기">
+                        🔊 사운드: ON
                     </button>
                 </div>
             </div>
@@ -1301,7 +1310,12 @@
         const drawer = document.getElementById('toolsMenuDrawer');
         const arrow = document.getElementById('toolbarMenuArrow');
         if (drawer) drawer.style.display = func_isToolbarOpen ? 'flex' : 'none';
-        if (arrow) arrow.textContent = func_isToolbarOpen ? '▲ 접기' : '▼ 펼치기';
+        if (arrow) {
+            arrow.textContent = func_isToolbarOpen ? '▲ 접기' : '▼ 펼치기';
+            arrow.style.background = func_isToolbarOpen ? '#38bdf8' : '#f59e0b';
+            arrow.style.borderColor = func_isToolbarOpen ? '#bae6fd' : '#fde68a';
+            arrow.style.boxShadow = func_isToolbarOpen ? '0 1px 5px rgba(56,189,248,0.45)' : '0 1px 5px rgba(245,158,11,0.45)';
+        }
         func_updateToolbarMenuBadge();
     }
     window.func_toggleToolbarMenu = func_toggleToolbarMenu;
@@ -1480,7 +1494,7 @@
         let html = `
             <div style="width:100%; display:flex; align-items:center; flex-wrap:wrap; gap:5px;">
                 <span style="font-size:0.82rem; font-weight:800; color:#0f172a; margin-right:2px;">⚡ 빠른 입력</span>
-                <button onmousedown="event.preventDefault()" onclick="func_toggleQuickInputBar()" style="padding:2px 8px; font-size:0.74rem; font-weight:700; border-radius:5px; border:1px solid #cbd5e1; background:#ffffff; color:#334155; cursor:pointer;">
+                <button onmousedown="event.preventDefault()" onclick="func_toggleQuickInputBar()" style="padding:2px 10px; font-size:0.74rem; font-weight:800; border-radius:999px; border:1.5px solid ${func_isQuickInputOpen ? '#0284c7' : '#d97706'}; background:${func_isQuickInputOpen ? '#38bdf8' : '#f59e0b'}; color:#0f172a; box-shadow:${func_isQuickInputOpen ? '0 1px 5px rgba(56,189,248,0.35)' : '0 1px 5px rgba(245,158,11,0.35)'}; cursor:pointer; transition:all 0.15s;">
                     ${func_isQuickInputOpen ? '▲ 접기' : '▼ 펼치기'}
                 </button>
                 <button onmousedown="event.preventDefault()" onclick="func_clearActiveInput()" style="padding:2px 8px; font-size:0.74rem; font-weight:700; border-radius:5px; border:1px solid #fca5a5; background:#fef2f2; color:#dc2626; cursor:pointer;" title="현재 입력창의 수식을 비웁니다">
@@ -1503,7 +1517,7 @@
         if (func_isQuickInputOpen) {
             if (!hasComplex) {
                 html += `<div style="width:100%; display:flex; align-items:center; gap:5px; flex-wrap:wrap; padding-top:4px; border-top:1px dashed #e2e8f0;">`;
-                html += `<span style="font-size:0.74rem; font-weight:800; color:#4338ca;">🎓 원클릭 개념 시나리오:</span>`;
+                html += `<span style="font-size:0.74rem; font-weight:800; color:#4338ca;">🎓 예제:</span>`;
                 SCENARIO_PRESETS.forEach((sc, idx) => {
                     html += `<button class="scenario-chip" onmousedown="event.preventDefault()" onclick="func_applyScenario(${idx})" title="클릭하면 '${sc.expr}' 수식 입력과 함께 맞춤 미적분 탐색 도구를 즉시 엽니다">${sc.label}</button>`;
                 });
@@ -2555,7 +2569,7 @@
             if (b) b.classList.toggle('active', val === z);
         });
         func_updateMicroscopePlot();
-        func_updateAll(true);
+        func_updateAll(false);
     }
     window.func_setMicroscopeZoom = func_setMicroscopeZoom;
 
@@ -2578,21 +2592,23 @@
             const xMin = a - span, xMax = a + span;
             const yMin = centerY - span, yMax = centerY + span;
             const steps = 80;
-            const xGrid = [], yGrid = [], zGrid = [];
-            for (let i = 0; i <= steps; i++) {
-                xGrid.push(xMin + (xMax - xMin) * (i / steps));
-                yGrid.push(yMin + (yMax - yMin) * (i / steps));
-            }
-            for (let j = 0; j <= steps; j++) {
+            const extraCoords = func_extractImplicitCriticalCoords(targetFunc, [a, centerY]);
+            const xGrid = func_buildImplicitGridAxis(xMin, xMax, steps, extraCoords, false);
+            const yGrid = func_buildImplicitGridAxis(yMin, yMax, steps, extraCoords, false);
+            const zGrid = [];
+            for (let j = 0; j < yGrid.length; j++) {
                 const row = [];
-                for (let i = 0; i <= steps; i++) row.push(func_evaluateImplicit(targetFunc, xGrid[i], yGrid[j]));
+                for (let i = 0; i < xGrid.length; i++) row.push(func_evaluateImplicit(targetFunc, xGrid[i], yGrid[j]));
                 zGrid.push(row);
             }
+            const { lineX: microLineX, lineY: microLineY } = func_buildExactImplicitZeroContour(
+                (x, y) => func_evaluateImplicit(targetFunc, x, y),
+                xGrid, yGrid, zGrid
+            );
             const microTraces = [{
-                x: xGrid, y: yGrid, z: zGrid, type: 'contour',
-                contours: { start: 0, end: 0, size: 1, coloring: 'none' },
+                x: microLineX, y: microLineY, mode: 'lines',
                 line: { color: targetFunc.color, width: 3.5 },
-                showscale: false, name: '음함수 곡선'
+                name: '음함수 곡선'
             }];
             if (roots.length > 0) {
                 const sideInfo = func_evaluateImplicitOneSidedDerivatives(targetFunc, a, centerY);
@@ -3094,17 +3110,54 @@
             guard++;
         }
 
-        // 3) 절댓값 기호 | ... | -> \left| ... \right|
-        guard = 0;
-        while (/\|([^|]+)\|/.test(s) && guard < 10) {
-            s = s.replace(/\|([^|]+)\|/g, '\\left|$1\\right|');
-            guard++;
+        // 3) 절댓값 기호 | ... | -> \left| ... \right| (중첩 절댓값 및 다중 절댓값 안전 변환)
+        if (s.includes('|')) {
+            let out = '';
+            let openStack = [];
+            let parenDepth = 0;
+            let prevNonSpace = '';
+            for (let i = 0; i < s.length; i++) {
+                const ch = s[i];
+                if (ch === '(' || ch === '[' || ch === '{') {
+                    parenDepth++;
+                    out += ch;
+                    prevNonSpace = ch;
+                } else if (ch === ')' || ch === ']' || ch === '}') {
+                    parenDepth = Math.max(0, parenDepth - 1);
+                    out += ch;
+                    prevNonSpace = ch;
+                } else if (ch === '|') {
+                    const topDepth = openStack.length > 0 ? openStack[openStack.length - 1] : -1;
+                    const isOpOrEmpty = (prevNonSpace === '' || '+-*/^(=,[?:<>'.includes(prevNonSpace));
+                    if (isOpOrEmpty) {
+                        out += '\\lvert ';
+                        openStack.push(parenDepth);
+                        prevNonSpace = '(';
+                    } else if (topDepth === parenDepth) {
+                        out += ' \\rvert';
+                        openStack.pop();
+                        prevNonSpace = ')';
+                    } else {
+                        out += ' \\cdot \\lvert ';
+                        openStack.push(parenDepth);
+                        prevNonSpace = '(';
+                    }
+                } else {
+                    out += ch;
+                    if (ch.trim() !== '') prevNonSpace = ch;
+                }
+            }
+            while (openStack.length > 0) {
+                out += ' \\rvert';
+                openStack.pop();
+            }
+            s = out;
         }
 
         // 4) 분수 지수 x^(p/q) -> \sqrt[q]{x^{p}} 또는 x^{p/q}
         s = s.replace(/\(([^()]+)\)\s*\^\s*\(\s*1\s*\/\s*(\d+)\s*\)/g, '\\sqrt[$2]{$1}');
         s = s.replace(/\b([a-zA-Z0-9]+)\s*\^\s*\(\s*1\s*\/\s*(\d+)\s*\)/g, '\\sqrt[$2]{$1}');
-        s = s.replace(/\(([^()]+)\)\s*\^\s*\(\s*(-?\d+)\s*\/\s*(\d+)\s*\)/g, '\\left($1\\right)^{\\frac{$2}{$3}}');
+        s = s.replace(/\(([^()]+)\)\s*\^\s*\(\s*(-?\d+)\s*\/\s*(\d+)\s*\)/g, '($1)^{\\frac{$2}{$3}}');
         s = s.replace(/\b([a-zA-Z0-9]+)\s*\^\s*\(\s*(-?\d+)\s*\/\s*(\d+)\s*\)/g, '$1^{\\frac{$2}{$3}}');
 
         // 5) 제곱근 sqrt(...) -> \sqrt{...}
@@ -3115,7 +3168,7 @@
         }
 
         // 6) 로그 log2(x) -> \log_{2}(x)
-        s = s.replace(/\blog([0-9.]+)\s*\(([^()]+)\)/gi, '\\log_{$1}\\left($2\\right)');
+        s = s.replace(/\blog([0-9.]+)\s*\(([^()]+)\)/gi, '\\log_{$1}($2)');
         s = s.replace(/\b(sin|cos|tan|csc|sec|cot|ln|log)\s*\(/gi, '\\$1(');
 
         // 7) 괄호 분수 (A)/(B) 및 단순 분수 A/B -> \frac{A}{B}
@@ -3866,20 +3919,205 @@
         if (eDiv) eDiv.innerHTML = eHTML;
     }
 
+    // 음함수 수식에서 꼭짓점·첨점 후보 좌표(0, H, K 및 수식 내 상수) 추출
+    function func_extractImplicitCriticalCoords(f, extraList = []) {
+        const coords = [0, Number(f && f.H) || 0, Number(f && f.K) || 0, ...extraList];
+        const raw = (f && f.expr) ? String(f.expr) : '';
+        const nums = raw.match(/-?\d+(?:\.\d+)?/g);
+        if (nums) {
+            nums.forEach(nStr => {
+                const v = parseFloat(nStr);
+                if (isFinite(v) && Math.abs(v) <= 100) {
+                    coords.push(v, -v);
+                }
+            });
+        }
+        return coords;
+    }
+
+    // 음함수 등고선 격자 축 생성: 화면 비율이나 드래그 위치와 무관하게 0, 정수/반정수, 평행이동 꼭짓점이 항상 격자선에 정확히 놓이도록 정렬
+    function func_buildImplicitGridAxis(minV, maxV, steps, extraVals = [], snapQuarter = true) {
+        const set = [];
+        const span = maxV - minV;
+        const dv = span / steps;
+        for (let i = 0; i <= steps; i++) set.push(minV + i * dv);
+        if (snapQuarter && span > 0 && span <= 80) {
+            const snapStep = span <= 36 ? 0.25 : 0.5;
+            const startSnap = Math.ceil(minV / snapStep) * snapStep;
+            for (let v = startSnap; v <= maxV; v += snapStep) set.push(v);
+        }
+        for (let k = 0; k < extraVals.length; k++) {
+            const ev = extraVals[k];
+            if (isFinite(ev) && ev >= minV && ev <= maxV) set.push(ev);
+        }
+        set.sort((a, b) => a - b);
+        const minGap = Math.max(1e-6, span * 1e-5);
+        const out = [];
+        for (let i = 0; i < set.length; i++) {
+            const val = Math.abs(set[i]) < 1e-12 ? 0 : set[i];
+            if (out.length === 0 || (val - out[out.length - 1]) > minGap) {
+                out.push(val);
+            }
+        }
+        return out;
+    }
+
+    // 음함수 F(x, y) = 0 의 정밀 등고선 폴리라인 추출 (|x|+|y|=4 등 마름모·첨점 꼭짓점 뭉개짐 완전 방지)
+    function func_buildExactImplicitZeroContour(evalFn, xGrid, yGrid, zGrid) {
+        const nx = xGrid.length - 1;
+        const ny = yGrid.length - 1;
+        if (nx < 1 || ny < 1) return { lineX: [], lineY: [] };
+
+        // 격자 꼭짓점의 F(x,y) = 0 지점을 -1e-12 로 미세 고정하여 꼭짓점 누락 없이 정확히 해당 좌표를 통과하도록 처리
+        const s = Array.from({ length: ny + 1 }, (_, j) => {
+            const row = new Float64Array(nx + 1);
+            const zRow = zGrid[j];
+            for (let i = 0; i <= nx; i++) {
+                const v = zRow[i];
+                if (!isFinite(v)) row[i] = NaN;
+                else if (Math.abs(v) < 1e-10) row[i] = -1e-12;
+                else row[i] = v;
+            }
+            return row;
+        });
+
+        function interpEdge(xA, yA, vA, xB, yB, vB) {
+            if (Math.abs(vA) <= 1e-10) return [xA, yA];
+            if (Math.abs(vB) <= 1e-10) return [xB, yB];
+            let aX = xA, aY = yA, fa = vA;
+            let bX = xB, bY = yB, fb = vB;
+            for (let k = 0; k < 4; k++) {
+                const denom = fa - fb;
+                const t = Math.abs(denom) > 1e-14 ? Math.max(0.05, Math.min(0.95, fa / denom)) : 0.5;
+                const mX = aX + t * (bX - aX);
+                const mY = aY + t * (bY - aY);
+                const fm = evalFn(mX, mY);
+                if (!isFinite(fm)) break;
+                if (Math.abs(fm) < 1e-9) return [mX, mY];
+                if (fa * fm <= 0) { bX = mX; bY = mY; fb = fm; }
+                else { aX = mX; aY = mY; fa = fm; }
+            }
+            const denom = fa - fb;
+            const t = Math.abs(denom) > 1e-14 ? Math.max(0, Math.min(1, fa / denom)) : 0.5;
+            return [aX + t * (bX - aX), aY + t * (bY - aY)];
+        }
+
+        const SEG_TABLE = {
+            1: [[3, 0]], 2: [[0, 1]], 3: [[3, 1]], 4: [[1, 2]],
+            5: [[3, 0], [1, 2]], 6: [[0, 2]], 7: [[3, 2]], 8: [[2, 3]],
+            9: [[2, 0]], 10: [[0, 1], [2, 3]], 11: [[2, 1]], 12: [[1, 3]],
+            13: [[1, 0]], 14: [[0, 3]]
+        };
+
+        const segments = [];
+        for (let j = 0; j < ny; j++) {
+            const y0 = yGrid[j], y1 = yGrid[j + 1];
+            const sRow0 = s[j], sRow1 = s[j + 1];
+            for (let i = 0; i < nx; i++) {
+                const x0 = xGrid[i], x1 = xGrid[i + 1];
+                const v0 = sRow0[i], v1 = sRow0[i + 1], v2 = sRow1[i + 1], v3 = sRow1[i];
+                if (isNaN(v0) || isNaN(v1) || isNaN(v2) || isNaN(v3)) continue;
+                if (Math.abs(v1 - v0) > 1e4 || Math.abs(v2 - v1) > 1e4 || Math.abs(v3 - v2) > 1e4 || Math.abs(v0 - v3) > 1e4) continue;
+                const mask = (v0 < 0 ? 1 : 0) | (v1 < 0 ? 2 : 0) | (v2 < 0 ? 4 : 0) | (v3 < 0 ? 8 : 0);
+                const pairs = SEG_TABLE[mask];
+                if (!pairs) continue;
+                const getPt = (edge) => {
+                    if (edge === 0) return interpEdge(x0, y0, v0, x1, y0, v1);
+                    if (edge === 1) return interpEdge(x1, y0, v1, x1, y1, v2);
+                    if (edge === 2) return interpEdge(x0, y1, v3, x1, y1, v2);
+                    return interpEdge(x0, y0, v0, x0, y1, v3);
+                };
+                for (let pIdx = 0; pIdx < pairs.length; pIdx++) {
+                    const pA = getPt(pairs[pIdx][0]);
+                    const pB = getPt(pairs[pIdx][1]);
+                    if (Math.hypot(pA[0] - pB[0], pA[1] - pB[1]) > 1e-7) {
+                        segments.push([pA, pB]);
+                    }
+                }
+            }
+        }
+
+        // 인접 선분을 연속된 폴리라인으로 연결하여 마름모 꼭짓점 등 모든 꺾임 지점이 매끄럽게 이어지도록 처리
+        const keyOf = (pt) => `${Math.round(pt[0] * 1e5)},${Math.round(pt[1] * 1e5)}`;
+        const adj = new Map();
+        const used = new Uint8Array(segments.length);
+        for (let idx = 0; idx < segments.length; idx++) {
+            const [pA, pB] = segments[idx];
+            const kA = keyOf(pA), kB = keyOf(pB);
+            if (!adj.has(kA)) adj.set(kA, []);
+            if (!adj.has(kB)) adj.set(kB, []);
+            adj.get(kA).push({ idx, end: 0 });
+            adj.get(kB).push({ idx, end: 1 });
+        }
+
+        const lineX = [], lineY = [];
+        for (let i = 0; i < segments.length; i++) {
+            if (used[i]) continue;
+            used[i] = 1;
+            const chain = [segments[i][0], segments[i][1]];
+            while (true) {
+                const tail = chain[chain.length - 1];
+                const list = adj.get(keyOf(tail));
+                if (!list) break;
+                let found = false;
+                for (let k = 0; k < list.length; k++) {
+                    const item = list[k];
+                    if (!used[item.idx]) {
+                        used[item.idx] = 1;
+                        chain.push(segments[item.idx][item.end === 0 ? 1 : 0]);
+                        found = true;
+                        break;
+                    }
+                }
+                if (!found) break;
+            }
+            while (true) {
+                const head = chain[0];
+                const list = adj.get(keyOf(head));
+                if (!list) break;
+                let found = false;
+                for (let k = 0; k < list.length; k++) {
+                    const item = list[k];
+                    if (!used[item.idx]) {
+                        used[item.idx] = 1;
+                        chain.unshift(segments[item.idx][item.end === 0 ? 1 : 0]);
+                        found = true;
+                        break;
+                    }
+                }
+                if (!found) break;
+            }
+            // 닫힌 곡선인 경우 시작점의 꺾임(join)이 끊어져 보이지 않도록 한 점을 더 이어줌
+            if (chain.length >= 4 && keyOf(chain[0]) === keyOf(chain[chain.length - 1])) {
+                chain.push(chain[1]);
+            }
+            if (lineX.length > 0) {
+                lineX.push(null);
+                lineY.push(null);
+            }
+            for (let k = 0; k < chain.length; k++) {
+                lineX.push(chain[k][0]);
+                lineY.push(chain[k][1]);
+            }
+        }
+        return { lineX, lineY };
+    }
+
     // Marching Squares 선형 보간으로 음함수 부등식 영역(예: x^2+y^2 <= 9)의 경계를 계단 현상 없이 매끄러운 다각형 경로로 추출
     function func_buildSmoothImplicitInequalityPolygons(xGrid, yGrid, zGrid, isGreater) {
-        const M = xGrid.length - 1;
-        const W = M + 2, H = M + 2;
+        const Mx = xGrid.length - 1;
+        const My = yGrid.length - 1;
+        const W = Mx + 2, H = My + 2;
         const xCoord = new Array(W + 1);
         const yCoord = new Array(H + 1);
-        for (let i = 0; i <= M; i++) xCoord[i + 1] = xGrid[i];
-        xCoord[0] = xGrid[0]; xCoord[W] = xGrid[M];
-        for (let j = 0; j <= M; j++) yCoord[j + 1] = yGrid[j];
-        yCoord[0] = yGrid[0]; yCoord[H] = yGrid[M];
+        for (let i = 0; i <= Mx; i++) xCoord[i + 1] = xGrid[i];
+        xCoord[0] = xGrid[0]; xCoord[W] = xGrid[Mx];
+        for (let j = 0; j <= My; j++) yCoord[j + 1] = yGrid[j];
+        yCoord[0] = yGrid[0]; yCoord[H] = yGrid[My];
 
         const s = Array.from({ length: H + 1 }, () => new Float64Array(W + 1).fill(1e-5));
-        for (let j = 0; j <= M; j++) {
-            for (let i = 0; i <= M; i++) {
+        for (let j = 0; j <= My; j++) {
+            for (let i = 0; i <= Mx; i++) {
                 let v = zGrid[j][i];
                 if (!isFinite(v)) {
                     s[j + 1][i + 1] = 1e-5;
@@ -5175,12 +5413,17 @@
             const ineqInfo = func_parseInequality(f.expr);
 
             if (func_isImplicitFunc(f)) {
-                let steps = skipHeavy ? 80 : 200; let dx = (maxX - minX) / steps, dy = (maxY - minY) / steps;
-                let xGrid = [], yGrid = [];
-                for(let i=0; i<=steps; i++) xGrid.push(minX + i*dx); for(let i=0; i<=steps; i++) yGrid.push(minY + i*dy);
-                let zGrid = [];
-                for(let j=0; j<=steps; j++) {
-                    let row = []; for(let i=0; i<=steps; i++) row.push(func_evaluateImplicit(f, xGrid[i], yGrid[j])); zGrid.push(row);
+                const steps = skipHeavy ? 75 : 150;
+                const extraCoords = func_extractImplicitCriticalCoords(f);
+                const xGrid = func_buildImplicitGridAxis(minX, maxX, steps, extraCoords, !skipHeavy);
+                const yGrid = func_buildImplicitGridAxis(minY, maxY, steps, extraCoords, !skipHeavy);
+                const nx = xGrid.length, ny = yGrid.length;
+                const zGrid = [];
+                for (let j = 0; j < ny; j++) {
+                    const row = new Array(nx);
+                    const yv = yGrid[j];
+                    for (let i = 0; i < nx; i++) row[i] = func_evaluateImplicit(f, xGrid[i], yv);
+                    zGrid.push(row);
                 }
                 if (ineqInfo) {
                     const isGreater = (ineqInfo.op === '>=' || ineqInfo.op === '>');
@@ -5195,21 +5438,36 @@
                     }
                 }
                 const isStrictIneq = ineqInfo && (ineqInfo.op === '>' || ineqInfo.op === '<');
-                traces.push({ x: xGrid, y: yGrid, z: zGrid, type: 'contour', contours: {start: 0, end: 0, size: 1, coloring: 'none'}, line: {color: f.color, width: isSelected ? 7 : 3, dash: isStrictIneq ? 'dash' : 'solid'}, showscale: false, name: fName, hoverinfo: 'none', customdata: Array(zGrid.length).fill(f.id) });
+                const { lineX: impX, lineY: impY } = func_buildExactImplicitZeroContour(
+                    (x, y) => func_evaluateImplicit(f, x, y),
+                    xGrid, yGrid, zGrid
+                );
+                traces.push({
+                    x: impX, y: impY, mode: 'lines',
+                    line: { color: f.color, width: isSelected ? 7 : 3, dash: isStrictIneq ? 'dash' : 'solid' },
+                    name: fName,
+                    customdata: Array(impX.length).fill(f.id),
+                    hovertemplate: `<b>${fName}</b> (${f.expr})<br>(%{x:.2f}, %{y:.2f})<extra></extra>`
+                });
 
                 if (f.showInverse) {
                     hasInverse = true;
                     const zGridInv = [];
-                    for (let j = 0; j <= steps; j++) {
-                        const row = [];
-                        for (let i = 0; i <= steps; i++) row.push(func_evaluateImplicit(f, yGrid[j], xGrid[i]));
+                    for (let j = 0; j < ny; j++) {
+                        const row = new Array(nx);
+                        const yv = yGrid[j];
+                        for (let i = 0; i < nx; i++) row[i] = func_evaluateImplicit(f, yv, xGrid[i]);
                         zGridInv.push(row);
                     }
+                    const { lineX: invX, lineY: invY } = func_buildExactImplicitZeroContour(
+                        (x, y) => func_evaluateImplicit(f, y, x),
+                        xGrid, yGrid, zGridInv
+                    );
                     traces.push({
-                        x: xGrid, y: yGrid, z: zGridInv, type: 'contour',
-                        contours: { start: 0, end: 0, size: 1, coloring: 'none' },
+                        x: invX, y: invY, mode: 'lines',
                         line: { color: f.color, width: 2, dash: 'dot' },
-                        showscale: false, name: `${fName} 역함수(y=x 대칭)`, hoverinfo: 'none'
+                        name: `${fName} 역함수(y=x 대칭)`,
+                        hovertemplate: `<b>${fName} 역함수</b><br>(%{x:.2f}, %{y:.2f})<extra></extra>`
                     });
                 }
 
